@@ -1,0 +1,1413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  fmiVersion="2.0"
+  modelName="Modelica.Mechanics.Rotational.Examples.SimpleGearShift"
+  guid="{b7620239-0c9d-476f-af8d-ee530e4cd5f3}"
+  description="Simple Gearshift"
+  version="3.2.1"
+  generationTool="Dymola Version 2015 FD01 (64-bit), 2014-12-15"
+  generationDateAndTime="2015-01-27T10:06:48Z"
+  variableNamingConvention="structured"
+  numberOfEventIndicators="36">
+  <ModelExchange
+    modelIdentifier="Modelica_Mechanics_Rotational_Examples_SimpleGearShift"
+    canBeInstantiatedOnlyOncePerProcess="true"
+    canGetAndSetFMUstate="true"
+    providesDirectionalDerivative="true"/>
+  <CoSimulation
+    modelIdentifier="Modelica_Mechanics_Rotational_Examples_SimpleGearShift"
+    canHandleVariableCommunicationStepSize="true"
+    canInterpolateInputs="true"
+    maxOutputDerivativeOrder="1"
+    canBeInstantiatedOnlyOncePerProcess="true"
+    canGetAndSetFMUstate="true"
+    providesDirectionalDerivative="true"/>
+  <UnitDefinitions>
+    <Unit
+      name="1"/>
+    <Unit
+      name="N">
+      <BaseUnit kg="1"
+        m="1"
+        s="-2"/>
+    </Unit>
+    <Unit
+      name="N.m">
+      <BaseUnit kg="1"
+        m="2"
+        s="-2"/>
+    </Unit>
+    <Unit
+      name="W">
+      <BaseUnit kg="1"
+        m="2"
+        s="-3"/>
+    </Unit>
+    <Unit
+      name="kg.m2">
+      <BaseUnit kg="1"
+        m="2"/>
+    </Unit>
+    <Unit
+      name="rad">
+      <BaseUnit rad="1"/>
+      <DisplayUnit
+        name="deg"
+        factor="57.29577951308232"/>
+      <DisplayUnit
+        name="rad"/>
+    </Unit>
+    <Unit
+      name="rad/s">
+      <BaseUnit s="-1"
+        rad="1"/>
+      <DisplayUnit
+        name="rpm"
+        factor="9.549296585513721"/>
+    </Unit>
+    <Unit
+      name="rad/s2">
+      <BaseUnit s="-2"
+        rad="1"/>
+    </Unit>
+    <Unit
+      name="s">
+      <BaseUnit s="1"/>
+    </Unit>
+  </UnitDefinitions>
+  <TypeDefinitions>
+    <SimpleType
+      name="Modelica.Blocks.Interfaces.RealInput">
+      <Real/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.Blocks.Interfaces.RealOutput">
+      <Real/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.Angle">
+      <Real
+        quantity="Angle"
+        unit="rad"
+        displayUnit="deg"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.AngularAcceleration">
+      <Real
+        quantity="AngularAcceleration"
+        unit="rad/s2"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.AngularVelocity">
+      <Real
+        quantity="AngularVelocity"
+        unit="rad/s"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.Force">
+      <Real
+        quantity="Force"
+        unit="N"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.Inertia">
+      <Real
+        quantity="MomentOfInertia"
+        unit="kg.m2"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.Power">
+      <Real
+        quantity="Power"
+        unit="W"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.Time">
+      <Real
+        quantity="Time"
+        unit="s"/>
+    </SimpleType>
+    <SimpleType
+      name="Modelica.SIunits.Torque">
+      <Real
+        quantity="Torque"
+        unit="N.m"/>
+    </SimpleType>
+  </TypeDefinitions>
+  <DefaultExperiment startTime="0.0"
+    stopTime="5.0"
+    tolerance="0.0001"/>
+  <ModelVariables>
+    <!-- Index for next variable = 1 -->
+    <ScalarVariable
+      name="wEngine"
+      valueReference="335544320"
+      description="Speed of engine"
+      causality="output">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 2 -->
+    <ScalarVariable
+      name="wLoad"
+      valueReference="335544321"
+      description="Speed of load"
+      causality="output">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 3 -->
+    <ScalarVariable
+      name="gearRatio"
+      valueReference="335544322"
+      description="gear ratio load/engine"
+      causality="output">
+      <Real
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 4 -->
+    <ScalarVariable
+      name="torqueStep.flange.phi"
+      valueReference="637534214"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 5 -->
+    <ScalarVariable
+      name="torqueStep.flange.tau"
+      valueReference="637534209"
+      description="Cut torque in the flange"
+      variability="discrete">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 6 -->
+    <ScalarVariable
+      name="torqueStep.phi_support"
+      valueReference="100663298"
+      description="Absolute angle of support flange"
+      variability="constant">
+      <Real
+        declaredType="Modelica.SIunits.Angle"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 7 -->
+    <ScalarVariable
+      name="torqueStep.phi"
+      valueReference="637534214"
+      description="Angle of flange with respect to support (= flange.phi - support.phi)">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 8 -->
+    <ScalarVariable
+      name="torqueStep.stepTorque"
+      valueReference="16777216"
+      description="Height of torque step (if negative, torque is acting as load)"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Torque"
+        start="20"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 9 -->
+    <ScalarVariable
+      name="torqueStep.offsetTorque"
+      valueReference="16777217"
+      description="Offset of torque"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Torque"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 10 -->
+    <ScalarVariable
+      name="torqueStep.startTime"
+      valueReference="16777218"
+      description="Torque = offset for time &lt; startTime"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Time"
+        start="0.5"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 11 -->
+    <ScalarVariable
+      name="torqueStep.tau"
+      valueReference="637534211"
+      description="Accelerating torque acting at flange (= -flange.tau)">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 12 -->
+    <ScalarVariable
+      name="engine.flange_a.phi"
+      valueReference="637534214"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 13 -->
+    <ScalarVariable
+      name="engine.flange_a.tau"
+      valueReference="637534211"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 14 -->
+    <ScalarVariable
+      name="engine.flange_b.phi"
+      valueReference="637534214"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 15 -->
+    <ScalarVariable
+      name="engine.flange_b.tau"
+      valueReference="637534212"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 16 -->
+    <ScalarVariable
+      name="engine.J"
+      valueReference="16777219"
+      description="Moment of inertia"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Inertia"
+        min="0.0"
+        start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 17 -->
+    <ScalarVariable
+      name="engine.phi"
+      valueReference="637534214"
+      description="Absolute rotation angle of component">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 18 -->
+    <ScalarVariable
+      name="der(engine.phi)"
+      valueReference="335544320"
+      description="der(Absolute rotation angle of component)">
+      <Real
+        unit="rad/s"
+        derivative="17"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 19 -->
+    <ScalarVariable
+      name="engine.w"
+      valueReference="369098759"
+      description="Absolute angular velocity of component (= der(phi))">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 20 -->
+    <ScalarVariable
+      name="der(engine.w)"
+      valueReference="637534216"
+      description="der(Absolute angular velocity of component (= der(phi)))">
+      <Real
+        unit="rad/s2"
+        derivative="19"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 21 -->
+    <ScalarVariable
+      name="engine.a"
+      valueReference="637534216"
+      description="Absolute angular acceleration of component (= der(w))">
+      <Real
+        declaredType="Modelica.SIunits.AngularAcceleration"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 22 -->
+    <ScalarVariable
+      name="idealPlanetary.ratio"
+      valueReference="16777220"
+      description="Number of ring_teeth/sun_teeth (e.g., ratio=100/50)"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        unit="1"
+        start="1.5"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 23 -->
+    <ScalarVariable
+      name="idealPlanetary.sun.phi"
+      valueReference="637534214"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 24 -->
+    <ScalarVariable
+      name="idealPlanetary.sun.tau"
+      valueReference="637534217"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 25 -->
+    <ScalarVariable
+      name="idealPlanetary.carrier.phi"
+      valueReference="637534223"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 26 -->
+    <ScalarVariable
+      name="idealPlanetary.carrier.tau"
+      valueReference="637534218"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 27 -->
+    <ScalarVariable
+      name="idealPlanetary.ring.phi"
+      valueReference="637534277"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 28 -->
+    <ScalarVariable
+      name="idealPlanetary.ring.tau"
+      valueReference="637534219"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 29 -->
+    <ScalarVariable
+      name="load.flange_a.phi"
+      valueReference="637534223"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 30 -->
+    <ScalarVariable
+      name="load.flange_a.tau"
+      valueReference="637534220"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 31 -->
+    <ScalarVariable
+      name="load.flange_b.phi"
+      valueReference="637534223"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 32 -->
+    <ScalarVariable
+      name="load.flange_b.tau"
+      valueReference="637534221"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 33 -->
+    <ScalarVariable
+      name="load.J"
+      valueReference="16777221"
+      description="Moment of inertia"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Inertia"
+        min="0.0"
+        start="10"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 34 -->
+    <ScalarVariable
+      name="load.phi"
+      valueReference="637534223"
+      description="Absolute rotation angle of component"
+      initial="exact">
+      <Real
+        declaredType="Modelica.SIunits.Angle"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 35 -->
+    <ScalarVariable
+      name="der(load.phi)"
+      valueReference="335544321"
+      description="der(Absolute rotation angle of component)">
+      <Real
+        unit="rad/s"
+        derivative="34"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 36 -->
+    <ScalarVariable
+      name="load.w"
+      valueReference="369098768"
+      description="Absolute angular velocity of component (= der(phi))"
+      initial="exact">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 37 -->
+    <ScalarVariable
+      name="der(load.w)"
+      valueReference="637534225"
+      description="der(Absolute angular velocity of component (= der(phi)))">
+      <Real
+        unit="rad/s2"
+        derivative="36"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 38 -->
+    <ScalarVariable
+      name="load.a"
+      valueReference="637534225"
+      description="Absolute angular acceleration of component (= der(w))">
+      <Real
+        declaredType="Modelica.SIunits.AngularAcceleration"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 39 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.flange.phi"
+      valueReference="637534223"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 40 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.flange.tau"
+      valueReference="637534227"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 41 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.phi_support"
+      valueReference="100663316"
+      description="Absolute angle of support flange"
+      variability="constant">
+      <Real
+        declaredType="Modelica.SIunits.Angle"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 42 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.phi"
+      valueReference="637534223"
+      description="Angle of flange with respect to support (= flange.phi - support.phi)">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 43 -->
+    <ScalarVariable
+      name="der(quadraticSpeedDependentTorque.phi)"
+      valueReference="335544321"
+      description="der(Angle of flange with respect to support (= flange.phi - support.phi))">
+      <Real
+        unit="rad/s"
+        derivative="42"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 44 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.tau_nominal"
+      valueReference="16777222"
+      description="Nominal torque (if negative, torque is acting as load)"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Torque"
+        start="-20"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 45 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.TorqueDirection"
+      valueReference="100663317"
+      description="Same direction of torque in both directions of rotation"
+      variability="constant">
+      <Boolean start="true"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 46 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.w_nominal"
+      valueReference="16777223"
+      description="Nominal speed"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"
+        displayUnit="rpm"
+        min="1E-015"
+        start="10.471975511966"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 47 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.w"
+      valueReference="335544321"
+      description="Angular velocity of flange with respect to support (= der(phi))">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 48 -->
+    <ScalarVariable
+      name="quadraticSpeedDependentTorque.tau"
+      valueReference="637534221"
+      description="Accelerating torque acting at flange (= -flange.tau)">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 49 -->
+    <ScalarVariable
+      name="clutch.phi_rel"
+      valueReference="637534230"
+      description="Relative rotation angle (= flange_b.phi - flange_a.phi)"
+      initial="exact">
+      <Real
+        declaredType="Modelica.SIunits.Angle"
+        nominal="0.0001"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 50 -->
+    <ScalarVariable
+      name="der(clutch.phi_rel)"
+      valueReference="369098775"
+      description="der(Relative rotation angle (= flange_b.phi - flange_a.phi))">
+      <Real
+        unit="rad/s"
+        derivative="49"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 51 -->
+    <ScalarVariable
+      name="clutch.w_rel"
+      valueReference="369098775"
+      description="Relative angular velocity (= der(phi_rel))"
+      initial="exact">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 52 -->
+    <ScalarVariable
+      name="der(clutch.w_rel)"
+      valueReference="637534232"
+      description="der(Relative angular velocity (= der(phi_rel)))">
+      <Real
+        unit="rad/s2"
+        derivative="51"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 53 -->
+    <ScalarVariable
+      name="clutch.a_rel"
+      valueReference="637534232"
+      description="Relative angular acceleration (= der(w_rel))">
+      <Real
+        declaredType="Modelica.SIunits.AngularAcceleration"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 54 -->
+    <ScalarVariable
+      name="clutch.tau"
+      valueReference="637534233"
+      description="Torque between flanges (= flange_b.tau)">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 55 -->
+    <ScalarVariable
+      name="clutch.flange_a.phi"
+      valueReference="637534214"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 56 -->
+    <ScalarVariable
+      name="clutch.flange_a.tau"
+      valueReference="637534234"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 57 -->
+    <ScalarVariable
+      name="clutch.flange_b.phi"
+      valueReference="637534277"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 58 -->
+    <ScalarVariable
+      name="clutch.flange_b.tau"
+      valueReference="637534233"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 59 -->
+    <ScalarVariable
+      name="clutch.phi_nominal"
+      valueReference="100663323"
+      description="Nominal value of phi_rel (used for scaling)"
+      variability="constant">
+      <Real
+        declaredType="Modelica.SIunits.Angle"
+        displayUnit="rad"
+        min="0.0"
+        start="0.0001"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 60 -->
+    <ScalarVariable
+      name="clutch.mue_pos[1, 1]"
+      valueReference="16777224"
+      description="[w,mue] positive sliding friction coefficient (w_rel&gt;=0)"
+      causality="parameter"
+      variability="fixed">
+      <Real start="0.0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 61 -->
+    <ScalarVariable
+      name="clutch.mue_pos[1, 2]"
+      valueReference="16777225"
+      description="[w,mue] positive sliding friction coefficient (w_rel&gt;=0)"
+      causality="parameter"
+      variability="fixed">
+      <Real start="0.5"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 62 -->
+    <ScalarVariable
+      name="clutch.peak"
+      valueReference="16777226"
+      description="peak*mue_pos[1,2] = maximum value of mue for w_rel==0"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        unit="1"
+        min="1.0"
+        start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 63 -->
+    <ScalarVariable
+      name="clutch.cgeo"
+      valueReference="16777227"
+      description="Geometry constant containing friction distribution assumption"
+      causality="parameter"
+      variability="tunable">
+      <Real min="0.0"
+        start="2"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 64 -->
+    <ScalarVariable
+      name="clutch.fn_max"
+      valueReference="16777228"
+      description="Maximum normal force"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Force"
+        min="0.0"
+        start="100"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 65 -->
+    <ScalarVariable
+      name="clutch.w_small"
+      valueReference="16777229"
+      description="Relative angular velocity near to zero if jumps due to a reinit(..) of the velocity can occur (set to low value only if such impulses can occur)"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"
+        start="10000000000.0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 66 -->
+    <ScalarVariable
+      name="clutch.w_relfric"
+      valueReference="369098775"
+      description="Relative angular velocity between frictional surfaces">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 67 -->
+    <ScalarVariable
+      name="clutch.a_relfric"
+      valueReference="637534232"
+      description="Relative angular acceleration between frictional surfaces">
+      <Real
+        declaredType="Modelica.SIunits.AngularAcceleration"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 68 -->
+    <ScalarVariable
+      name="clutch.tau0"
+      valueReference="637534237"
+      description="Friction torque for w=0 and forward sliding">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 69 -->
+    <ScalarVariable
+      name="clutch.tau0_max"
+      valueReference="637534238"
+      description="Maximum friction torque for w=0 and locked">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 70 -->
+    <ScalarVariable
+      name="clutch.free"
+      valueReference="637534239"
+      description="true, if frictional element is not active"
+      variability="discrete">
+      <Boolean/>
+    </ScalarVariable>
+    <!-- Index for next variable = 71 -->
+    <ScalarVariable
+      name="clutch.sa"
+      valueReference="637534240"
+      description="Path parameter of friction characteristic tau = f(a_relfric)">
+      <Real
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 72 -->
+    <ScalarVariable
+      name="clutch.startForward"
+      valueReference="637534241"
+      description="true, if w_rel=0 and start of forward sliding"
+      variability="discrete"
+      initial="exact">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 73 -->
+    <ScalarVariable
+      name="clutch.startBackward"
+      valueReference="637534242"
+      description="true, if w_rel=0 and start of backward sliding"
+      variability="discrete"
+      initial="exact">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 74 -->
+    <ScalarVariable
+      name="clutch.locked"
+      valueReference="637534243"
+      description="true, if w_rel=0 and not sliding"
+      variability="discrete"
+      initial="approx">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 75 -->
+    <ScalarVariable
+      name="clutch.Unknown"
+      valueReference="100663332"
+      description="Value of mode is not known"
+      variability="constant">
+      <Integer start="3"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 76 -->
+    <ScalarVariable
+      name="clutch.Free"
+      valueReference="100663333"
+      description="Element is not active"
+      variability="constant">
+      <Integer start="2"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 77 -->
+    <ScalarVariable
+      name="clutch.Forward"
+      valueReference="100663334"
+      description="w_rel &gt; 0 (forward sliding)"
+      variability="constant">
+      <Integer start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 78 -->
+    <ScalarVariable
+      name="clutch.Stuck"
+      valueReference="100663335"
+      description="w_rel = 0 (forward sliding, locked or backward sliding)"
+      variability="constant">
+      <Integer start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 79 -->
+    <ScalarVariable
+      name="clutch.Backward"
+      valueReference="100663336"
+      description="w_rel &lt; 0 (backward sliding)"
+      variability="constant">
+      <Integer start="-1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 80 -->
+    <ScalarVariable
+      name="clutch.mode"
+      valueReference="905969705"
+      variability="discrete"
+      initial="exact">
+      <Integer min="-1"
+        max="3"
+        start="3"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 81 -->
+    <ScalarVariable
+      name="clutch.lossPower"
+      valueReference="905969709"
+      description="Loss power leaving component via heatPort (&gt; 0, if heat is flowing out of component)">
+      <Real
+        declaredType="Modelica.SIunits.Power"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 82 -->
+    <ScalarVariable
+      name="clutch.mue0"
+      valueReference="16777225"
+      description="Friction coefficient for w=0 and forward sliding">
+      <Real/>
+    </ScalarVariable>
+    <!-- Index for next variable = 83 -->
+    <ScalarVariable
+      name="clutch.fn"
+      valueReference="637534254"
+      description="Normal force (fn=fn_max*f_normalized)">
+      <Real
+        declaredType="Modelica.SIunits.Force"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 84 -->
+    <ScalarVariable
+      name="clutch.f_normalized"
+      valueReference="637534255"
+      description="Normalized force signal 0..1 (normal force = fn_max*f_normalized; clutch is engaged if &gt; 0)">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealInput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 85 -->
+    <ScalarVariable
+      name="brake.flange_a.phi"
+      valueReference="637534277"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 86 -->
+    <ScalarVariable
+      name="brake.flange_a.tau"
+      valueReference="637534257"
+      description="Cut torque in the flange">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 87 -->
+    <ScalarVariable
+      name="brake.flange_b.phi"
+      valueReference="637534277"
+      description="Absolute rotation angle of flange">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 88 -->
+    <ScalarVariable
+      name="brake.flange_b.tau"
+      valueReference="100663346"
+      description="Cut torque in the flange"
+      variability="constant">
+      <Real
+        declaredType="Modelica.SIunits.Torque"
+        start="0.0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 89 -->
+    <ScalarVariable
+      name="brake.phi_support"
+      valueReference="100663347"
+      description="Absolute angle of support flange"
+      variability="constant">
+      <Real
+        declaredType="Modelica.SIunits.Angle"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 90 -->
+    <ScalarVariable
+      name="brake.mue_pos[1, 1]"
+      valueReference="16777230"
+      description="[w,mue] positive sliding friction coefficient (w_rel&gt;=0)"
+      causality="parameter"
+      variability="fixed">
+      <Real start="0.0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 91 -->
+    <ScalarVariable
+      name="brake.mue_pos[1, 2]"
+      valueReference="16777231"
+      description="[w,mue] positive sliding friction coefficient (w_rel&gt;=0)"
+      causality="parameter"
+      variability="fixed">
+      <Real start="0.5"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 92 -->
+    <ScalarVariable
+      name="brake.peak"
+      valueReference="16777232"
+      description="peak*mue_pos[1,2] = maximum value of mue for w_rel==0"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        unit="1"
+        min="1.0"
+        start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 93 -->
+    <ScalarVariable
+      name="brake.cgeo"
+      valueReference="16777233"
+      description="Geometry constant containing friction distribution assumption"
+      causality="parameter"
+      variability="tunable">
+      <Real min="0.0"
+        start="2"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 94 -->
+    <ScalarVariable
+      name="brake.fn_max"
+      valueReference="16777234"
+      description="Maximum normal force"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Force"
+        min="0.0"
+        start="100"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 95 -->
+    <ScalarVariable
+      name="brake.w_small"
+      valueReference="16777235"
+      description="Relative angular velocity near to zero if jumps due to a reinit(..) of the velocity can occur (set to low value only if such impulses can occur)"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"
+        start="10000000000.0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 96 -->
+    <ScalarVariable
+      name="brake.w_relfric"
+      valueReference="369098822"
+      description="Relative angular velocity between frictional surfaces">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 97 -->
+    <ScalarVariable
+      name="brake.a_relfric"
+      valueReference="637534279"
+      description="Relative angular acceleration between frictional surfaces">
+      <Real
+        declaredType="Modelica.SIunits.AngularAcceleration"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 98 -->
+    <ScalarVariable
+      name="brake.tau0"
+      valueReference="637534260"
+      description="Friction torque for w=0 and forward sliding">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 99 -->
+    <ScalarVariable
+      name="brake.tau0_max"
+      valueReference="637534261"
+      description="Maximum friction torque for w=0 and locked">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 100 -->
+    <ScalarVariable
+      name="brake.free"
+      valueReference="637534262"
+      description="true, if frictional element is not active"
+      variability="discrete">
+      <Boolean/>
+    </ScalarVariable>
+    <!-- Index for next variable = 101 -->
+    <ScalarVariable
+      name="brake.sa"
+      valueReference="637534263"
+      description="Path parameter of friction characteristic tau = f(a_relfric)">
+      <Real
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 102 -->
+    <ScalarVariable
+      name="brake.startForward"
+      valueReference="637534264"
+      description="true, if w_rel=0 and start of forward sliding"
+      variability="discrete"
+      initial="exact">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 103 -->
+    <ScalarVariable
+      name="brake.startBackward"
+      valueReference="637534265"
+      description="true, if w_rel=0 and start of backward sliding"
+      variability="discrete"
+      initial="exact">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 104 -->
+    <ScalarVariable
+      name="brake.locked"
+      valueReference="637534266"
+      description="true, if w_rel=0 and not sliding"
+      variability="discrete"
+      initial="approx">
+      <Boolean start="false"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 105 -->
+    <ScalarVariable
+      name="brake.Unknown"
+      valueReference="100663355"
+      description="Value of mode is not known"
+      variability="constant">
+      <Integer start="3"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 106 -->
+    <ScalarVariable
+      name="brake.Free"
+      valueReference="100663356"
+      description="Element is not active"
+      variability="constant">
+      <Integer start="2"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 107 -->
+    <ScalarVariable
+      name="brake.Forward"
+      valueReference="100663357"
+      description="w_rel &gt; 0 (forward sliding)"
+      variability="constant">
+      <Integer start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 108 -->
+    <ScalarVariable
+      name="brake.Stuck"
+      valueReference="100663358"
+      description="w_rel = 0 (forward sliding, locked or backward sliding)"
+      variability="constant">
+      <Integer start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 109 -->
+    <ScalarVariable
+      name="brake.Backward"
+      valueReference="100663359"
+      description="w_rel &lt; 0 (backward sliding)"
+      variability="constant">
+      <Integer start="-1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 110 -->
+    <ScalarVariable
+      name="brake.mode"
+      valueReference="905969728"
+      variability="discrete"
+      initial="exact">
+      <Integer min="-1"
+        max="3"
+        start="3"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 111 -->
+    <ScalarVariable
+      name="brake.lossPower"
+      valueReference="905969732"
+      description="Loss power leaving component via heatPort (&gt; 0, if heat is flowing out of component)">
+      <Real
+        declaredType="Modelica.SIunits.Power"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 112 -->
+    <ScalarVariable
+      name="brake.phi"
+      valueReference="637534277"
+      description="Angle between shaft flanges (flange_a, flange_b) and support">
+      <Real
+        declaredType="Modelica.SIunits.Angle"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 113 -->
+    <ScalarVariable
+      name="der(brake.phi)"
+      valueReference="369098822"
+      description="der(Angle between shaft flanges (flange_a, flange_b) and support)">
+      <Real
+        unit="rad/s"
+        derivative="112"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 114 -->
+    <ScalarVariable
+      name="brake.tau"
+      valueReference="637534257"
+      description="Brake friction torque">
+      <Real
+        declaredType="Modelica.SIunits.Torque"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 115 -->
+    <ScalarVariable
+      name="brake.w"
+      valueReference="369098822"
+      description="Absolute angular velocity of flange_a and flange_b">
+      <Real
+        declaredType="Modelica.SIunits.AngularVelocity"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 116 -->
+    <ScalarVariable
+      name="der(brake.w)"
+      valueReference="637534279"
+      description="der(Absolute angular velocity of flange_a and flange_b)">
+      <Real
+        unit="rad/s2"
+        derivative="115"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 117 -->
+    <ScalarVariable
+      name="brake.a"
+      valueReference="637534279"
+      description="Absolute angular acceleration of flange_a and flange_b">
+      <Real
+        declaredType="Modelica.SIunits.AngularAcceleration"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 118 -->
+    <ScalarVariable
+      name="brake.mue0"
+      valueReference="16777231"
+      description="Friction coefficient for w=0 and forward sliding">
+      <Real/>
+    </ScalarVariable>
+    <!-- Index for next variable = 119 -->
+    <ScalarVariable
+      name="brake.fn"
+      valueReference="637534280"
+      description="Normal force (=fn_max*f_normalized)">
+      <Real
+        declaredType="Modelica.SIunits.Force"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 120 -->
+    <ScalarVariable
+      name="brake.f_normalized"
+      valueReference="637534281"
+      description="Normalized force signal 0..1 (normal force = fn_max*f_normalized; brake is active if &gt; 0)">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealInput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 121 -->
+    <ScalarVariable
+      name="feedback.u1"
+      valueReference="16777236">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealInput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 122 -->
+    <ScalarVariable
+      name="feedback.u2"
+      valueReference="637534255">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealInput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 123 -->
+    <ScalarVariable
+      name="feedback.y"
+      valueReference="637534281">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealOutput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 124 -->
+    <ScalarVariable
+      name="const1.k"
+      valueReference="16777236"
+      description="Constant output value"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        unit="1"
+        start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 125 -->
+    <ScalarVariable
+      name="const1.y"
+      valueReference="16777236"
+      description="Connector of Real output signal">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealOutput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 126 -->
+    <ScalarVariable
+      name="ramp.height"
+      valueReference="16777237"
+      description="Height of ramps"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        unit="1"
+        start="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 127 -->
+    <ScalarVariable
+      name="ramp.duration"
+      valueReference="16777238"
+      description="Duration of ramp (= 0.0 gives a Step)"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Time"
+        min="0.0"
+        start="0.1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 128 -->
+    <ScalarVariable
+      name="ramp.offset"
+      valueReference="16777239"
+      description="Offset of output signal"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        unit="1"
+        start="0"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 129 -->
+    <ScalarVariable
+      name="ramp.startTime"
+      valueReference="16777240"
+      description="Output = offset for time &lt; startTime"
+      causality="parameter"
+      variability="tunable">
+      <Real
+        declaredType="Modelica.SIunits.Time"
+        start="2"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 130 -->
+    <ScalarVariable
+      name="ramp.y"
+      valueReference="637534255"
+      description="Connector of Real output signal">
+      <Real
+        declaredType="Modelica.Blocks.Interfaces.RealOutput"
+        unit="1"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 131 -->
+    <ScalarVariable
+      name="stateSelect.set1.x[1]"
+      valueReference="33554432">
+      <Real reinit="true"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 132 -->
+    <ScalarVariable
+      name="stateSelect.set1.x[2]"
+      valueReference="33554433">
+      <Real reinit="true"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 133 -->
+    <ScalarVariable
+      name="der(stateSelect.set1.x[1])"
+      valueReference="587202560">
+      <Real derivative="131"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 134 -->
+    <ScalarVariable
+      name="der(stateSelect.set1.x[2])"
+      valueReference="587202561">
+      <Real derivative="132"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 135 -->
+    <ScalarVariable
+      name="stateSelect.set2.x[1]"
+      valueReference="33554434">
+      <Real reinit="true"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 136 -->
+    <ScalarVariable
+      name="stateSelect.set2.x[2]"
+      valueReference="33554435">
+      <Real reinit="true"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 137 -->
+    <ScalarVariable
+      name="der(stateSelect.set2.x[1])"
+      valueReference="587202562">
+      <Real derivative="135"/>
+    </ScalarVariable>
+    <!-- Index for next variable = 138 -->
+    <ScalarVariable
+      name="der(stateSelect.set2.x[2])"
+      valueReference="587202563">
+      <Real derivative="136"/>
+    </ScalarVariable>
+  </ModelVariables>
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="1"
+        dependencies="135 136"
+        dependenciesKind="dependent dependent"/>
+      <Unknown index="2"
+        dependencies="135 136"
+        dependenciesKind="dependent dependent"/>
+      <Unknown index="3"
+        dependencies="135 136"
+        dependenciesKind="dependent dependent"/>
+    </Outputs>
+    <Derivatives>
+      <Unknown index="133"
+        dependencies="131 132 135 136"
+        dependenciesKind="dependent dependent dependent dependent"/>
+      <Unknown index="134"
+        dependencies="131 132 135 136"
+        dependenciesKind="dependent dependent dependent dependent"/>
+      <Unknown index="137"
+        dependencies="135 136"
+        dependenciesKind="dependent dependent"/>
+      <Unknown index="138"
+        dependencies="135 136"
+        dependenciesKind="dependent dependent"/>
+    </Derivatives>
+    <InitialUnknowns>
+      <Unknown index="1"
+        dependencies="22 36 51"
+        dependenciesKind="dependent dependent dependent"/>
+      <Unknown index="2"
+        dependencies="36"
+        dependenciesKind="dependent"/>
+      <Unknown index="3"
+        dependencies="22 36 51"
+        dependenciesKind="dependent dependent dependent"/>
+      <Unknown index="131"
+        dependencies="22 34 49"
+        dependenciesKind="dependent dependent dependent"/>
+      <Unknown index="132"
+        dependencies="22 34 49"
+        dependenciesKind="dependent dependent dependent"/>
+      <Unknown index="133"
+        dependencies="22 34 36 49 51"
+        dependenciesKind="dependent dependent dependent dependent dependent"/>
+      <Unknown index="134"
+        dependencies="22 34 36 49 51"
+        dependenciesKind="dependent dependent dependent dependent dependent"/>
+      <Unknown index="135"
+        dependencies="22 36 51"
+        dependenciesKind="dependent dependent dependent"/>
+      <Unknown index="136"
+        dependencies="22 36 51"
+        dependenciesKind="dependent dependent dependent"/>
+      <Unknown index="137"
+        dependencies="8 9 10 16 22 33 36 44 46 51 61 62 63 64 65 91 92 93 94 95 124 126 127 128 129"
+        dependenciesKind="dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent"/>
+      <Unknown index="138"
+        dependencies="8 9 10 16 22 33 36 44 46 51 61 62 63 64 65 91 92 93 94 95 124 126 127 128 129"
+        dependenciesKind="dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent dependent"/>
+    </InitialUnknowns>
+  </ModelStructure>
+</fmiModelDescription>
