@@ -17,90 +17,30 @@ set x64=
 set x64NAME=
 )
 
-echo -----------------------------------------------------------
-echo Running all FMUs 1.0 of the FmuSDK ...
-
-echo -----------------------------------------------------------
-call fmusim me10 fmu10\fmu\me\%x64%bouncingBall.fmu 4 0.01 0 c %1
-move /Y result.csv result_me10%x64NAME%_bouncingBall.csv
-
-echo -----------------------------------------------------------
-call fmusim cs10 fmu10\fmu\cs\%x64%bouncingBall.fmu 4 0.01 0 c %1
-move /Y result.csv result_cs10%x64NAME%_bouncingBall.csv
-
-echo -----------------------------------------------------------
-call fmusim me10 fmu10\fmu\me\%x64%vanDerPol.fmu 5 0.1 0 c %1
-move /Y result.csv result_me10%x64NAME%_vanDerPol.csv
-
-echo -----------------------------------------------------------
-call fmusim cs10 fmu10\fmu\cs\%x64%vanDerPol.fmu 5 0.1 0 c %1
-move /Y result.csv result_cs10%x64NAME%_vanDerPol.csv
-
-echo -----------------------------------------------------------
-call fmusim me10 fmu10\fmu\me\%x64%dq.fmu 1 0.1 0 c %1
-move /Y result.csv result_me10%x64NAME%_dq.csv
-
-echo -----------------------------------------------------------
-call fmusim cs10 fmu10\fmu\cs\%x64%dq.fmu 1 0.1 0 c %1
-move /Y result.csv result_cs10%x64NAME%_dq.csv
-
-echo -----------------------------------------------------------
-call fmusim me10 fmu10\fmu\me\%x64%inc.fmu 15 0.1 0 c %1
-move /Y result.csv result_me10%x64NAME%_inc.csv
-
-echo -----------------------------------------------------------
-call fmusim cs10 fmu10\fmu\cs\%x64%inc.fmu 15 0.5 0 c %1
-move /Y result.csv result_cs10%x64NAME%_inc.csv
-
-echo -----------------------------------------------------------
-call fmusim me10 fmu10\fmu\me\%x64%values.fmu 12 0.1 0 c %1
-move /Y result.csv result_me10%x64NAME%_values.csv
-
-echo -----------------------------------------------------------
-call fmusim cs10 fmu10\fmu\cs\%x64%values.fmu 12 0.1 0 c %1
-move /Y result.csv result_cs10%x64NAME%_values.csv
-
-echo -----------------------------------------------------------
 echo Running all FMUs 2.0 of the FmuSDK ...
 
 echo -----------------------------------------------------------
-call fmusim me20 fmu20\fmu\me\%x64%bouncingBall.fmu 4 0.01 0 c %1
-move /Y result.csv result_me20%x64NAME%_bouncingBall.csv
+call fmusim cs20 fmu20\fmu\cs\%x64%mass_spring_damper.fmu 4 0.01 1 c %1
+move /Y result.csv result_cs20%x64NAME%_mass_spring_damper.csv
 
 echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%bouncingBall.fmu 4 0.01 0 c %1
+call fmusim cs20 fmu20\fmu\cs\%x64%bouncingBall.fmu 4 0.01 1 c %1
 move /Y result.csv result_cs20%x64NAME%_bouncingBall.csv
 
 echo -----------------------------------------------------------
-call fmusim me20 fmu20\fmu\me\%x64%vanDerPol.fmu 5 0.1 0 c %1
-move /Y result.csv result_me20%x64NAME%_vanDerPol.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%vanDerPol.fmu 5 0.1 0 c %1
+call fmusim cs20 fmu20\fmu\cs\%x64%vanDerPol.fmu 5 0.1 1 c %1
 move /Y result.csv result_cs20%x64NAME%_vanDerPol.csv
 
 echo -----------------------------------------------------------
-call fmusim me20 fmu20\fmu\me\%x64%dq.fmu 1 0.1 0 c %1
-move /Y result.csv result_me20%x64NAME%_dq.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%dq.fmu 1 0.1 0 c %1
+call fmusim cs20 fmu20\fmu\cs\%x64%dq.fmu 1 0.1 1 c %1
 move /Y result.csv result_cs20%x64NAME%_dq.csv
 
 echo -----------------------------------------------------------
-call fmusim me20 fmu20\fmu\me\%x64%inc.fmu 15 0.1 0 c %1
-move /Y result.csv result_me20%x64NAME%_inc.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%inc.fmu 15 0.5 0 c %1
+call fmusim cs20 fmu20\fmu\cs\%x64%inc.fmu 15 0.5 1 c %1
 move /Y result.csv result_cs20%x64NAME%_inc.csv
 
 echo -----------------------------------------------------------
-call fmusim me20 fmu20\fmu\me\%x64%values.fmu 12 0.1 0 c %1
-move /Y result.csv result_me20%x64NAME%_values.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%values.fmu 12 0.1 0 c %1
+call fmusim cs20 fmu20\fmu\cs\%x64%values.fmu 12 0.1 1 c %1
 move /Y result.csv result_cs20%x64NAME%_values.csv
 
 endlocal

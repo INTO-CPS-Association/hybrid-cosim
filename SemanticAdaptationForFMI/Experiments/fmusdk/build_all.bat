@@ -9,12 +9,6 @@ rem Copyright QTronic GmbH. All rights reserved.
 rem ------------------------------------------------------------
 
 echo -----------------------------------------------------------
-echo Making the simulators and models for FMI 1.0 of the FmuSDK ...
-pushd fmu10\src
-call build_all %1
-popd
-
-echo -----------------------------------------------------------
 echo Making the simulators and models for FMI 2.0 of the FmuSDK ...
 pushd fmu20\src
 call build_all %1

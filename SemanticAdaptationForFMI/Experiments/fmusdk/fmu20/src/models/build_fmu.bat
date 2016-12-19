@@ -22,13 +22,13 @@ if "%3"=="-win64" (set x64=x64\) else set x64=
 
 rem setup the compiler
 if defined x64 (
-if defined VS110COMNTOOLS (call "%VS110COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64) else ^
+if defined VS140COMNTOOLS (call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64) else ^
 if defined VS100COMNTOOLS (call "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64) else ^
 if defined VS90COMNTOOLS (call "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64) else ^
 if defined VS80COMNTOOLS (call "%VS80COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64) else ^
 goto noCompiler
 ) else (
-if defined VS110COMNTOOLS (call "%VS110COMNTOOLS%\vsvars32.bat") else ^
+if defined VS140COMNTOOLS (call "%VS140COMNTOOLS%\vsvars32.bat") else ^
 if defined VS100COMNTOOLS (call "%VS100COMNTOOLS%\vsvars32.bat") else ^
 if defined VS90COMNTOOLS (call "%VS90COMNTOOLS%\vsvars32.bat") else ^
 if defined VS80COMNTOOLS (call "%VS80COMNTOOLS%\vsvars32.bat") else ^
