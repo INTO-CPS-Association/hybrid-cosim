@@ -8,7 +8,7 @@
 
 // define model size
 // This FMU, since it is a wrapper, does not have any real state even though its model description says so.
-#define NUMBER_OF_REALS 0
+#define NUMBER_OF_REALS 7
 #define NUMBER_OF_INTEGERS 0
 #define NUMBER_OF_BOOLEANS 0
 #define NUMBER_OF_STRINGS 0
@@ -43,6 +43,8 @@
 
 // This is used by the loadFMU function, in the sim_support library, to load the FMU dll.
 FMU fmu; // the fmu to simulate
+FMU* childFMU; // pointer to the above FMU
+fmi2Component childFMUInstance;                        // instance of the above fmu
 
 // called by fmi2Instantiate
 // Set values for all variables that define a start value
@@ -59,14 +61,11 @@ void instantiate(ModelInstance *comp) {
 	ModelDescription* md; 					// handle to the parsed XML file
 	const char *guid;                       // global unique id of the fmu
 	const char *instanceName;               // instance name
-    fmi2Component massSpringDamperInstance;                        // instance of the fmu
-	FMU* fmuP = &fmu;
+    childFMU = &fmu;
 	fmi2Status fmi2Flag;                    // return code of the fmu functions
     char *fmuResourceLocation = getTempResourcesLocation(); // path to the fmu resources as URL, "file://C:\QTronic\sales"
     fmi2Boolean visible = fmi2False;        // no simulator user interface
 	fmi2Boolean loggingOn = fmi2True;  // TODO : this should be a parameter
-	// TODO: Reuse given callback function from the current FMU.
-	fmi2CallbackFunctions callbacks = {fmuLogger, calloc, free, NULL, fmuP};  // called by the model during simulation
 	
 	// TODO: Reuse categories given by instantiation
 	char **categories = NULL;
@@ -75,23 +74,22 @@ void instantiate(ModelInstance *comp) {
 	loadFMU(fmuFileName);
 	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Mass Spring Damper FMU Loaded")
 	
-	
-	md = fmuP->modelDescription;
+	md = childFMU->modelDescription;
     guid = getAttributeValue((Element *)md, att_guid);
     instanceName = getAttributeValue((Element *)getCoSimulation(md), att_modelIdentifier);
-    massSpringDamperInstance = fmuP->instantiate(instanceName, fmi2CoSimulation, guid, fmuResourceLocation,
-                    &callbacks, visible, loggingOn);
+    childFMUInstance = childFMU->instantiate(instanceName, fmi2CoSimulation, guid, fmuResourceLocation,
+                    comp->functions, visible, comp->loggingOn);
     free(fmuResourceLocation);
 	
-    if (!massSpringDamperInstance){
+    if (!childFMUInstance){
 		FILTERED_LOG(comp, fmi2Error, LOG_ERROR, "Could not instantiate mass spring damper model")
 		return;
-	} 
+	}
 	
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Mass Spring Damper FMU Instantiated")
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Mass Spring Damper FMU Instantiated: fmu %u ; instance %u", childFMU, childFMUInstance)
 	
     if (nCategories > 0) {
-        fmi2Flag = fmuP->setDebugLogging(massSpringDamperInstance, fmi2True, nCategories, categories);
+        fmi2Flag = childFMU->setDebugLogging(childFMUInstance, fmi2True, nCategories, categories);
         if (fmi2Flag > fmi2Warning) {
 			FILTERED_LOG(comp, fmi2Error, LOG_ERROR, "Could not initialize mass spring damper model - failed FMI set debug logging")
 			return;
@@ -106,22 +104,41 @@ fmi2Status setupExperiment(ModelInstance *comp, fmi2Boolean toleranceDefined, fm
 	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">setupExperiment: toleranceDefined=%d tolerance=%g",
         toleranceDefined, tolerance)
 	
-	return fmi2OK;
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Setting up experiment in child: fmu %u ; instance %u", childFMU, childFMUInstance)
+	
+	fmi2Status fmi2Flag = childFMU->setupExperiment(childFMUInstance, toleranceDefined, tolerance, startTime, stopTimeDefined, stopTime);
+    
+	FILTERED_LOG(comp, fmi2Flag, LOG_FMI_CALL, "<setupExperiment")
+	
+	return fmi2Flag;
 }
 
 fmi2Status enterInitializationMode(ModelInstance *comp){
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "enterInitializationMode")
-	return fmi2OK;
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">enterInitializationMode")
+	
+	fmi2Status fmi2Flag = childFMU->enterInitializationMode(childFMUInstance);
+    
+	FILTERED_LOG(comp, fmi2Flag, LOG_FMI_CALL, "<enterInitializationMode")
+	return fmi2Flag;
 }
 
 fmi2Status exitInitializationMode(ModelInstance *comp){
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "exitInitializationMode")
-	return fmi2OK;
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">exitInitializationMode")
+	
+	fmi2Status fmi2Flag = childFMU->exitInitializationMode(childFMUInstance);
+    
+	FILTERED_LOG(comp, fmi2Flag, LOG_FMI_CALL, "<exitInitializationMode")
+	return fmi2Flag;
 }
 
 fmi2Status terminate(ModelInstance *comp){
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "terminate")
-	return fmi2OK;
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">terminate")
+	
+	fmi2Status fmi2Flag = childFMU->terminate(childFMUInstance);
+    
+	FILTERED_LOG(comp, fmi2Flag, LOG_FMI_CALL, "<terminate")
+	
+	return fmi2Flag;
 }
 
 fmi2Status reset(ModelInstance *comp){
@@ -130,7 +147,12 @@ fmi2Status reset(ModelInstance *comp){
 }
 
 fmi2Status freeInstance(ModelInstance *comp){
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "freeInstance")
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">freeInstance")
+	
+	childFMU->freeInstance(childFMUInstance);
+    
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "<freeInstance")
+	
 	return fmi2OK;
 }
 
@@ -143,7 +165,18 @@ fmi2Status doStep(ModelInstance *comp, fmi2Real currentCommunicationPoint,
         "noSetFMUStatePriorToCurrentPoint = fmi2%s",
         currentCommunicationPoint, communicationStepSize, noSetFMUStatePriorToCurrentPoint ? "True" : "False")
 	
-    comp->time = currentCommunicationPoint + communicationStepSize;
+	int n_steps = 10;
+	double h = communicationStepSize / n_steps;
+    int k;
+	fmi2Status fmi2Flag;
+    
+    comp->time = currentCommunicationPoint;
+	
+	for (k = 0; k < n_steps; k++){
+		fmi2Flag = childFMU->doStep(childFMUInstance, comp->time, h, fmi2True);
+		FILTERED_LOG(comp, fmi2Flag, LOG_FMI_CALL, "doStep of child completed to time %g", comp->time)
+		comp->time += h;
+	}
 	
 	return fmi2OK;
 }
@@ -157,8 +190,14 @@ void calculateValues(ModelInstance *comp) {
 
 // called by fmi2GetReal, fmi2GetContinuousStates and fmi2GetDerivatives
 fmi2Real getReal(ModelInstance* comp, fmi2ValueReference vr){
-	// does nothing for now.
-	return 0.0f;
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">getReal")
+	
+	// passing the address is a cheap way of conforming to the vector.
+	fmi2Real val;
+	fmi2Status fmi2flag = childFMU->getReal(childFMUInstance, &vr, 1, &val);
+    
+	FILTERED_LOG(comp, fmi2flag, LOG_FMI_CALL, "<getReal = %g", val)
+	return val;
 }
 
 // used to set the next time event, if any.

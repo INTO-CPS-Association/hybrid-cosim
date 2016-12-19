@@ -157,6 +157,9 @@ typedef struct {
     fmi2EventInfo eventInfo;
     fmi2Boolean isDirtyValues;
     fmi2Boolean isNewEventIteration;
+	
+	// Stores generic state to be used by includers
+	void * genericState;
 } ModelInstance;
 
 // ---------------------------------------------------------------------------

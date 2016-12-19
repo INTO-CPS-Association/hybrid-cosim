@@ -63,7 +63,6 @@ void instantiate(ModelInstance *comp) {
 	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "instantiate")
 }
 
-
 fmi2Status setupExperiment(ModelInstance *comp, fmi2Boolean toleranceDefined, fmi2Real tolerance,
                             fmi2Real startTime, fmi2Boolean stopTimeDefined, fmi2Real stopTime){
 	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "setupExperiment: toleranceDefined=%d tolerance=%g",

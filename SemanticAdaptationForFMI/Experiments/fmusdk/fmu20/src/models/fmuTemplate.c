@@ -145,7 +145,7 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
             sizeof(fmi2Boolean));
         comp->instanceName = (char *)functions->allocateMemory(1 + strlen(instanceName), sizeof(char));
         comp->GUID = (char *)functions->allocateMemory(1 + strlen(fmuGUID), sizeof(char));
-
+		
         // set all categories to on or off. fmi2SetDebugLogging should be called to choose specific categories.
         for (i = 0; i < NUMBER_OF_CATEGORIES; i++) {
             comp->logCategories[i] = loggingOn;
@@ -185,18 +185,21 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 
 fmi2Status fmi2SetupExperiment(fmi2Component c, fmi2Boolean toleranceDefined, fmi2Real tolerance,
                             fmi2Real startTime, fmi2Boolean stopTimeDefined, fmi2Real stopTime) {
-
     // ignore arguments: stopTimeDefined, stopTime
     ModelInstance *comp = (ModelInstance *)c;
     if (invalidState(comp, "fmi2SetupExperiment", MASK_fmi2SetupExperiment))
         return fmi2Error;
 	
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">fmi2SetupExperiment: toleranceDefined=%d tolerance=%g",
+        toleranceDefined, tolerance)
+	
 	fmi2Status status = setupExperiment(comp, toleranceDefined, tolerance, startTime, stopTimeDefined, stopTime); // to be implemented by includer.
 	
-    FILTERED_LOG(comp, status, LOG_FMI_CALL, "fmi2SetupExperiment: toleranceDefined=%d tolerance=%g",
-        toleranceDefined, tolerance)
-
     comp->time = startTime;
+	
+	FILTERED_LOG(comp, status, LOG_FMI_CALL, "<fmi2SetupExperiment",
+        toleranceDefined, tolerance)
+	
     return status;
 }
 
