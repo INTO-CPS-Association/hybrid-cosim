@@ -315,19 +315,26 @@ fmi2Status fmi2SetDebugLogging(fmi2Component c, fmi2Boolean loggingOn, size_t nC
         return fmi2Error;
     comp->loggingOn = loggingOn;
     FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "fmi2SetDebugLogging")
-
+	
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Resetting all %u categories", nCategories)
     // reset all categories
     for (j = 0; j < NUMBER_OF_CATEGORIES; j++) {
         comp->logCategories[j] = fmi2False;
     }
-
+	
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Categories reset")
+    
     if (nCategories == 0) {
         // no category specified, set all categories to have loggingOn value
+		FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "No category specified, so all of the become active.")
+		
         for (j = 0; j < NUMBER_OF_CATEGORIES; j++) {
             comp->logCategories[j] = loggingOn;
         }
     } else {
         // set specific categories on
+		FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Categories specified. Activating them.")
+		
         for (i = 0; i < nCategories; i++) {
             fmi2Boolean categoryFound = fmi2False;
             for (j = 0; j < NUMBER_OF_CATEGORIES; j++) {

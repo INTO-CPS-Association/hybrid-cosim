@@ -11,7 +11,7 @@ echo -----------------------------------------------------------
 echo Making the FMUs of the FmuSDK ...
 pushd models
 
-call build_fmu cs mass_spring_damper_hierarchical %1
+call build_hierarchical_fmu cs mass_spring_damper_hierarchical %1
 
 popd
 

@@ -15,6 +15,13 @@
 #define NUMBER_OF_STATES 0
 #define NUMBER_OF_EVENT_INDICATORS 0
 
+// These libraries are needed to load FMUs
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "fmi2.h"
+#include "sim_support.h"
+
 // include fmu header files, typedefs and macros
 #include "fmuTemplate.h"
 
@@ -34,6 +41,9 @@
 // define state vector as vector of value references
 #define STATES { }
 
+// This is used by the loadFMU function, in the sim_support library, to load the FMU dll.
+FMU fmu; // the fmu to simulate
+
 // called by fmi2Instantiate
 // Set values for all variables that define a start value
 void setStartValues(ModelInstance *comp) {
@@ -43,14 +53,59 @@ void setStartValues(ModelInstance *comp) {
 // called by fmi2Instantiate
 // In the case of hierarchical co-simulation, this will instantiate the (compiled) mass-spring-damper FMU.
 void instantiate(ModelInstance *comp) {
-    // does nothing for now.
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "instantiate")
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">instantiate")
+	
+	const char* fmuFileName = "fmu20\\fmu\\cs\\mass_spring_damper.fmu";
+	ModelDescription* md; 					// handle to the parsed XML file
+	const char *guid;                       // global unique id of the fmu
+	const char *instanceName;               // instance name
+    fmi2Component massSpringDamperInstance;                        // instance of the fmu
+	FMU* fmuP = &fmu;
+	fmi2Status fmi2Flag;                    // return code of the fmu functions
+    char *fmuResourceLocation = getTempResourcesLocation(); // path to the fmu resources as URL, "file://C:\QTronic\sales"
+    fmi2Boolean visible = fmi2False;        // no simulator user interface
+	fmi2Boolean loggingOn = fmi2True;  // TODO : this should be a parameter
+	// TODO: Reuse given callback function from the current FMU.
+	fmi2CallbackFunctions callbacks = {fmuLogger, calloc, free, NULL, fmuP};  // called by the model during simulation
+	
+	// TODO: Reuse categories given by instantiation
+	char **categories = NULL;
+	int nCategories = 0;
+	
+	loadFMU(fmuFileName);
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Mass Spring Damper FMU Loaded")
+	
+	
+	md = fmuP->modelDescription;
+    guid = getAttributeValue((Element *)md, att_guid);
+    instanceName = getAttributeValue((Element *)getCoSimulation(md), att_modelIdentifier);
+    massSpringDamperInstance = fmuP->instantiate(instanceName, fmi2CoSimulation, guid, fmuResourceLocation,
+                    &callbacks, visible, loggingOn);
+    free(fmuResourceLocation);
+	
+    if (!massSpringDamperInstance){
+		FILTERED_LOG(comp, fmi2Error, LOG_ERROR, "Could not instantiate mass spring damper model")
+		return;
+	} 
+	
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "Mass Spring Damper FMU Instantiated")
+	
+    if (nCategories > 0) {
+        fmi2Flag = fmuP->setDebugLogging(massSpringDamperInstance, fmi2True, nCategories, categories);
+        if (fmi2Flag > fmi2Warning) {
+			FILTERED_LOG(comp, fmi2Error, LOG_ERROR, "Could not initialize mass spring damper model - failed FMI set debug logging")
+			return;
+        }
+    }
+	
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "<instantiate")
 }
 
 fmi2Status setupExperiment(ModelInstance *comp, fmi2Boolean toleranceDefined, fmi2Real tolerance,
                             fmi2Real startTime, fmi2Boolean stopTimeDefined, fmi2Real stopTime){
-	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, "setupExperiment: toleranceDefined=%d tolerance=%g",
+	FILTERED_LOG(comp, fmi2OK, LOG_FMI_CALL, ">setupExperiment: toleranceDefined=%d tolerance=%g",
         toleranceDefined, tolerance)
+	
 	return fmi2OK;
 }
 

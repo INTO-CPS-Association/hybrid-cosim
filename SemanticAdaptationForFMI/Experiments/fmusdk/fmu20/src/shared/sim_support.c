@@ -25,7 +25,6 @@
 
 extern FMU fmu;
 
-
 int unzip(const char *zipPath, const char *outPath) {
     int code;
     char cwd[BUFSIZE];

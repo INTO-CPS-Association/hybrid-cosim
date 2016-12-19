@@ -41,9 +41,9 @@ pushd temp
 if exist *.dll del /Q *.dll
 
 if %1==cs (set DEF=/DFMI_COSIMULATION) else set DEF=
-set SRC=..\%2\%2.c
-set INC=/I ..\. /I ..\..\shared\include /I ..\..\shared 
-cl /LD /nologo %DEF% %SRC% %INC% /link
+set SRC=..\%2\%2.c ..\..\shared\sim_support.c ..\..\shared\xmlVersionParser.c ..\..\shared\parser\XmlParser.cpp ..\..\shared\parser\XmlElement.cpp ..\..\shared\parser\XmlParserCApi.cpp
+set INC=/I ..\. /I ..\..\shared\include /I ..\..\shared /I ..\..\shared\parser
+cl /LD /EHsc /nologo /DSTANDALONE_XML_PARSER /DLIBXML_STATIC %DEF% %SRC% %INC% /link /LIBPATH:..\..\shared\parser /NODEFAULTLIB:libcmtd.lib
 if not exist %2.dll goto compileError
 
 rem create FMU dir structure with root 'fmu'

@@ -41,7 +41,8 @@ set OPTIONS=/DFMI_COSIMULATION /nologo /EHsc /DSTANDALONE_XML_PARSER /DLIBXML_ST
 
 rem create fmu20sim_cs.exe in co_simulation dir
 pushd co_simulation
-cl %SRC% %INC% %OPTIONS% /Fefmu20sim_cs.exe /link /LIBPATH:..\shared\parser\%x64%
+cl %SRC% %INC% %OPTIONS% /Fefmu20sim_cs.exe /link /LIBPATH:..\shared\parser\%x64% /NODEFAULTLIB:libcmtd.lib
+
 del *.obj
 popd
 if not exist co_simulation\fmu20sim_cs.exe goto compileError
