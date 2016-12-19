@@ -18,6 +18,7 @@ extern "C" {
 
 #pragma comment(lib, "libxml2.lib")
 #pragma comment(lib, "wsock32.lib")
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 
 char *extractVersion(const char *xmlDescriptionPath);
 
