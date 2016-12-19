@@ -159,6 +159,21 @@ typedef struct {
     fmi2Boolean isNewEventIteration;
 } ModelInstance;
 
+// ---------------------------------------------------------------------------
+// Logger utilities
+// ---------------------------------------------------------------------------
+
+static fmi2String logCategoriesNames[] = {"logAll", "logError", "logFmiCall", "logEvent"};
+
+fmi2Boolean isCategoryLogged(ModelInstance *comp, int categoryIndex);
+
+// macro to be used to log messages. The macro check if current 
+// log category is valid and, if true, call the logger provided by simulator.
+#define FILTERED_LOG(instance, status, categoryIndex, message, ...) if (isCategoryLogged(instance, categoryIndex)) \
+        instance->functions->logger(instance->functions->componentEnvironment, instance->instanceName, status, \
+        logCategoriesNames[categoryIndex], message, ##__VA_ARGS__);
+
+
 #ifdef __cplusplus
 } // closing brace for extern "C"
 #endif

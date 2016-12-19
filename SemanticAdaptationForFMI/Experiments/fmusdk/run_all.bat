@@ -9,41 +9,12 @@ rem Copyright QTronic GmbH. All rights reserved.
 rem ------------------------------------------------------------
 
 setlocal
-if "%1"=="-win64" (
-set x64=x64\
-set x64NAME=x64
-) else (
-set x64=
-set x64NAME=
-)
 
 echo Running all FMUs 2.0 of the FmuSDK ...
 
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%mass_spring_damper.fmu 4 0.01 1 c %1
-move /Y result.csv result_cs20%x64NAME%_mass_spring_damper.csv
+call run_mass_spring_damper %1
 
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%bouncingBall.fmu 4 0.01 1 c %1
-move /Y result.csv result_cs20%x64NAME%_bouncingBall.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%vanDerPol.fmu 5 0.1 1 c %1
-move /Y result.csv result_cs20%x64NAME%_vanDerPol.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%dq.fmu 1 0.1 1 c %1
-move /Y result.csv result_cs20%x64NAME%_dq.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%inc.fmu 15 0.5 1 c %1
-move /Y result.csv result_cs20%x64NAME%_inc.csv
-
-echo -----------------------------------------------------------
-call fmusim cs20 fmu20\fmu\cs\%x64%values.fmu 12 0.1 1 c %1
-move /Y result.csv result_cs20%x64NAME%_values.csv
+call run_mass_spring_damper_hierarchical %1
 
 endlocal
 
-rem keep window visible for user
-pause

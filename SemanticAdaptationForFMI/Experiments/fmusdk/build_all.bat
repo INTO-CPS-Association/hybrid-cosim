@@ -14,5 +14,3 @@ pushd fmu20\src
 call build_all %1
 popd
 
-rem keep window visible for user
-pause

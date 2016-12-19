@@ -1,0 +1,17 @@
+<html>
+<head>
+<title>Documentation for mass_spring_damper.fmu</title>
+<style type="text/css">
+  html { font-family: Verdana, Arial, Helvetica, sans-serif; }
+  h1   { color: #000066; }
+</style>
+</head>
+<body>
+<h1>mass_spring_damper_hierarchical.fmu</h1>
+This FMU implements a wrapper of the mass_spring_damper.fmu, hereby denoted as internal FMU.
+The wrapper runs the internal FMU 10 times for each requested time step.
+The input comming into the wrapper is kept the same to the internal FMU.
+The last output of the internal fmu is the one that is sent to the output of the wrapper.
+</body>
+</html>
+
