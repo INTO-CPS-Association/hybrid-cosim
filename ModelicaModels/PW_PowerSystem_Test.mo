@@ -1,12 +1,17 @@
 model PW_PowerSystem_Test
-  Modelica.Blocks.Sources.Step step1(startTime = 1)  annotation(Placement(visible = true, transformation(origin = {-66, 18}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Sources.Constant const(k = 0)  annotation(Placement(visible = true, transformation(origin = {-66, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  PW_PowerSystem pW_PowerSystem1 annotation(Placement(visible = true, transformation(origin = {-10, -10}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
-  Modelica.Blocks.Math.Gain window_friction(k = -100)  annotation(Placement(visible = true, transformation(origin = {-12, -40}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
+  PW_PowerSystem power annotation(Placement(visible = true, transformation(origin = {-20, 6}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  PW_Window window annotation(Placement(visible = true, transformation(origin = {10, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Obstacle obstacle annotation(Placement(visible = true, transformation(origin = {10, -28}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
+  Modelica.Blocks.Math.Add add1 annotation(Placement(visible = true, transformation(origin = {-20, -22}, extent = {{10, -10}, {-10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Pulse up(nperiod = 1, period = 3.5, startTime = 0.0, width = 100)  annotation(Placement(visible = true, transformation(origin = {-66, 24}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+  Modelica.Blocks.Sources.Pulse down(nperiod = 1, period = 3, startTime = 3.55, width = 100) annotation(Placement(visible = true, transformation(origin = {-66, -14}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 equation
-  connect(window_friction.y, pW_PowerSystem1.input_torque) annotation(Line(points = {{-24, -40}, {-34, -40}, {-34, -16}, {-16, -16}, {-16, -16}}, color = {0, 0, 127}));
-  connect(pW_PowerSystem1.speed, window_friction.u) annotation(Line(points = {{-2, -14}, {16, -14}, {16, -40}, {0, -40}, {0, -40}, {0, -40}}, color = {0, 0, 127}));
-  connect(const.y, pW_PowerSystem1.down_input) annotation(Line(points = {{-54, -14}, {-30, -14}, {-30, -10}, {-16, -10}, {-16, -10}}, color = {0, 0, 127}));
-  connect(step1.y, pW_PowerSystem1.up_input) annotation(Line(points = {{-54, 18}, {-24, 18}, {-24, -4}, {-16, -4}, {-16, -4}}, color = {0, 0, 127}));
-  annotation(uses(Modelica(version = "3.2.1")), experiment(StartTime = 0, StopTime = 8, Tolerance = 0.0001, Interval = 0.004));
+  connect(down.y, power.down_input) annotation(Line(points = {{-54, -14}, {-42, -14}, {-42, 6}, {-26, 6}, {-26, 6}}, color = {0, 0, 127}));
+  connect(up.y, power.up_input) annotation(Line(points = {{-54, 24}, {-38, 24}, {-38, 12}, {-26, 12}, {-26, 12}}, color = {0, 0, 127}));
+  connect(obstacle.object_reaction, add1.u2) annotation(Line(points = {{-1, -28}, {-8, -28}}, color = {0, 0, 127}));
+  connect(window.window_height_out, obstacle.in_height) annotation(Line(points = {{21, 5}, {34, 5}, {34, -28}, {18, -28}}, color = {0, 0, 127}));
+  connect(window.window_torque_out, add1.u1) annotation(Line(points = {{21, -5}, {28, -5}, {28, -16}, {-8, -16}}, color = {0, 0, 127}));
+  connect(power.speed, window.speed_motor) annotation(Line(points = {{-12, 0}, {2, 0}}, color = {0, 0, 127}));
+  connect(add1.y, power.input_torque) annotation(Line(points = {{-32, -22}, {-38, -22}, {-38, 0}, {-26, 0}, {-26, 0}}, color = {0, 0, 127}));
+  annotation(uses(Modelica(version = "3.2.1")), experiment(StartTime = 0, StopTime = 5, Tolerance = 0.0001, Interval = 0.0025));
 end PW_PowerSystem_Test;
