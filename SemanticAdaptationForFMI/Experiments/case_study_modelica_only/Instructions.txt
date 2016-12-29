@@ -1,0 +1,18 @@
+Unpack FMILibrary-2.0.2-win32 to some folder, preferably C:\FMILibrary-2.0.2-win32
+
+Set an environment variable called FMIL_HOME with the value C:\FMILibrary-2.0.2-win32
+
+Read the instructions of PyFMI and make sure you have the dependencies satisfied.
+https://pypi.python.org/pypi/PyFMI
+
+Make sure you have some visual studio compiler installed on your machine. I had to install this one:
+https://www.microsoft.com/en-us/download/details.aspx?id=44266
+
+Upgrade your setuptools python package by running
+pip install setuptools -U
+
+Reboot (just to be safe)
+
+Install PyFMI by running
+pip install PyFMI.
+
