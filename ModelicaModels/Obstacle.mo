@@ -16,5 +16,5 @@ equation
   connect(add1.y, greaterEqualThreshold1.u) annotation(Line(points = {{-38, 40}, {-36, 40}, {-36, -8}, {-30, -8}}, color = {0, 0, 127}));
   connect(in_height, add1.u2) annotation(Line(points = {{-100, 34}, {-62, 34}}, color = {0, 0, 127}));
   connect(realExpression1.y, add1.u1) annotation(Line(points = {{-74, 70}, {-68, 70}, {-68, 46}, {-62, 46}, {-62, 46}}, color = {0, 0, 127}));
-  annotation(uses(Modelica(version = "3.2.1")));
+  annotation(uses(Modelica(version = "3.2.2")));
 end Obstacle;

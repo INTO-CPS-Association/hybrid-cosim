@@ -38,5 +38,5 @@ equation
   connect(motor.pin_en, voltage_ground.p) annotation(Line(points = {{-18, -34}, {-60, -34}}, color = {0, 0, 255}));
   connect(up_voltage.n, up_ground.p) annotation(Line(points = {{-62, 38}, {-62, 24}, {-80, 24}}, color = {0, 0, 255}));
   connect(dc_motor_power.n, voltage_ground.p) annotation(Line(points = {{-48, -18}, {-48, -18}, {-48, -34}, {-60, -34}, {-60, -34}}, color = {0, 0, 255}));
-  annotation(Icon(coordinateSystem(extent = {{-100, -100}, {100, 100}}, preserveAspectRatio = true, initialScale = 0.1, grid = {2, 2})), Diagram(coordinateSystem(extent = {{-100, -100}, {100, 100}}, preserveAspectRatio = true, initialScale = 0.1, grid = {2, 2})), experiment(StartTime = 0, StopTime = 8, Tolerance = 0.0001, Interval = 0.004), uses(Modelica(version = "3.2.1")));
+  annotation(Icon(coordinateSystem(extent = {{-100, -100}, {100, 100}}, preserveAspectRatio = true, initialScale = 0.1, grid = {2, 2})), Diagram(coordinateSystem(extent = {{-100, -100}, {100, 100}}, preserveAspectRatio = true, initialScale = 0.1, grid = {2, 2})), experiment(StartTime = 0, StopTime = 8, Tolerance = 0.0001, Interval = 0.004), uses(Modelica(version = "3.2.2")));
 end PW_PowerSystem;

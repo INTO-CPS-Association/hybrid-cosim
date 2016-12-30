@@ -13,5 +13,5 @@ equation
   connect(window.window_torque_out, add1.u1) annotation(Line(points = {{21, -5}, {28, -5}, {28, -16}, {-8, -16}}, color = {0, 0, 127}));
   connect(power.speed, window.speed_motor) annotation(Line(points = {{-12, 0}, {2, 0}}, color = {0, 0, 127}));
   connect(add1.y, power.input_torque) annotation(Line(points = {{-32, -22}, {-38, -22}, {-38, 0}, {-26, 0}, {-26, 0}}, color = {0, 0, 127}));
-  annotation(uses(Modelica(version = "3.2.1")), experiment(StartTime = 0, StopTime = 5, Tolerance = 0.0001, Interval = 0.0025));
+  annotation(uses(Modelica(version = "3.2.2")), experiment(StartTime = 0, StopTime = 5, Tolerance = 0.0001, Interval = 0.0025));
 end PW_PowerSystem_Test;

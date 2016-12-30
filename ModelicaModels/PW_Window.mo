@@ -21,5 +21,5 @@ equation
   connect(window_angle.phi, window_height.u) annotation(Line(points = {{54, -18}, {58, -18}, {58, -40}, {62, -40}, {62, -40}}, color = {0, 0, 127}));
   connect(window_height.y, window_height_out) annotation(Line(points = {{85, -40}, {100, -40}}, color = {0, 0, 127}));
   connect(window_speed.y, window_speed_out) annotation(Line(points = {{85, 10}, {100, 10}}, color = {0, 0, 127}));
-  annotation(uses(Modelica(version = "3.2.1")));
+  annotation(uses(Modelica(version = "3.2.2")));
 end PW_Window;

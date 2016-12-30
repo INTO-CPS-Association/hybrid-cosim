@@ -1,0 +1,28 @@
+/*
+ * Copyright QTronic GmbH. All rights reserved.
+ */
+
+/* ---------------------------------------------------------------------------*
+ * xmlVersionParser.h
+ * Parse a xml model description of a FMI 1.0 or FMI 2.0 model to extract its
+ * fmi version.
+ *
+ * Author: Adrian Tirea
+ * ---------------------------------------------------------------------------*/
+
+#ifndef xmlVersionParser_h
+#define xmlVersionParser_h
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#pragma comment(lib, "libxml2.lib")
+#pragma comment(lib, "wsock32.lib")
+#pragma comment(lib, "legacy_stdio_definitions.lib")
+
+char *extractVersion(const char *xmlDescriptionPath);
+
+#ifdef __cplusplus
+} // closing brace for extern "C"
+#endif
+#endif // xmlVersionParser_h
