@@ -37,4 +37,4 @@ void deleteUnzippedFiles();
 void outputRow(FMU *fmu, fmi2Component c, double time, FILE* file, char separator, fmi2Boolean header);
 int error(const char *message);
 void printHelp(const char *fmusim);
-char *getTempResourcesLocation(); // caller has to free the result
+char *getTempResourcesLocation(const char* fmuTargetDir); // caller has to free the result

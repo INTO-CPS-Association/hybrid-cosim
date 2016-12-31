@@ -100,11 +100,12 @@ static char* getTmpPath() {
     return strdup(tmpPath);
 }
 
-char *getTempResourcesLocation() {
+char *getTempResourcesLocation(const char* fmuTargetDir) {
     char *tempPath = getTmpPath();
     char *resourcesLocation = (char *)calloc(sizeof(char), 9 + strlen(RESOURCES_DIR) + strlen(tempPath));
     strcpy(resourcesLocation, "file:///");
     strcat(resourcesLocation, tempPath);
+    strcat(resourcesLocation, fmuTargetDir);
     strcat(resourcesLocation, RESOURCES_DIR);
     free(tempPath);
     return resourcesLocation;
