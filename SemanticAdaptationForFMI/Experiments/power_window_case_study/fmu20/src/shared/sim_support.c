@@ -282,9 +282,10 @@ static void printModelDescription(ModelDescription* md){
     free((void *)attributes);
 }
 
-void loadFMU(const char* fmuFileName, FMU* fmu) {
+void loadFMU(const char* fmuFileName, const char* fmuTargetDir, FMU* fmu) {
     char* fmuPath;
     char* tmpPath;
+    char* fmuTempPath;
     char* xmlPath;
     char* dllPath;
     char* dllDir;
@@ -294,24 +295,28 @@ void loadFMU(const char* fmuFileName, FMU* fmu) {
 	
     // get absolute path to FMU, NULL if not found
     fmuPath = getFmuPath(fmuFileName);
-    if (!fmuPath) exit(EXIT_FAILURE);
+	if (!fmuPath) exit(EXIT_FAILURE);
 	
 	printf("Absolute path of FMU: %s\n", fmuPath);
 	
     // unzip the FMU to the tmpPath directory
     tmpPath = getTmpPath();
-    if (!unzip(fmuPath, tmpPath)) exit(EXIT_FAILURE);
+	fmuTempPath = calloc(sizeof(char), strlen(tmpPath) + strlen(fmuTargetDir) + 1);
+    sprintf(fmuTempPath, "%s%s", tmpPath, fmuTargetDir);
 	
-	printf("FMU unzipped to: %s\n", tmpPath);
+	printf("Inziping FMU to: %s\n", fmuTempPath);
 	
-    // parse tmpPath\modelDescription.xml
-    xmlPath = calloc(sizeof(char), strlen(tmpPath) + strlen(XML_FILE) + 1);
-    sprintf(xmlPath, "%s%s", tmpPath, XML_FILE);
+	if (!unzip(fmuPath, fmuTempPath)) exit(EXIT_FAILURE);
+	
+    // parse fmuTempPath\modelDescription.xml
+    xmlPath = calloc(sizeof(char), strlen(fmuTempPath) + strlen(XML_FILE) + 1);
+    sprintf(xmlPath, "%s%s", fmuTempPath, XML_FILE);
 	printf("XmlDescription path: %s\n", xmlPath);
     // check FMI version of the FMU to match current simulator version
     if (!checkFmiVersion(xmlPath)) {
         free(xmlPath);
         free(fmuPath);
+        free(fmuTempPath);
         free(tmpPath);
         exit(EXIT_FAILURE);
     }
@@ -328,12 +333,12 @@ void loadFMU(const char* fmuFileName, FMU* fmu) {
 	printf("FMU model id: %s\n", modelId);
     
     // load the FMU dll
-	dllDir = calloc(sizeof(char), strlen(tmpPath) + strlen(DLL_DIR) + 1);
-    sprintf(dllDir, "%s%s", tmpPath, DLL_DIR);
+	dllDir = calloc(sizeof(char), strlen(fmuTempPath) + strlen(DLL_DIR) + 1);
+    sprintf(dllDir, "%s%s", fmuTempPath, DLL_DIR);
 	
-    dllPath = calloc(sizeof(char), strlen(tmpPath) + strlen(DLL_DIR)
+    dllPath = calloc(sizeof(char), strlen(fmuTempPath) + strlen(DLL_DIR)
         + strlen(modelId) +  strlen(".dll") + 1);
-	sprintf(dllPath, "%s%s%s.dll", tmpPath, DLL_DIR, modelId);
+	sprintf(dllPath, "%s%s%s.dll", fmuTempPath, DLL_DIR, modelId);
 	
 	printf("Loading dll: %s\n", dllPath);
     if (!loadDll(dllPath, dllDir, fmu)) {
@@ -341,6 +346,7 @@ void loadFMU(const char* fmuFileName, FMU* fmu) {
         free(dllDir);
         free(fmuPath);
         free(tmpPath);
+        free(fmuTempPath);
 		printf("Loading failed.\n");
         exit(EXIT_FAILURE);
     }
@@ -348,6 +354,7 @@ void loadFMU(const char* fmuFileName, FMU* fmu) {
     free(dllPath);
     free(fmuPath);
     free(tmpPath);
+    free(fmuTempPath);
 	
 	printf("FMU dll loaded\n");
 }

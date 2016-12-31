@@ -1,6 +1,6 @@
 @echo off 
 
-call build_all
+call build_all %1
 
 setlocal
 
@@ -19,4 +19,6 @@ set PATH=%PREV_PATH%
 
 endlocal
 
-pause
+if "%1"=="nopause" goto skip
+	pause
+:skip

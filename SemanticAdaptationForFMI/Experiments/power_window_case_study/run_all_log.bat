@@ -1,3 +1,3 @@
 @echo off 
 
-call run_all > log.txt >CON
+call run_all nopause > log.txt

@@ -60,4 +60,7 @@ echo done.
 
 endlocal
 
+
+if "%1"=="nopause" goto skip
 pause
+:skip

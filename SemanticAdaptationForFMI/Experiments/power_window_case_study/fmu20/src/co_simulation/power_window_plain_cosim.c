@@ -10,8 +10,11 @@
 
 // The paths to the FMUs to be simulated.
 #define OBSTACLE_FMU_PATH "fmu20\\fmu\\cs\\Obstacle.fmu"
+#define OBSTACLE_TARGET_DIR "obstacle\\"
 #define POWERSYSTEM_FMU_PATH "fmu20\\fmu\\cs\\PW_PowerSystem.fmu"
+#define POWERSYSTEM_TARGET_DIR "power_system\\"
 #define WINDOW_FMU_PATH "fmu20\\fmu\\cs\\PW_Window.fmu"
+#define WINDOW_TARGET_DIR "window\\"
 
 int main(int argc, char *argv[]) {
     int i;
@@ -32,10 +35,9 @@ int main(int argc, char *argv[]) {
 	
 	printf("Loading FMUs...\n");
 	
-	// TODO: The fmus need to be loaded onto separate directories.
-    loadFMU(OBSTACLE_FMU_PATH, &Obstacle);
-	loadFMU(POWERSYSTEM_FMU_PATH, &PW_PowerSystem);
-	loadFMU(WINDOW_FMU_PATH, &PW_Window);
+    loadFMU(OBSTACLE_FMU_PATH, OBSTACLE_TARGET_DIR, &Obstacle);
+	loadFMU(POWERSYSTEM_FMU_PATH, POWERSYSTEM_TARGET_DIR, &PW_PowerSystem);
+	loadFMU(WINDOW_FMU_PATH, WINDOW_TARGET_DIR, &PW_Window);
 	
 	printf("FMUs loaded.\n");
 	
