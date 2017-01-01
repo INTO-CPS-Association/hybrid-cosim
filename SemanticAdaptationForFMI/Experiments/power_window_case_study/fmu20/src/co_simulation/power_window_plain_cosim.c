@@ -127,12 +127,12 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
         return error("Could not set up experiment for window_instance fmu.");
     }
 	
+	*/
 	printf("Setting up default experiment for msd_instance fmu...\n");
 	returnCodeFmiFunctions = setupExperimentFMU(msd_instance, MSD, start_time, tEnd); 
     if (returnCodeFmiFunctions > fmi2Warning) {
         return error("Could not set up experiment for msd_instance fmu.");
     }
-	*/
 	
 	/*
 	printf("Entering initialization mode for obstacle_instance fmu...\n");
@@ -156,13 +156,13 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 		printf("Could not enter initialization window_instance for power fmu.\n");
         return error("Could not enter initialization window_instance for power fmu");
     }
+	*/
 	printf("Entering initialization mode msd_instance fmu...\n");
 	returnCodeFmiFunctions = MSD->enterInitializationMode(msd_instance);
     if (returnCodeFmiFunctions > fmi2Warning) {
 		printf("Could not enter initialization msd_instance for power fmu.\n");
         return error("Could not enter initialization msd_instance for power fmu");
     }
-	*/
 	
 	
 	/*
@@ -184,12 +184,12 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
     if (returnCodeFmiFunctions > fmi2Warning) {
         return error("Could not exit initialization window_instance for power fmu");
     }
+	*/
 	printf("Exiting initialization mode msd_instance fmu...\n");
 	returnCodeFmiFunctions = MSD->exitInitializationMode(msd_instance);
     if (returnCodeFmiFunctions > fmi2Warning) {
         return error("Could not exit initialization msd_instance for power fmu");
     }
-	*/
 	
 	
 	// open result file
@@ -211,12 +211,12 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
         printf("    %s\n", strerror(errno));
         return 0; // failure
     }
+	*/
 	if (!(msd_results = fopen(MSD_RESULTS, "w"))) {
         printf("could not write %s because:\n", MSD_RESULTS);
         printf("    %s\n", strerror(errno));
         return 0; // failure
     }
-	*/
     
 	
 	// output solution for time t0
@@ -225,9 +225,9 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 	outputRow(Obstacle, obstacle_instance, start_time, obstacle_results, separator, fmi2True);
     outputRow(PW_PowerSystem, power_results, start_time, power_results, separator, fmi2True);
     outputRow(PW_Window, window_instance, start_time, window_results, separator, fmi2True);
-    outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2True);
-    
 	*/
+    outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2True);
+	
 	/*
 	printf("Writting first row of obstacle_instance...\n");
 	outputRow(Obstacle, obstacle_instance, start_time, obstacle_results, separator, fmi2False); // output values
@@ -235,34 +235,34 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 	outputRow(PW_PowerSystem, power_instance, start_time, power_results, separator, fmi2False);
 	printf("Writting first row of window_instance...\n");
     outputRow(PW_Window, window_instance, start_time, window_results, separator, fmi2False);
+	*/
 	printf("Writting first row of msd_instance...\n");
     outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2False);
 	
-	*/
 	// end simulation
     printf("Terminating FMUs...\n");
 	/*
 	Obstacle->terminate(obstacle_instance);
 	PW_PowerSystem->terminate(power_results);
 	PW_Window->terminate(window_instance);
-	MSD->terminate(msd_instance);
 	*/
+	MSD->terminate(msd_instance);
 	
 	printf("Releasing FMUs...\n");
 	/*
 	Obstacle->freeInstance(obstacle_instance);
 	PW_PowerSystem->freeInstance(power_results);
 	PW_Window->freeInstance(window_instance);
-    MSD->freeInstance(msd_instance);
 	*/
+    MSD->freeInstance(msd_instance);
     
 	printf("Closing files...\n");
     /*
 	fclose(obstacle_results);
     fclose(power_results);
     fclose(window_results);
-    fclose(msd_results);
 	*/
+    fclose(msd_results);
 	
 	printf("Simulation done.\n");
 	

@@ -102,7 +102,7 @@ static char* getTmpPath() {
 
 char *getTempResourcesLocation(const char* fmuTargetDir) {
     char *tempPath = getTmpPath();
-    char *resourcesLocation = (char *)calloc(sizeof(char), 9 + strlen(RESOURCES_DIR) + strlen(tempPath));
+    char *resourcesLocation = (char *)calloc(sizeof(char), strlen("file:///") + strlen(tempPath) + strlen(fmuTargetDir) + strlen(RESOURCES_DIR) + 1);
     strcpy(resourcesLocation, "file:///");
     strcat(resourcesLocation, tempPath);
     strcat(resourcesLocation, fmuTargetDir);
@@ -572,7 +572,7 @@ static void replaceRefsInMessage(const char* msg, char* buffer, int nBuffer, FMU
 void fmuLogger(fmi2ComponentEnvironment c, fmi2String instanceName, fmi2Status status,
                fmi2String category, fmi2String message, ...) {
     char msg[MAX_MSG_SIZE];
-    char* copy;
+    //char* copy;
     va_list argp;
 		
 	printf("Logging message: %s\n", message);
@@ -582,11 +582,11 @@ void fmuLogger(fmi2ComponentEnvironment c, fmi2String instanceName, fmi2Status s
     vsprintf(msg, message, argp);
     va_end(argp);
 
-    // replace e.g. ## and #r12#
-    copy = strdup(msg);
 	// claudio: Removed this as it depends on global var.
-    //replaceRefsInMessage(copy, msg, MAX_MSG_SIZE, &fmu);
-    free(copy);
+    // replace e.g. ## and #r12#
+    // copy = strdup(msg);
+    // replaceRefsInMessage(copy, msg, MAX_MSG_SIZE, &fmu);
+    // free(copy);
 
     // print the final message
     if (!instanceName) instanceName = "?";
