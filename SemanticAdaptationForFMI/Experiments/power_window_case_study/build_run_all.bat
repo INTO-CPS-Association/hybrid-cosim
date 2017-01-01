@@ -1,5 +1,7 @@
 @echo off 
 
+call build_all %1
+
 setlocal
 
 set FMUSDK_HOME=.

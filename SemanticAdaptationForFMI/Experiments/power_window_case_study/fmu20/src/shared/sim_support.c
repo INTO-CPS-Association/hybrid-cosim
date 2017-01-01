@@ -305,7 +305,7 @@ void loadFMU(const char* fmuFileName, const char* fmuTargetDir, FMU* fmu) {
 	fmuTempPath = calloc(sizeof(char), strlen(tmpPath) + strlen(fmuTargetDir) + 1);
     sprintf(fmuTempPath, "%s%s", tmpPath, fmuTargetDir);
 	
-	printf("Inziping FMU to: %s\n", fmuTempPath);
+	printf("Unziping FMU to: %s\n", fmuTempPath);
 	
 	if (!unzip(fmuPath, fmuTempPath)) exit(EXIT_FAILURE);
 	
@@ -568,13 +568,15 @@ static void replaceRefsInMessage(const char* msg, char* buffer, int nBuffer, FMU
 }
 */
 
-#define MAX_MSG_SIZE 1000
-void fmuLogger(void *componentEnvironment, fmi2String instanceName, fmi2Status status,
+#define MAX_MSG_SIZE 10000
+void fmuLogger(fmi2ComponentEnvironment c, fmi2String instanceName, fmi2Status status,
                fmi2String category, fmi2String message, ...) {
     char msg[MAX_MSG_SIZE];
     char* copy;
     va_list argp;
-
+		
+	printf("Logging message: %s\n", message);
+	
     // replace C format strings
     va_start(argp, message);
     vsprintf(msg, message, argp);
@@ -590,6 +592,8 @@ void fmuLogger(void *componentEnvironment, fmi2String instanceName, fmi2Status s
     if (!instanceName) instanceName = "?";
     if (!category) category = "?";
     printf("%s %s (%s): %s\n", fmi2StatusToString(status), instanceName, category, msg);
+	
+	printf("Message logged: %s\n", message);
 }
 
 int error(const char* message){

@@ -32,7 +32,7 @@ goto noCompiler
 
 set SRC=power_window_plain_cosim.c ..\shared\sim_support.c ..\shared\xmlVersionParser.c ..\shared\parser\XmlParser.cpp ..\shared\parser\XmlElement.cpp ..\shared\parser\XmlParserCApi.cpp
 set INC=/I..\shared\include /I..\shared /I..\shared\parser
-set OPTIONS=/DFMI_COSIMULATION /nologo /EHsc /DSTANDALONE_XML_PARSER /DLIBXML_STATIC
+set OPTIONS=/DFMI_COSIMULATION /nologo /EHsc /DSTANDALONE_XML_PARSER /DLIBXML_STATIC /DEBUG:FULL /Zi /INCREMENTAL:NO
 
 rem create fmu20sim_cs.exe in co_simulation dir
 pushd co_simulation
@@ -42,6 +42,7 @@ del *.obj
 popd
 if not exist co_simulation\fmu20sim_cs.exe goto compileError
 move /Y co_simulation\fmu20sim_cs.exe ..\..\bin\%x64%
+move /Y co_simulation\*.pdb ..\..\bin\%x64%
 goto done
 
 :noCompiler

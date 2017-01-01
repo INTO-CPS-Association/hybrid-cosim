@@ -43,7 +43,7 @@ if exist *.dll del /Q *.dll
 if %1==cs (set DEF=/DFMI_COSIMULATION) else set DEF=
 set SRC=..\%2\%2.c
 set INC=/I ..\. /I ..\..\shared\include /I ..\..\shared 
-cl /LD /nologo %DEF% %SRC% %INC% /link
+cl /LD /nologo %DEF% %SRC% %INC% /link /DEBUG:FULL /Zi
 if not exist %2.dll goto compileError
 
 rem create FMU dir structure with root 'fmu'
@@ -54,6 +54,7 @@ if not exist %BIN_DIR% mkdir %BIN_DIR%
 if not exist %SRC_DIR% mkdir %SRC_DIR%
 if not exist %DOC_DIR% mkdir %DOC_DIR%
 move /Y %2.dll %BIN_DIR%
+move /Y %2.pdb %BIN_DIR%
 if exist ..\%2\*~ del /Q ..\%2\*~
 copy ..\%2\%2.c %SRC_DIR% 
 type ..\%2\modelDescription_%1.xml > fmu\modelDescription.xml
