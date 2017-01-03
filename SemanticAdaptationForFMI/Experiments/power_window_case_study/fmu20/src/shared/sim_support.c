@@ -575,7 +575,7 @@ void fmuLogger(fmi2ComponentEnvironment c, fmi2String instanceName, fmi2Status s
     //char* copy;
     va_list argp;
 		
-	printf("Logging message: %s\n", message);
+	//printf("Logging message: %s\n", message);
 	
     // replace C format strings
     va_start(argp, message);
@@ -593,7 +593,7 @@ void fmuLogger(fmi2ComponentEnvironment c, fmi2String instanceName, fmi2Status s
     if (!category) category = "?";
     printf("%s %s (%s): %s\n", fmi2StatusToString(status), instanceName, category, msg);
 	
-	printf("Message logged: %s\n", message);
+	//printf("Message logged: %s\n", message);
 }
 
 int error(const char* message){

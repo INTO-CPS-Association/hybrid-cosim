@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/!svn/ver/6332/FMILibrary/tags/2.0b3/ThirdParty/FMI/default/FMI2
+END
+fmi2Functions.h
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/!svn/ver/6332/FMILibrary/tags/2.0b3/ThirdParty/FMI/default/FMI2/fmi2Functions.h
+END
+fmi2TypesPlatform.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/!svn/ver/6332/FMILibrary/tags/2.0b3/ThirdParty/FMI/default/FMI2/fmi2TypesPlatform.h
+END
+fmi2FunctionTypes.h
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/!svn/ver/6332/FMILibrary/tags/2.0b3/ThirdParty/FMI/default/FMI2/fmi2FunctionTypes.h
+END

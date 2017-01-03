@@ -1,5 +1,7 @@
 @echo off 
 
+mode 200,1000
+
 setlocal
 
 set FMUSDK_HOME=.

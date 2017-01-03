@@ -69,10 +69,6 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 	
 	// aux vars for intermediate results
 	fmi2Status returnCodeFmiFunctions;	
-	fmi2Boolean toleranceDefined = fmi2False; // Default value: false
-	fmi2Real tolerance;
-	ValueStatus xmlParserValueState;
-	Element *xmlParserElement;
 	
 	// FMU results file
     FILE* obstacle_results;
@@ -93,17 +89,15 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 	// Instantiate FMUS
 	printf("Instantiating obstacle fmu...\n");
 	instantiateFMU(&obstacle_instance, Obstacle, OBSTACLE_TARGET_DIR, loggingOn, &obstacle_callbacks);
-	/*
 	
-	printf("Instantiating power fmu...\n");
-	instantiateFMU(&power_instance, PW_PowerSystem, POWERSYSTEM_TARGET_DIR, loggingOn, &power_callbacks);
+	printf("Instantiating msd fmu...\n");
+	instantiateFMU(&msd_instance, MSD, MSD_TARGET_DIR, loggingOn, &msd_callbacks);
 	
 	printf("Instantiating window fmu...\n");
 	instantiateFMU(&window_instance, PW_Window, WINDOW_TARGET_DIR, loggingOn, &window_callbacks);
 	
-	*/
-	printf("Instantiating msd fmu...\n");
-	instantiateFMU(&msd_instance, MSD, MSD_TARGET_DIR, loggingOn, &msd_callbacks);
+	printf("Instantiating power fmu...\n");
+	instantiateFMU(&power_instance, PW_PowerSystem, POWERSYSTEM_TARGET_DIR, loggingOn, &power_callbacks);
 	
 	// Setup experiments
 	
@@ -112,12 +106,11 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
     if (returnCodeFmiFunctions > fmi2Warning) {
         return error("Could not set up experiment for obstacle_instance fmu.");
     }
-	/*
 	
-	printf("Setting up default experiment for power_instance fmu...\n");
-	returnCodeFmiFunctions = setupExperimentFMU(power_instance, PW_PowerSystem, start_time, tEnd); 
+	printf("Setting up default experiment for msd_instance fmu...\n");
+	returnCodeFmiFunctions = setupExperimentFMU(msd_instance, MSD, start_time, tEnd); 
     if (returnCodeFmiFunctions > fmi2Warning) {
-        return error("Could not set up experiment for power_instance fmu.");
+        return error("Could not set up experiment for msd_instance fmu.");
     }
 	
 	printf("Setting up default experiment for window_instance fmu...\n");
@@ -127,12 +120,13 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
         return error("Could not set up experiment for window_instance fmu.");
     }
 	
-	*/
-	printf("Setting up default experiment for msd_instance fmu...\n");
-	returnCodeFmiFunctions = setupExperimentFMU(msd_instance, MSD, start_time, tEnd); 
+	printf("Setting up default experiment for power_instance fmu...\n");
+	returnCodeFmiFunctions = setupExperimentFMU(power_instance, PW_PowerSystem, start_time, tEnd); 
     if (returnCodeFmiFunctions > fmi2Warning) {
-        return error("Could not set up experiment for msd_instance fmu.");
+        return error("Could not set up experiment for power_instance fmu.");
     }
+	
+	// Init FMUs
 	
 	printf("Entering initialization mode for obstacle_instance fmu...\n");
 	returnCodeFmiFunctions = Obstacle->enterInitializationMode(obstacle_instance);
@@ -140,7 +134,13 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 		printf("Could not enter initialization mode for obstacle_instance fmu.\n");
         return error("Could not enter initialization mode for obstacle_instance fmu");
     }
-	/*
+	
+	printf("Entering initialization mode msd_instance fmu...\n");
+	returnCodeFmiFunctions = MSD->enterInitializationMode(msd_instance);
+    if (returnCodeFmiFunctions > fmi2Warning) {
+		printf("Could not enter initialization msd_instance for power fmu.\n");
+        return error("Could not enter initialization msd_instance for power fmu");
+    }
 	
 	printf("Entering initialization mode for power_instance fmu...\n");
 	returnCodeFmiFunctions = PW_PowerSystem->enterInitializationMode(power_instance);
@@ -156,14 +156,10 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 		printf("Could not enter initialization window_instance for power fmu.\n");
         return error("Could not enter initialization window_instance for power fmu");
     }
-	*/
-	printf("Entering initialization mode msd_instance fmu...\n");
-	returnCodeFmiFunctions = MSD->enterInitializationMode(msd_instance);
-    if (returnCodeFmiFunctions > fmi2Warning) {
-		printf("Could not enter initialization msd_instance for power fmu.\n");
-        return error("Could not enter initialization msd_instance for power fmu");
-    }
 	
+	
+	
+	// Finish Init FMUs
 	
 	printf("Exiting initialization mode for obstacle_instance fmu...\n");
 	returnCodeFmiFunctions = Obstacle->exitInitializationMode(obstacle_instance);
@@ -171,12 +167,11 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
 		printf("Could not exit initialization mode for obstacle_instance fmu.\n");
         return error("Could not exit initialization mode for obstacle_instance fmu");
     }
-	/*
 	
-	printf("Exiting initialization mode for power_instance fmu...\n");
-	returnCodeFmiFunctions = PW_PowerSystem->exitInitializationMode(power_instance);
+	printf("Exiting initialization mode msd_instance fmu...\n");
+	returnCodeFmiFunctions = MSD->exitInitializationMode(msd_instance);
     if (returnCodeFmiFunctions > fmi2Warning) {
-        return error("Could not exit initialization mode for power_instance fmu");
+        return error("Could not exit initialization msd_instance for power fmu");
     }
 	
 	printf("Exiting initialization mode window_instance fmu...\n");
@@ -184,13 +179,12 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
     if (returnCodeFmiFunctions > fmi2Warning) {
         return error("Could not exit initialization window_instance for power fmu");
     }
-	*/
-	printf("Exiting initialization mode msd_instance fmu...\n");
-	returnCodeFmiFunctions = MSD->exitInitializationMode(msd_instance);
-    if (returnCodeFmiFunctions > fmi2Warning) {
-        return error("Could not exit initialization msd_instance for power fmu");
-    }
 	
+	printf("Exiting initialization mode for power_instance fmu...\n");
+	returnCodeFmiFunctions = PW_PowerSystem->exitInitializationMode(power_instance);
+    if (returnCodeFmiFunctions > fmi2Warning) {
+        return error("Could not exit initialization mode for power_instance fmu");
+    }
 	
 	// open result file
 	printf("Creating results files...\n");
@@ -200,9 +194,8 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
         printf("    %s\n", strerror(errno));
         return 0; // failure
     }
-	/*
-	if (!(power_results = fopen(POWERSYSTEM_RESULTS, "w"))) {
-        printf("could not write %s because:\n", POWERSYSTEM_RESULTS);
+	if (!(msd_results = fopen(MSD_RESULTS, "w"))) {
+        printf("could not write %s because:\n", MSD_RESULTS);
         printf("    %s\n", strerror(errno));
         return 0; // failure
     }
@@ -211,58 +204,46 @@ static int simulate(FMU* MSD, FMU* Obstacle, FMU* PW_PowerSystem, FMU* PW_Window
         printf("    %s\n", strerror(errno));
         return 0; // failure
     }
-	*/
-	if (!(msd_results = fopen(MSD_RESULTS, "w"))) {
-        printf("could not write %s because:\n", MSD_RESULTS);
+	if (!(power_results = fopen(POWERSYSTEM_RESULTS, "w"))) {
+        printf("could not write %s because:\n", POWERSYSTEM_RESULTS);
         printf("    %s\n", strerror(errno));
         return 0; // failure
     }
     
-	
 	// output solution for time t0
     printf("Writting headers...\n");
 	outputRow(Obstacle, obstacle_instance, start_time, obstacle_results, separator, fmi2True);
-	/*
+    outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2True);
     outputRow(PW_PowerSystem, power_results, start_time, power_results, separator, fmi2True);
     outputRow(PW_Window, window_instance, start_time, window_results, separator, fmi2True);
-	*/
-    outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2True);
 	
 	printf("Writting first row of obstacle_instance...\n");
 	outputRow(Obstacle, obstacle_instance, start_time, obstacle_results, separator, fmi2False); // output values
-	/*
+	printf("Writting first row of msd_instance...\n");
+    outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2False);
 	printf("Writting first row of power_instance...\n");
 	outputRow(PW_PowerSystem, power_instance, start_time, power_results, separator, fmi2False);
 	printf("Writting first row of window_instance...\n");
     outputRow(PW_Window, window_instance, start_time, window_results, separator, fmi2False);
-	*/
-	printf("Writting first row of msd_instance...\n");
-    outputRow(MSD, msd_instance, start_time, msd_results, separator, fmi2False);
 	
 	// end simulation
     printf("Terminating FMUs...\n");
 	Obstacle->terminate(obstacle_instance);
-	/*
+	MSD->terminate(msd_instance);
 	PW_PowerSystem->terminate(power_results);
 	PW_Window->terminate(window_instance);
-	*/
-	MSD->terminate(msd_instance);
 	
 	printf("Releasing FMUs...\n");
 	Obstacle->freeInstance(obstacle_instance);
-	/*
+    MSD->freeInstance(msd_instance);
 	PW_PowerSystem->freeInstance(power_results);
 	PW_Window->freeInstance(window_instance);
-	*/
-    MSD->freeInstance(msd_instance);
     
 	printf("Closing files...\n");
 	fclose(obstacle_results);
-    /*
+    fclose(msd_results);
     fclose(power_results);
     fclose(window_results);
-	*/
-    fclose(msd_results);
 	
 	printf("Simulation done.\n");
 	
@@ -289,11 +270,9 @@ int main(int argc, char *argv[]) {
 	printf("Loading FMUs...\n");
 	
 	loadFMU(OBSTACLE_FMU_PATH, OBSTACLE_TARGET_DIR, &Obstacle);
-    /*
+	loadFMU(MSD_FMU_PATH, MSD_TARGET_DIR, &MSD);
 	loadFMU(POWERSYSTEM_FMU_PATH, POWERSYSTEM_TARGET_DIR, &PW_PowerSystem);
 	loadFMU(WINDOW_FMU_PATH, WINDOW_TARGET_DIR, &PW_Window);
-	*/
-	loadFMU(MSD_FMU_PATH, MSD_TARGET_DIR, &MSD);
 	
 	printf("Simulating FMUs...\n");
 	
@@ -307,18 +286,21 @@ int main(int argc, char *argv[]) {
 		printf("Error unloading Obstacle.dllHandle.\n");
 	}
     freeModelDescription(Obstacle.modelDescription);
-	/*
 	
-	FreeLibrary(PW_PowerSystem.dllHandle);
-    freeModelDescription(PW_PowerSystem.modelDescription);
-	
-	FreeLibrary(PW_Window.dllHandle);
-    freeModelDescription(PW_Window.modelDescription);
-    */
 	if (!FreeLibrary(MSD.dllHandle)){
 		printf("Error unloading MSD.dllHandle.\n");
 	}
 	freeModelDescription(MSD.modelDescription);
+	
+	if (!FreeLibrary(PW_Window.dllHandle)){
+		printf("Error unloading PW_Window.dllHandle.\n");
+	}
+    freeModelDescription(PW_Window.modelDescription);
+	
+	if (!FreeLibrary(PW_PowerSystem.dllHandle)){
+		printf("Error unloading PW_PowerSystem.dllHandle.\n");
+	}
+    freeModelDescription(PW_PowerSystem.modelDescription);
     
 	// delete temp files obtained by unzipping the FMU
     printf("Attempting to delete unzipped files...\n");

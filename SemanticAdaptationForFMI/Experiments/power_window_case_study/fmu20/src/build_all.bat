@@ -39,6 +39,7 @@ pushd co_simulation
 cl %SRC% %INC% %OPTIONS% /Fefmu20sim_cs.exe /link /LIBPATH:..\shared\parser\%x64% /NODEFAULTLIB:libcmtd.lib
 
 del *.obj
+del *.ilk
 popd
 if not exist co_simulation\fmu20sim_cs.exe goto compileError
 move /Y co_simulation\fmu20sim_cs.exe ..\..\bin\%x64%

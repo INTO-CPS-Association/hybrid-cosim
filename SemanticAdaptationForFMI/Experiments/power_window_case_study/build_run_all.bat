@@ -1,5 +1,7 @@
 @echo off 
 
+mode 200,1000
+
 call build_all %1
 
 setlocal
