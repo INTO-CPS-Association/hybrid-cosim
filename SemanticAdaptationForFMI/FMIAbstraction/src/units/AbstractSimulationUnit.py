@@ -56,14 +56,14 @@ class AbstractSimulationUnit(object):
         
         l.debug("<AbstractSimulationUnit()")
     
-    def _getNonOutputVars(self):
+    def _getInputAndStateVars(self):
         return self.__non_output_vars
-    
-    def _getInputVars(self):
-        return self.__input_vars
     
     def _getStateVars(self):
         return self.__state_vars
+    
+    def _getInputVars(self):
+        return self.__input_vars
     
     def rollback(self, toStep):
         # Cleans the computed_time from toStep onwards.
@@ -103,7 +103,7 @@ class AbstractSimulationUnit(object):
         
         # Get the state and input vars to be used for the computation of the values
         current_state_snaptshot = {}
-        for var in self.__non_output_vars:
+        for var in self._getInputAndStateVars():
             # Only up-to-date values go in the calculations.
             # If a calcfunction crash, it's because this FMU is not being used correctly
             if current_step < len(self.__state[var]):
@@ -113,7 +113,6 @@ class AbstractSimulationUnit(object):
         l.debug("current_state_snaptshot = %s", current_state_snaptshot)
         
         for var in self.__calc_functions:
-            assert self.__state.has_key(var)
             new_value = self.__calc_functions[var](current_state_snaptshot)
             if current_iteration==0:
                 assert current_step == len(self.__state[var])

@@ -4,14 +4,22 @@ import logging
 l = logging.getLogger()
 l.setLevel(logging.DEBUG)
 
-power_fmu = PowerFMU("power", 1e-08, 1e-05, 0.001, J=0.01, b=0.1, K=0.01, R=1, L=0.5, V=12)
+power_fmu = PowerFMU("power", 1e-08, 1e-05, 0.001, 
+                     J=0.085, 
+                     b=5, 
+                     K=1.8, 
+                     R=0.15, 
+                     L=0.036,
+                     V=12)
 
 power_fmu.enterInitMode()
 
 power_fmu.setValues(0, 0, {power_fmu.i: 0.0,
                             power_fmu.omega: 0.0,
                             power_fmu.theta: 0.0,
-                            power_fmu.tau: 0.0
+                            power_fmu.tau: 0.0,
+                            power_fmu.up: 1.0,
+                            power_fmu.down: 0.0
                             })
 
 power_fmu.exitInitMode()
@@ -26,7 +34,9 @@ trace_omega = [0.0]
 times = [0.0]
 
 for step in range(1, int(1 / cosim_step_size) + 1):
-    power_fmu.setValues(step, 0, {power_fmu.tau: 0.0})
+    power_fmu.setValues(step, 0, {power_fmu.tau: 0.0,
+                                  power_fmu.up: 1.0,
+                                  power_fmu.down: 0.0})
     power_fmu.doStep(time, step, 0, cosim_step_size)
     values = power_fmu.getValues(step, 0, [power_fmu.omega, power_fmu.i])
     times.append(time)

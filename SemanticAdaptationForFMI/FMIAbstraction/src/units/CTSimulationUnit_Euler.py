@@ -17,7 +17,9 @@ class CTSimulationUnit_Euler(CTSimulationUnit):
     To be subclassed by concrete implementations
     """
     
-    def __init__(self, num_rtol, num_atol, internal_step_size, state_derivatives, calc_functions, state_vars, input_vars):
+    def __init__(self, num_rtol, num_atol, internal_step_size, 
+                 state_derivatives, calc_functions, 
+                 state_vars, input_vars):
         CTSimulationUnit.__init__(self,num_rtol, num_atol, calc_functions, state_vars, input_vars)
         
         self.__state_derivatives = state_derivatives
@@ -44,8 +46,7 @@ class CTSimulationUnit_Euler(CTSimulationUnit):
         for microstep in range(num_steps):
             l.debug("microstep = %d", microstep)
             l.debug("state = %s", state_buffers[previous_state_idx])
-            for state_var in self._getStateVars():
-                assert self.__state_derivatives.has_key(state_var), "State derivative not provided for state var " + state_var
+            for state_var in self.__state_derivatives.keys():
                 state_derivative_function = self.__state_derivatives[state_var]
                 previous_state = state_buffers[previous_state_idx]
                 der_state_var = state_derivative_function(previous_state, input_buffer)

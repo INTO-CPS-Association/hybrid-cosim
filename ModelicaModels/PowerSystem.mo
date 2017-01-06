@@ -16,7 +16,7 @@ equation
   V = if u > 0.5 then V_abs 
       else if d > 0.5 then - V_abs
       else 0.0;
-  J * der(omega) = K * i + tau - b * omega;
+  der(omega) = (K * i + tau - b * omega) / J;
   L * der(i) = V - R * i - K * omega;
   der(theta) = omega;
 annotation(
