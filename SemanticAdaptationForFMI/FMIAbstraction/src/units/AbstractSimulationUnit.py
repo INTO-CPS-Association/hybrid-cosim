@@ -37,9 +37,9 @@ class AbstractSimulationUnit(object):
         
         self._name = name
         self.__state = {}
+        self.__outputs_dirty = {}
         self.__computed_time = []
         self.__mode = INSTANTIATED_MODE
-        self.__outputs_dirty = False
         
         self.__out_functions = output_functions
         self.__state_vars = state_vars
@@ -54,6 +54,7 @@ class AbstractSimulationUnit(object):
             self.__state[var] = []
         for var in self.__output_vars:
             self.__state[var] = []
+            self.__outputs_dirty[var] = False
         for var in input_vars:
             self.__state[var] = []
         
@@ -88,9 +89,12 @@ class AbstractSimulationUnit(object):
         assert self.__mode == STEP_MODE
         assert step_size > 0
         
+        """ This is not done here because it may not be possible to do it for 
+                the current step as it has not been computed.
         if self.__outputs_dirty:
             self.__computeOutputs(step, current_iteration)
             self.__outputs_dirty = False
+        """
         
         # Record time, even if the step is not accepted.
         self.__recordTime(time, step, current_iteration, step_size)
@@ -134,20 +138,36 @@ class AbstractSimulationUnit(object):
         for var in varsToPrint:
             strState += var + "=" + str(self.__state[var][step][iteration]) + "\n"
         return strState
+    
+    def __markOutputsDirty(self, step, iteration, whichOnes=None):
+        output_vars = self.__output_vars if whichOnes==None else whichOnes
+        for out_var in output_vars:
+            if self.__outputs_dirty.has_key(out_var):
+                self.__outputs_dirty[out_var] = True
+            
+    def __areOutputsDirty(self, step, iteration, whichOnes=None):
+        var_names = self.__output_vars if whichOnes==None else whichOnes
+        for out_var in var_names:
+            if self.__outputs_dirty.has_key(out_var):
+                if self.__outputs_dirty[out_var]:
+                    return True
+        return False
         
     def setValues(self, step, iteration, values):
         l.debug(">%s.setValues(%d, %d, %s)", self._name, step, iteration, values)
         Utils.copyMapToStateTrace(self.__state, step, iteration, values)
-        self.__outputs_dirty = True
+        
+        self.__markOutputsDirty(step, iteration);
+        
         l.debug("New state: \n%s", self._printState(step,iteration, values.keys()))
         l.debug("<%s.setValues()", self._name)
         
     
     def getValues(self, step, iteration, var_names):
         l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
-        if self.__outputs_dirty:
+        if self.__areOutputsDirty(step, iteration, var_names):
             self.__computeOutputs(step, iteration)
-            self.__outputs_dirty = True
+            self.__markOutputsDirty(step, iteration, var_names);
         
         values = {}
         for var in var_names:
@@ -169,9 +189,9 @@ class AbstractSimulationUnit(object):
         
     def exitInitMode(self):
         l.debug(">%s.exitInitMode()", self._name)
-        if self.__outputs_dirty:
-            self.__computeOutputs(0, 0)
-            self.__outputs_dirty = False
+        if self.__areOutputsDirty(0,0):
+            self.__computeOutputs(0,0)
+            self.__markOutputsDirty(0,0)
         self.__mode = STEP_MODE
         l.debug("<%s.exitInitMode()", self._name)
         

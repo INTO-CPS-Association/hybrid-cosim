@@ -9,7 +9,7 @@ class Utils(object):
     @staticmethod
     def copyMapToStateTrace(target, step, iteration, source):
         for var in source:
-            Utils.copyValueToStateTrace(target, var, step, iteration, source)
+            Utils.copyValueToStateTrace(target, var, step, iteration, source[var])
     
     @staticmethod
     def getValuesUpToDate(source, vars_to_select, step, iteration):
@@ -23,14 +23,14 @@ class Utils(object):
         return result
     
     @staticmethod
-    def copyValueToStateTrace(target, var, step, iteration, source):
+    def copyValueToStateTrace(target, var, step, iteration, value):
         assert target.has_key(var)
         if step == len(target[var]):
-            target[var].append([source[var]])
+            target[var].append([value])
         elif iteration == len(target[var][step]):
-            target[var][step].append(source[var])
+            target[var][step].append(value)
         else:
-            target[var][step][iteration] = source[var]
+            target[var][step][iteration] = value
     
     @staticmethod
     def trimList(listToTrim, target_size):
