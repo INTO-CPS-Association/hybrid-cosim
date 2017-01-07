@@ -88,7 +88,7 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     
     # set old values for window (this is not ideal)
     pOut = power.getValues(step-1, 0, [power.omega, power.theta, power.i])
-
+    
     window.setValues(step, 0, {window.omega_input: pOut[power.omega],
                             window.theta_input: pOut[power.theta]})
     window.doStep(time, step, 0, cosim_step_size)

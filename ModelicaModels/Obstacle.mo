@@ -2,7 +2,6 @@ model Obstacle
   parameter Real c = 1e5;
   parameter Real fixed_x = 0.45;
   input Real x;
-  input Real v;
   output Real F;
 equation
   F = if x > fixed_x then c*(x - fixed_x) else 0;
