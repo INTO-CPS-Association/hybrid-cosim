@@ -2,7 +2,7 @@ model Window
   parameter Real J = 0.08;
   parameter Real r = 0.017;
   parameter Real b = 150;
-  parameter Real c = 1e5;
+  parameter Real c = 1e3;
   input Real omega_input;
   input Real theta_input;
   output Real tau;

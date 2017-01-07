@@ -8,5 +8,5 @@ equation
   window.theta_input = power.theta;
   power.tau = - window.tau;
   annotation(
-    experiment(StartTime = 0, StopTime = 2, Tolerance = 1e-07, Interval = 0.002));
+    experiment(StartTime = 0, StopTime = 1, Tolerance = 1e-06, Interval = 0.001));
 end NoObstacle_Test;

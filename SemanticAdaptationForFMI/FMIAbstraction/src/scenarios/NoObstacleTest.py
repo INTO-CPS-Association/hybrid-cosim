@@ -11,10 +11,11 @@ def env_up(time):
 def env_down(time):
     return 0.0 if time < 6 else 1.0
 
-cosim_step_size = 0.00001;
+cosim_step_size = 0.001;
+num_internal_steps = 10
 stop_time = 1.0;
 
-power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size, 
+power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
                      J=0.085, 
                      b=5, 
                      K=1.8, 
@@ -22,11 +23,11 @@ power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size,
                      L=0.036,
                      V=12)
 
-window = WindowFMU("window", 1e-08, 1e-08, cosim_step_size, 
+window = WindowFMU("window", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
                      J=0.085, 
                      r=0.017, 
                      b = 150, 
-                     c = 1e5)
+                     c = 1e3) # c = 1e5 makes this an unstable system.
 
 power.enterInitMode()
 window.enterInitMode()
@@ -85,11 +86,11 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     
     pOut = power.getValues(step, 0, [power.omega, power.theta, power.i])
     
-    times.append(time)
     trace_omega.append(pOut[power.omega])
     trace_i.append(pOut[power.i])
     trace_x.append(wOut[window.x])
     time += cosim_step_size
+    times.append(time)
 
 color_pallete = [
                 "#e41a1c",
@@ -104,11 +105,11 @@ color_pallete = [
 
 output_file("./results.html", title="Results")
 p = figure(title="Plot", x_axis_label='time', y_axis_label='')
-p.line(x=range(len(trace_omega)), y=trace_omega, legend="trace_omega", color=color_pallete[0])
-p.line(x=range(len(trace_i)), y=trace_i, legend="trace_i", color=color_pallete[1])
+p.line(x=times, y=trace_omega, legend="trace_omega", color=color_pallete[0])
+p.line(x=times, y=trace_i, legend="trace_i", color=color_pallete[1])
 show(p)
 
 output_file("./results_x.html", title="Results")
 p = figure(title="Plot", x_axis_label='time', y_axis_label='')
-p.line(x=range(len(trace_x)), y=trace_x, legend="trace_x", color=color_pallete[2])
+p.line(x=times, y=trace_x, legend="trace_x", color=color_pallete[2])
 show(p)
