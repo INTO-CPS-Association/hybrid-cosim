@@ -15,8 +15,6 @@ class PowerFMU(CTSimulationUnit_Euler):
         self.omega = "omega"
         self.i = "i"
         
-        state_vars = [self.theta, self.omega, self.i]
-        
         def get_v(up, down):
             return V if up > 0.5 else (-V if down>0.5 else 0.0)
         
@@ -34,6 +32,6 @@ class PowerFMU(CTSimulationUnit_Euler):
                              self.i: der_i
                              }
         
-        CTSimulationUnit_Euler.__init__(self, num_rtol, num_atol, internal_step_size, state_derivatives, {}, state_vars, input_vars)
+        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, {}, input_vars)
     
     

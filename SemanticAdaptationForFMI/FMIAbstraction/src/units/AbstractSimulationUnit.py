@@ -32,32 +32,35 @@ class AbstractSimulationUnit(object):
     communication step size.
     """
     
-    def __init__(self, calc_functions, state_vars, input_vars):
-        l.debug(">AbstractSimulationUnit(%s, %s, %s)", calc_functions, state_vars, input_vars)
+    def __init__(self, name, output_functions, state_vars, input_vars):
+        l.debug(">AbstractSimulationUnit(%s, %s, %s, %s)", name, output_functions, state_vars, input_vars)
         
+        self._name = name
         self.__state = {}
         self.__computed_time = []
-        self.__calc_functions = calc_functions
         self.__mode = INSTANTIATED_MODE
-        self.__values_dirty = False
+        self.__outputs_dirty = False
         
+        self.__out_functions = output_functions
         self.__state_vars = state_vars
         self.__input_vars = input_vars
-        self.__non_output_vars = list(state_vars)
-        self.__non_output_vars.extend(input_vars)
+        self.__output_vars = output_functions.keys()
+        self.__state_and_input_vars = list(state_vars)
+        self.__state_and_input_vars.extend(input_vars)
         
-        assert len(self.__non_output_vars) == len(self.__input_vars) + len(self.__state_vars)
+        assert len(self.__state_and_input_vars) == len(self.__input_vars) + len(self.__state_vars)
         
         for var in state_vars:
             self.__state[var] = []
-        
+        for var in self.__output_vars:
+            self.__state[var] = []
         for var in input_vars:
             self.__state[var] = []
         
         l.debug("<AbstractSimulationUnit()")
     
     def _getInputAndStateVars(self):
-        return self.__non_output_vars
+        return self.__state_and_input_vars
     
     def _getStateVars(self):
         return self.__state_vars
@@ -70,110 +73,106 @@ class AbstractSimulationUnit(object):
         assert toStep <= len(self.__computed_time), "Cannot rollback to a future step"
         Utils.trimList(self.__computed_time, toStep)
         raise "To be finished"
-        
-    def doStep(self, current_time, step, current_iteration, step_size):
-        l.debug(">doStep(t=%f, s=%d, i=%d, H=%f)", current_time, step, current_iteration, step_size)
-        assert self.__mode == STEP_MODE
-        assert step_size > 0
-        
-        if self.__values_dirty:
-            self.__calculateValues(step, current_iteration)
-            self.__values_dirty = False
-        
-        iteration_running = current_iteration > 0
-        
-        # Record time, even if the step is not accepted.
-        if not iteration_running:
+    
+    def __recordTime(self, current_time, step, current_iteration, step_size):
+        if current_iteration == 0:
             assert step == len(self.__computed_time)
             self.__computed_time.append([current_time + step_size])
         else:
             assert step == len(self.__computed_time) - 1
             assert current_iteration == len(self.__computed_time[step])
             self.__computed_time[step].append(current_time + step_size)
+       
+    def doStep(self, time, step, current_iteration, step_size):
+        l.debug(">%s.doStep(t=%f, s=%d, i=%d, H=%f)", self._name,  time, step, current_iteration, step_size)
+        assert self.__mode == STEP_MODE
+        assert step_size > 0
         
-        result = self._doInternalSteps(current_time, step, current_iteration, step_size, iteration_running)
-        l.debug("<doStep()=%s", result)
+        if self.__outputs_dirty:
+            self.__computeOutputs(step, current_iteration)
+            self.__outputs_dirty = False
+        
+        # Record time, even if the step is not accepted.
+        self.__recordTime(time, step, current_iteration, step_size)
+        
+        result = self._doInternalSteps(time, step, current_iteration, step_size)
+        l.debug("<%s.doStep()=%s", self._name, result)
     
-    def _doInternalSteps(self, current_time, step, current_iteration, step_size, iteration_running):
+    def _doInternalSteps(self, time, step, iteration, cosim_step_size):
         raise "Must be implemented in subclasses"
 
-    def __calculateValues(self, current_step, current_iteration):
-        l.debug(">__calculateValues(%d, %d)", current_step, current_iteration)
+    def __computeOutputs(self, step, iteration):
+        l.debug(">__computeOutputs(%d, %d)", step, iteration)
         # This does not support algebraic loops.
         
         # Get the state and input vars to be used for the computation of the values
-        current_state_snaptshot = {}
-        for var in self._getInputAndStateVars():
-            # Only up-to-date values go in the calculations.
-            # If a calcfunction crash, it's because this FMU is not being used correctly
-            if current_step < len(self.__state[var]):
-                if current_iteration < self.__state[var][current_step]:
-                    current_state_snaptshot[var] = self.__state[var][current_step][current_iteration]
+        # Only up-to-date values go in the calculations.
+        # If a calcfunction crashes, it's because this FMU is not being used correctly
+        current_state_snaptshot = Utils.getValuesUpToDate(self.__state, self._getStateVars(), step, iteration)
+        current_input_snaptshot = Utils.getValuesUpToDate(self.__state, self._getInputVars(), step, iteration)
         
         l.debug("current_state_snaptshot = %s", current_state_snaptshot)
+        l.debug("current_input_snaptshot = %s", current_input_snaptshot)
         
-        for var in self.__calc_functions:
-            new_value = self.__calc_functions[var](current_state_snaptshot)
-            if current_iteration==0:
-                assert current_step == len(self.__state[var])
-                self.__state[var].append([new_value])
-            else:
-                assert current_step == len(self.__state[var])-1
-                assert current_iteration == len(self.__state[var][current_step])
-                self.__state[var][current_step].append(new_value)
+        l.debug("outputs to update = %s", self.__output_vars)
         
-        l.debug("Updated portion of the state:\n%s", self._printState(current_step, current_iteration, self.__calc_functions.keys()))
+        for var in self.__output_vars:
+            new_value = self.__out_functions[var](current_state_snaptshot, current_input_snaptshot)
+            Utils.copyValueToStateTrace(self.__state, var, step, iteration, new_value)
         
-        l.debug("<__calculateValues()")
+        l.debug("Updated portion of the state:\n%s", 
+                    self._printState(step, iteration, self.__out_functions.keys()))
+        
+        l.debug("<__computeOutputs()")
         
     def __setDefaultValues(self, values):
         Utils.copyMapToStateTrace(self.__state, 0, 0, values)
     
-    def _printState(self,step,iteration, varNames=None):
+    def _printState(self,step, iteration, varNames=None):
         varsToPrint = varNames if varNames != None else self.__state.keys()
         strState = ""
         for var in varsToPrint:
             strState += var + "=" + str(self.__state[var][step][iteration]) + "\n"
         return strState
         
-    def setValues(self, current_step, current_iteration, values):
-        l.debug(">setValues(%d, %d, %s)", current_step, current_iteration, values)
-        Utils.copyMapToStateTrace(self.__state, current_step, current_iteration, values)
-        self.__values_dirty = True
-        l.debug("New state: \n%s", self._printState(current_step,current_iteration, values.keys()))
-        l.debug("<setValues()")
+    def setValues(self, step, iteration, values):
+        l.debug(">%s.setValues(%d, %d, %s)", self._name, step, iteration, values)
+        Utils.copyMapToStateTrace(self.__state, step, iteration, values)
+        self.__outputs_dirty = True
+        l.debug("New state: \n%s", self._printState(step,iteration, values.keys()))
+        l.debug("<%s.setValues()", self._name)
         
     
-    def getValues(self, current_step, current_iteration, var_names):
-        l.debug(">getValues(%d, %d, %s)", current_step, current_iteration, var_names)
-        if self.__values_dirty:
-            self.__calculateValues(current_step, current_iteration)
-            self.__values_dirty = True
+    def getValues(self, step, iteration, var_names):
+        l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
+        if self.__outputs_dirty:
+            self.__computeOutputs(step, iteration)
+            self.__outputs_dirty = True
         
         values = {}
         for var in var_names:
             assert self.__state.has_key(var)
-            assert current_step < len(self.__state[var]), "State is not initialized: " + str(self.__state)
-            assert current_iteration < len(self.__state[var][current_step])
-            values[var] = self.__state[var][current_step][current_iteration]
+            assert step < len(self.__state[var]), "State is not initialized: " + str(self.__state)
+            assert iteration < len(self.__state[var][step])
+            values[var] = self.__state[var][step][iteration]
         
-        l.debug("<getValues()=%s", values)
+        l.debug("<%s.getValues()=%s", self._name, values)
         return values
         
     def enterInitMode(self):
-        l.debug(">enterInitMode()")
+        l.debug(">%s.enterInitMode()", self._name)
         assert len(self.__computed_time) == 0
         self.__computed_time.append([0.0])
         
         self.__mode = INIT_MODE
-        l.debug("<enterInitMode()")
+        l.debug("<%s.enterInitMode()", self._name)
         
     def exitInitMode(self):
-        l.debug(">exitInitMode()")
-        if self.__values_dirty:
-            self.__calculateValues(0, 0)
-            self.__values_dirty = False
+        l.debug(">%s.exitInitMode()", self._name)
+        if self.__outputs_dirty:
+            self.__computeOutputs(0, 0)
+            self.__outputs_dirty = False
         self.__mode = STEP_MODE
-        l.debug("<exitInitMode()")
+        l.debug("<%s.exitInitMode()", self._name)
         
     
