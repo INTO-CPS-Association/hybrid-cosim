@@ -17,10 +17,10 @@ class CTSimulationUnit_Euler(CTSimulationUnit):
     """
     
     def __init__(self, name, num_rtol, num_atol, internal_step_size,
-                 state_derivatives, output_functions, 
+                 state_derivatives, algebraic_functions, 
                  input_vars):
         CTSimulationUnit.__init__(self, name, num_rtol, num_atol,
-                                  state_derivatives, output_functions,
+                                  state_derivatives, algebraic_functions,
                                   input_vars)
         
         self.__internal_step_size = internal_step_size

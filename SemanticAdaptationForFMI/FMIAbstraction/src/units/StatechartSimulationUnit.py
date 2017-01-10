@@ -73,7 +73,7 @@ class StatechartSimulationUnit(AbstractSimulationUnit):
         
         self.__last_transition_time = 0.0
         
-        AbstractSimulationUnit.__init__(self, name, {}, [self.__current_state, self.out_event], [self.__in_event])
+        AbstractSimulationUnit.__init__(self, name, {}, [self.__current_state, self.out_event], [self.in_event])
     
     def _isClose(self, a, b):
         return numpy.isclose(a,b, self._num_rtol, self._num_atol)

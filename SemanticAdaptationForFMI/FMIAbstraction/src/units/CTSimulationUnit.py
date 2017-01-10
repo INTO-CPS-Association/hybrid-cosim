@@ -19,9 +19,9 @@ class CTSimulationUnit(AbstractSimulationUnit):
     """
     
     def __init__(self, name, num_rtol, num_atol, 
-                                  state_derivatives, output_functions, 
+                                  state_derivatives, algebraic_functions, 
                                   input_vars):
-        AbstractSimulationUnit.__init__(self, name, output_functions, state_derivatives.keys(), input_vars)
+        AbstractSimulationUnit.__init__(self, name, algebraic_functions, state_derivatives.keys(), input_vars)
         
         self._num_rtol = num_rtol
         self._num_atol = num_atol

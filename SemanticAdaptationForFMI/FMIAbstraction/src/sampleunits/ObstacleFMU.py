@@ -13,10 +13,10 @@ class ObstacleFMU(CTSimulationUnit_Euler):
         
         state_derivatives = {}
         
-        output_functions = {
+        algebraic_functions = {
                             self.F : calc_F
                             }
         
-        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, output_functions, input_vars)
+        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, algebraic_functions, input_vars)
     
     

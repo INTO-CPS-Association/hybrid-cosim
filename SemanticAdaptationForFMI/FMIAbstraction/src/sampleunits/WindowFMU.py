@@ -30,12 +30,12 @@ class WindowFMU(CTSimulationUnit_Euler):
                              self.omega: der_omega
                              }
         
-        output_functions = {
+        algebraic_functions = {
                             self.v : calc_v,
                             self.x : calc_x,
                             self.tau: calc_tau
                             }
         
-        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, output_functions, input_vars)
+        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, algebraic_functions, input_vars)
     
     

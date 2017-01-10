@@ -32,6 +32,8 @@ class PowerFMU(CTSimulationUnit_Euler):
                              self.i: der_i
                              }
         
+        algebraic_functions = []
+        
         CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, {}, input_vars)
     
     
