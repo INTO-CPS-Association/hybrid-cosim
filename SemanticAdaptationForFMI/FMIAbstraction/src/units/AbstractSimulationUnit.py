@@ -39,12 +39,12 @@ class AbstractSimulationUnit(object):
         self.__state = {}
         self.__alg_value_dirty = {}
         self.__computed_time = []
-        self.__mode = INSTANTIATED_MODE
+        self._mode = INSTANTIATED_MODE
         
         self.__algebraic_functions = algebraic_functions
         self.__state_vars = state_vars
         self.__input_vars = input_vars
-        self.__output_vars = algebraic_functions.keys()
+        self.__algebraic_vars = algebraic_functions.keys()
         self.__state_and_input_vars = list(state_vars)
         self.__state_and_input_vars.extend(input_vars)
         
@@ -52,7 +52,7 @@ class AbstractSimulationUnit(object):
         
         for var in state_vars:
             self.__state[var] = []
-        for var in self.__output_vars:
+        for var in self.__algebraic_vars:
             self.__state[var] = []
             self.__alg_value_dirty[var] = False
         for var in input_vars:
@@ -86,7 +86,7 @@ class AbstractSimulationUnit(object):
        
     def doStep(self, time, step, current_iteration, step_size):
         l.debug(">%s.doStep(t=%f, s=%d, i=%d, H=%f)", self._name,  time, step, current_iteration, step_size)
-        assert self.__mode == STEP_MODE
+        assert self._mode == STEP_MODE
         assert step_size > 0
         
         """ This is not done here because it may not be possible to do it for 
@@ -118,9 +118,9 @@ class AbstractSimulationUnit(object):
         l.debug("current_state_snaptshot = %s", current_state_snaptshot)
         l.debug("current_input_snaptshot = %s", current_input_snaptshot)
         
-        l.debug("outputs to update = %s", self.__output_vars)
+        l.debug("outputs to update = %s", self.__algebraic_vars)
         
-        for var in self.__output_vars:
+        for var in self.__algebraic_vars:
             new_value = self.__algebraic_functions[var](current_state_snaptshot, current_input_snaptshot)
             Utils.copyValueToStateTrace(self.__state, var, step, iteration, new_value)
         
@@ -139,14 +139,14 @@ class AbstractSimulationUnit(object):
             strState += var + "=" + str(self.__state[var][step][iteration]) + "\n"
         return strState
     
-    def __markOutputs(self, step, iteration, dirty, whichOnes=None):
-        output_vars = self.__output_vars if whichOnes==None else whichOnes
-        for out_var in output_vars:
+    def __markAlgVars(self, step, iteration, dirty, whichOnes=None):
+        algebraic_vars = self.__algebraic_vars if whichOnes==None else whichOnes
+        for out_var in algebraic_vars:
             if self.__alg_value_dirty.has_key(out_var):
                 self.__alg_value_dirty[out_var] = dirty
             
-    def __areOutputsDirty(self, step, iteration, whichOnes=None):
-        var_names = self.__output_vars if whichOnes==None else whichOnes
+    def __areAlgVarsDirty(self, step, iteration, whichOnes=None):
+        var_names = self.__algebraic_vars if whichOnes==None else whichOnes
         for out_var in var_names:
             if self.__alg_value_dirty.has_key(out_var):
                 if self.__alg_value_dirty[out_var]:
@@ -157,7 +157,7 @@ class AbstractSimulationUnit(object):
         l.debug(">%s.setValues(%d, %d, %s)", self._name, step, iteration, values)
         Utils.copyMapToStateTrace(self.__state, step, iteration, values)
         
-        self.__markOutputs(step, iteration, dirty=True);
+        self.__markAlgVars(step, iteration, dirty=True);
         
         l.debug("New state: \n%s", self._printState(step,iteration, values.keys()))
         l.debug("<%s.setValues()", self._name)
@@ -165,9 +165,9 @@ class AbstractSimulationUnit(object):
     
     def getValues(self, step, iteration, var_names):
         l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
-        if self.__areOutputsDirty(step, iteration, var_names):
+        if self.__areAlgVarsDirty(step, iteration, var_names):
             self.__computeOutputs(step, iteration)
-            self.__markOutputs(step, iteration, dirty=False, whichOnes=var_names);
+            self.__markAlgVars(step, iteration, dirty=False, whichOnes=var_names);
         
         values = {}
         for var in var_names:
@@ -184,15 +184,15 @@ class AbstractSimulationUnit(object):
         assert len(self.__computed_time) == 0
         self.__computed_time.append([0.0])
         
-        self.__mode = INIT_MODE
+        self._mode = INIT_MODE
         l.debug("<%s.enterInitMode()", self._name)
         
     def exitInitMode(self):
         l.debug(">%s.exitInitMode()", self._name)
-        if self.__areOutputsDirty(0,0):
+        if self.__areAlgVarsDirty(0,0):
             self.__computeOutputs(0,0)
-            self.__markOutputs(0,0, dirty=False)
-        self.__mode = STEP_MODE
+            self.__markAlgVars(0,0, dirty=False)
+        self._mode = STEP_MODE
         l.debug("<%s.exitInitMode()", self._name)
         
     

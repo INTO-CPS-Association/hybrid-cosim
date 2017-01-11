@@ -2,7 +2,8 @@ import logging
 
 import numpy
 
-from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT
+from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT, \
+    INIT_MODE
 
 
 l = logging.getLogger()
@@ -28,7 +29,6 @@ class InacurateControllerArmatureAdaptation(AbstractSimulationUnit):
         The FMU records this value in its internal state.
     "" = f.getValues(...)
         The empty event is returned because at time t=0, there can be no crossing. 
-        Because there was no doStep call in between, the event returned here can only be None.
     f.exitInitMode()
     
     f.setValues(..., None)
@@ -56,10 +56,10 @@ class InacurateControllerArmatureAdaptation(AbstractSimulationUnit):
         self.__threshold = threshold
         
         self.armature_current = "armature_current"
-        self.previous_input = "previous_input"
         self.out_event = "out_event"
         input_vars = [self.armature_current]
-        state_vars = [self.previous_input, self.out_event]
+        state_vars = [self.out_event]
+        
         algebraic_functions = {}
         AbstractSimulationUnit.__init__(self, name, algebraic_functions, state_vars, input_vars)
     
@@ -75,24 +75,23 @@ class InacurateControllerArmatureAdaptation(AbstractSimulationUnit):
         assert self._biggerThan(cosim_step_size, 0), "cosim_step_size too small: {0}".format(cosim_step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
-        previous_input = self.getValues(step-1, iteration, self._getStateVars())[self.previous_input]
         current_input = self.getValues(step, iteration, self._getInputVars())[self.armature_current]
+        previous_input = self.getValues(step-1, iteration, self._getInputVars())[self.armature_current]
         
         output_event = ""
         
-        l.debug("previous_input=%f", previous_input)
-        l.debug("current_input=%f", current_input)
+        l.debug("%s.previous_input=%f", self._name, previous_input)
+        l.debug("%s.current_input=%f", self._name, current_input)
         
         if (not self._biggerThan(previous_input, self.__threshold)) \
                 and self._biggerThan(current_input, self.__threshold) \
                 and self.__crossUpward:
             output_event = "obj"
         
-        l.debug("output_event=%f", previous_input)
+        l.debug("%s.output_event=%s", self._name, output_event)
         self.setValues(step, iteration, {self.out_event: output_event})
-        
-        # Commit the new state and discard previous.
-        self.setValues(step, iteration, {self.previous_input: current_input})
         
         l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, cosim_step_size)
         return (STEP_ACCEPT, cosim_step_size)
+    
+    

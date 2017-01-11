@@ -53,4 +53,4 @@ class DriverControllerStatechartFMU(StatechartSimulationUnit):
             # No transition taken
             return (None, current_state, False, None)
         
-        StatechartSimulationUnit.__init__(self, name, num_rtol, num_atol, state_transition)
+        StatechartSimulationUnit.__init__(self, name, num_rtol, num_atol, state_transition, autonomous=False)

@@ -45,9 +45,11 @@ class CTSimulationUnit(AbstractSimulationUnit):
         
         # Use double buffering in the internal steps. 
         # This ensures that any computation in the state derivatives use consistent values
+        l.debug("Initialising state double buffer...")
         state_buffers = [self.getValues(step-1, iteration, self._getStateVars()), {}]
         next_state_idx = 0;
         previous_state_idx = 1;
+        l.debug("Initialising input buffer...")
         input_buffer = self.getValues(step, iteration, self._getInputVars())
         
         next_cosim_time = time+cosim_step_size

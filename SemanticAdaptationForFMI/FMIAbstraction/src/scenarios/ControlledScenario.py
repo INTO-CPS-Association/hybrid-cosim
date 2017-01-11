@@ -19,7 +19,7 @@ l.setLevel(logging.DEBUG)
 
 cosim_step_size = 0.001
 num_internal_steps = 10
-stop_time = 6.0;
+stop_time = 10;
 
 environment = EnvironmentStatechartFMU("env", NUM_RTOL, NUM_ATOL)
 
@@ -33,7 +33,7 @@ power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps
                      L=0.036,
                      V=12)
 
-armature_threshold = 30.0
+armature_threshold = 20.0
 adapt_armature = InacurateControllerArmatureAdaptation("arm_adapt", NUM_RTOL, NUM_ATOL, armature_threshold, True)
 
 adapt_power_input = PowerInputAdaptation("power_adapt")
@@ -83,31 +83,40 @@ wOut = window.getValues(0, 0, [window.tau, window.x])
 obstacle.setValues(0, 0, {obstacle.x: wOut[window.x]})
 oOut = obstacle.getValues(0, 0, [obstacle.F])
 
-
-adapt_armature.setValues(0, 0, {adapt_armature.armature_current: pOut[power.i]})
+adapt_armature.setValues(0, 0, {adapt_armature.armature_current: pOut[power.i],
+                                adapt_armature.out_event: "" })
 
 adaptArmOut = adapt_armature.getValues(0, 0, [adapt_armature.out_event])
 
+environment.setValues(0, 0, {environment.current_state : "Neutral",
+                             environment.out_event : ""})
 envOut = environment.getValues(0, 0, [environment.out_event])
 
 # coupling equation for the input event of the controller
 controller_in = adaptArmOut[adapt_armature.out_event] + envOut[environment.out_event]
 if adaptArmOut[adapt_armature.out_event] != "" and envOut[environment.out_event] != "":
     controller_in = adaptArmOut[adapt_armature.out_event]
-controller.setValues(0, 0, {controller.in_event : controller_in})
+controller.setValues(0, 0, {controller.in_event : controller_in,
+                            controller.current_state: "Neutral",
+                            controller.out_event: ""})
 
 cOut = controller.getValues(0, 0, [controller.out_event])
 
-adapt_power_input.setValues(0, 0, {adapt_power_input.in_event : cOut[controller.out_event]})
+adapt_power_input.setValues(0, 0, {adapt_power_input.in_event : cOut[controller.out_event],
+                                   adapt_power_input.out_down: 0.0,
+                                   adapt_power_input.out_up: 0.0})
+
 adaptPowerOut = adapt_power_input.getValues(0, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
+
 
 # Coupling equation for power
 power_tau = - ( wOut[window.tau] + window_radius * oOut[obstacle.F])
 
 # Finally set the other power inputs
 power.setValues(0, 0, {power.tau: power_tau, 
-                       power.up: adaptPowerOut.out_up,
-                       power.down: adaptPowerOut.out_down})
+                       power.up: adaptPowerOut[adapt_power_input.out_up],
+                       power.down: adaptPowerOut[adapt_power_input.out_down]})
+
 
 
 environment.exitInitMode()
@@ -128,6 +137,26 @@ time = 0.0
 
 for step in range(1, int(stop_time / cosim_step_size) + 1):
     
+    # Note that despite the fact that there is no feedthrough between 
+    # the inputs and the outputs of the power system, 
+    # the internal solver would still benefit from an up-to-date 
+    # value given for the inputs. However, that creates an algebraic loop, 
+    # so for now, we just get old values for the inputs.
+    
+    oOut = obstacle.getValues(step-1, 0, [obstacle.F])
+    wOut = window.getValues(step-1, 0, [window.tau, window.x])
+    adaptPowerOut = adapt_power_input.getValues(step-1, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
+    
+    # Coupling equation for power
+    power_tau = - ( wOut[window.tau] + window_radius * oOut[obstacle.F])
+    
+    # Finally set the other power inputs
+    power.setValues(step, 0, {power.tau: power_tau, 
+                           power.up: adaptPowerOut[adapt_power_input.out_up],
+                           power.down: adaptPowerOut[adapt_power_input.out_down]})
+    
+    power.doStep(time, step, 0, cosim_step_size)
+    
     pOut = power.getValues(step, 0, [power.omega, power.theta, power.i])
     
     window.setValues(step, 0, {window.omega_input: pOut[power.omega],
@@ -135,15 +164,18 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
                             window.theta: 0.0,
                             window.omega: 0.0
                             })
+    window.doStep(time, step, 0, cosim_step_size) 
     wOut = window.getValues(step, 0, [window.tau, window.x])
     
     obstacle.setValues(step, 0, {obstacle.x: wOut[window.x]})
+    obstacle.doStep(time, step, 0, cosim_step_size) 
     oOut = obstacle.getValues(step, 0, [obstacle.F])
     
     adapt_armature.setValues(step, 0, {adapt_armature.armature_current: pOut[power.i]})
-
+    adapt_armature.doStep(time, step, 0, cosim_step_size) 
     adaptArmOut = adapt_armature.getValues(step, 0, [adapt_armature.out_event])
     
+    environment.doStep(time, step, 0, cosim_step_size) 
     envOut = environment.getValues(step, 0, [environment.out_event])
     
     # coupling equation for the input event of the controller
@@ -151,19 +183,27 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     if adaptArmOut[adapt_armature.out_event] != "" and envOut[environment.out_event] != "":
         controller_in = adaptArmOut[adapt_armature.out_event]
     controller.setValues(step, 0, {controller.in_event : controller_in})
-    
+    controller.doStep(time, step, 0, cosim_step_size) 
     cOut = controller.getValues(step, 0, [controller.out_event])
     
     adapt_power_input.setValues(step, 0, {adapt_power_input.in_event : cOut[controller.out_event]})
+    adapt_power_input.doStep(time, step, 0, cosim_step_size) 
     adaptPowerOut = adapt_power_input.getValues(step, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
     
     # Coupling equation for power
     power_tau = - ( wOut[window.tau] + window_radius * oOut[obstacle.F])
     
     # Finally set the other power inputs
+    """
+    The instruction below is not really needed, as power has already performed the step.
+    However, we leave it here because in case an algebraic loop were being solved,
+    this is where we would set the improved values for the power inputs, 
+    and check for convergence.
+    
+    """
     power.setValues(step, 0, {power.tau: power_tau, 
-                           power.up: adaptPowerOut.out_up,
-                           power.down: adaptPowerOut.out_down})
+                           power.up: adapt_power_input.out_up,
+                           power.down: adapt_power_input.out_down})
     
     trace_omega.append(pOut[power.omega])
     trace_i.append(pOut[power.i])
