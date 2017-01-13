@@ -128,7 +128,7 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         l.debug("<%s.StatechartSimulationUnit_CTInOut.setValues()", self._name)
     
     
-    def _doStepFunction(self, time, state, inputs):
+    def _doStepFunction(self, time, state, inputs, previous_inputs):
         """
         Runs all transitions that are enabled, or become enabled at time time with the inputs 
             valued *at that time*.
@@ -147,7 +147,8 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
             The out_values is a map of assignments to the output variables.
             It will be merged with output_assignments
             """
-            (out_values, new_state, transition_taken, trigger) = self._state_transition_function(statechart_state, inputs, elapsed)
+            (out_values, new_state, transition_taken, trigger) = \
+                self._state_transition_function(statechart_state, inputs, previous_inputs, elapsed)
             if transition_taken:
                 l.debug("Transition taken from %s to %s because of %s. Produced assignments: %s.", 
                                 statechart_state, new_state, trigger, out_values)
@@ -174,8 +175,9 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         
         state_snapshot = self.getValues(step-1, iteration, [self.__current_state])
         input_snapshot = self.getValues(step, iteration, self._getInputVars())
+        previous_input_snaptshop = self.getValues(step-1, -1, self._getInputVars())
         
-        (next_state, output_assignments) = self._doStepFunction(time+cosim_step_size, state_snapshot, input_snapshot)
+        (next_state, output_assignments) = self._doStepFunction(time+cosim_step_size, state_snapshot, input_snapshot, previous_input_snaptshop)
         
         # Commit the new state and outputs.
         self.setValues(step, iteration, {self.__current_state : next_state})

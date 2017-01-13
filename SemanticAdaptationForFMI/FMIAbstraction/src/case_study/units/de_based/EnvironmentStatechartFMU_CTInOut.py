@@ -23,9 +23,9 @@ class EnvironmentStatechartFMU_CTInOut(StatechartSimulationUnit_CTInOut):
         output_vars = [self.out_up , self.out_down]
         
         initial_state = "Initial"
-        
-        def state_transition(current_state, input_event, elapsed):
-            l.debug(">%s.state_transition(%s, %s, %f)", self._name, current_state, input_event, elapsed)
+                
+        def state_transition(current_state, inputs, previous_inputs, elapsed):
+            l.debug(">%s.state_transition(%s, %s, %f)", self._name, current_state, inputs, elapsed)
             
             output_assignment = {}
             target_state = ""
@@ -36,17 +36,17 @@ class EnvironmentStatechartFMU_CTInOut(StatechartSimulationUnit_CTInOut):
                 target_state = "Neutral"
                 transition_taken = True
                 trigger = StatechartSimulationUnit_CTInOut.TRIGGER_DEFAULT
-                output_assignment[self.out_up] = 0.0
-                output_assignment[self.out_down] = 0.0
+                output_assignment[self.out_up] = 0
+                output_assignment[self.out_down] = 0
             elif current_state == "Neutral":
                 if self._biggerThan(elapsed, 0.5):
                     target_state = "Up"
                     transition_taken = True
                     trigger = StatechartSimulationUnit_CTInOut.TRIGGER_AFTER
-                    output_assignment[self.out_up] = 1.0
+                    output_assignment[self.out_up] = 1
                 
-            return (output_assignment, target_state, transition_taken, trigger)
             l.debug("<%s.state_transition(%s, %s, %s, %s)", self._name, output_assignment, target_state, transition_taken, trigger)
+            return (output_assignment, target_state, transition_taken, trigger)
         
         StatechartSimulationUnit_CTInOut.__init__(self, name, 
                                                   num_rtol, num_atol, 
