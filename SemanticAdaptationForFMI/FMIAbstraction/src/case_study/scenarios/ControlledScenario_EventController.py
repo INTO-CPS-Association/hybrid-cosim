@@ -13,8 +13,8 @@ from case_study.units.adaptations.PowerInputAdaptation_Event import PowerInputAd
 from case_study.units.ct_based.ObstacleFMU import ObstacleFMU
 from case_study.units.ct_based.PowerFMU import PowerFMU
 from case_study.units.ct_based.WindowFMU import WindowFMU
-from case_study.units.de_based.DriverControllerStatechartFMU import DriverControllerStatechartFMU_Event
-from case_study.units.de_based.EnvironmentStatechartFMU import EnvironmentStatechartFMU_Event
+from case_study.units.de_based.DriverControllerStatechartFMU_Event import DriverControllerStatechartFMU_Event
+from case_study.units.de_based.EnvironmentStatechartFMU_Event import EnvironmentStatechartFMU_Event
 
 
 NUM_RTOL = 1e-08
@@ -94,7 +94,7 @@ adapt_armature.setValues(0, 0, {adapt_armature.armature_current: pOut[power.i],
 
 adaptArmOut = adapt_armature.getValues(0, 0, [adapt_armature.out_event])
 
-environment.setValues(0, 0, {environment.current_state : "Neutral",
+environment.setValues(0, 0, {environment.__current_state : "Neutral",
                              environment.out_event : ""})
 envOut = environment.getValues(0, 0, [environment.out_event])
 
@@ -103,7 +103,7 @@ controller_in = adaptArmOut[adapt_armature.out_event] + envOut[environment.out_e
 if adaptArmOut[adapt_armature.out_event] != "" and envOut[environment.out_event] != "":
     controller_in = adaptArmOut[adapt_armature.out_event]
 controller.setValues(0, 0, {controller.in_event : controller_in,
-                            controller.current_state: "Neutral",
+                            controller.__current_state: "Neutral",
                             controller.out_event: ""})
 
 cOut = controller.getValues(0, 0, [controller.out_event])

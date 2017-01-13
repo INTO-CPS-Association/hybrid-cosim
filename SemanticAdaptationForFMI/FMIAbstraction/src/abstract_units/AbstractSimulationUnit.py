@@ -131,6 +131,16 @@ class AbstractSimulationUnit(object):
                     self._printState(step, iteration, self.__algebraic_functions.keys()))
         
         l.debug("<__computeOutputs()")
+    
+    def _ZOHOldValues(self, step, iteration):
+        l.debug(">_ZOHOldValues(%d, %d)", step, iteration)
+        assert iteration == 0, "Not supported yet."
+        if step>0:
+            for state_var in self._getStateVars():
+                if step == len(self.__state[state_var]):
+                    l.debug("Applying ZOH to %s...", state_var)
+                    self.__state[state_var].append([self.__state[state_var][step-1][-1]])
+        l.debug("<_ZOHOldValues(%d, %d)", step, iteration)
         
     def __setDefaultValues(self, values):
         Utils.copyMapToStateTrace(self.__state, 0, 0, values)

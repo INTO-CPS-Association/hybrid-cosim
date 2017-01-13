@@ -72,7 +72,7 @@ class StatechartSimulationUnit_Event(AbstractSimulationUnit):
         
         self.in_event = "__in_event"
         self.out_event = "__out_event"
-        self.current_state = "state"
+        self.__current_state = "state"
         
         self.__last_transition_time = 0.0
         
@@ -80,7 +80,7 @@ class StatechartSimulationUnit_Event(AbstractSimulationUnit):
         
         input_vars = [self.in_event] if not autonomous else []
         
-        AbstractSimulationUnit.__init__(self, name, {}, [self.current_state, self.out_event], input_vars)
+        AbstractSimulationUnit.__init__(self, name, {}, [self.__current_state, self.out_event], input_vars)
     
     def _isClose(self, a, b):
         return numpy.isclose(a,b, self._num_rtol, self._num_atol)
@@ -94,13 +94,13 @@ class StatechartSimulationUnit_Event(AbstractSimulationUnit):
     """
     def _doStepFunction(self, time, state, inputs):
         """
-        state is {self.current_state : current_state}
+        state is {self.__current_state : __current_state}
         input is {self.input : input}
         """
         l.debug(">%s._doStepFunction(%f, %s, %s)", self._name, time, state, inputs)
         
         transition_taken = True
-        old_state = state[self.current_state]
+        old_state = state[self.__current_state]
         inputToConsume = inputs[self.in_event] if not self.__autonomous else ""
         output_event = ""
         while transition_taken:
@@ -132,13 +132,13 @@ class StatechartSimulationUnit_Event(AbstractSimulationUnit):
         assert self._biggerThan(cosim_step_size, 0), "cosim_step_size too small: {0}".format(cosim_step_size)
         assert iteration == 0, "Fixed point iterations involving this component are not supported."
         
-        state_snapshot = self.getValues(step-1, iteration, [self.current_state])
+        state_snapshot = self.getValues(step-1, iteration, [self.__current_state])
         input_snapshot = self.getValues(step, iteration, self._getInputVars())
         
         (next_state, output_event) = self._doStepFunction(time+cosim_step_size, state_snapshot, input_snapshot)
         
         # Commit the new state
-        self.setValues(step, iteration, {self.current_state : next_state, self.out_event : output_event})
+        self.setValues(step, iteration, {self.__current_state : next_state, self.out_event : output_event})
         
         l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, cosim_step_size)
         return (STEP_ACCEPT, cosim_step_size)
