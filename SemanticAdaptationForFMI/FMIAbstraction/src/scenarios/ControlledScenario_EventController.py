@@ -10,6 +10,11 @@ from sampleunits.PowerFMU import PowerFMU
 from sampleunits.PowerInputAdaptation import PowerInputAdaptation
 from sampleunits.WindowFMU import WindowFMU
 
+"""
+In this scenario, the controller is a statchart that receives events at his input.
+The main semantic adaptation is getting the continuous armature signal coming from the power system,
+and converting it into an event.
+"""
 
 NUM_RTOL = 1e-08
 NUM_ATOL = 1e-08

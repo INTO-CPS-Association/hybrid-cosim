@@ -2,7 +2,7 @@ from units.CTSimulationUnit_Euler import CTSimulationUnit_Euler
 
 class PowerFMU(CTSimulationUnit_Euler):
     
-    def __init__(self, name, num_rtol, num_atol, internal_step_size, J, b, K, R, L, V):
+    def __init__(self, name, num_rtol, num_atol, internal_step_size, J, b, K, R, L, V_a):
         self.name = name
         
         self.up = "up"
@@ -16,7 +16,7 @@ class PowerFMU(CTSimulationUnit_Euler):
         self.i = "i"
         
         def get_v(up, down):
-            return V if up > 0.5 else (-V if down>0.5 else 0.0)
+            return V_a if up > 0.5 else (-V_a if down>0.5 else 0.0)
         
         def der_theta(x, u):
             return x[self.omega]
@@ -32,8 +32,10 @@ class PowerFMU(CTSimulationUnit_Euler):
                              self.i: der_i
                              }
         
-        algebraic_functions = []
+        algebraic_functions = {}
         
-        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, {}, input_vars)
+        CTSimulationUnit_Euler.__init__(self, name, 
+                                        num_rtol, num_atol, internal_step_size, 
+                                        state_derivatives, algebraic_functions, input_vars)
     
     

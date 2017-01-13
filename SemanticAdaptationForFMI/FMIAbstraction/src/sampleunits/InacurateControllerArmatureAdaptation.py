@@ -2,8 +2,7 @@ import logging
 
 import numpy
 
-from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT, \
-    INIT_MODE
+from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT
 
 
 l = logging.getLogger()
