@@ -41,7 +41,7 @@ class DriverControllerStatechartFMU_CTInOut(StatechartSimulationUnit_CTInOut):
         
         initial_state = "Initial"
         
-        def state_transition(current_state, inputs, previous_inputs, elapsed):
+        def state_transition(current_state, inputs, previous_inputs, elapsed, inputs_available):
             l.debug(">%s.state_transition(%s, %s, %f)", self._name, current_state, inputs, elapsed)
             
             output_assignment = {}
@@ -56,48 +56,51 @@ class DriverControllerStatechartFMU_CTInOut(StatechartSimulationUnit_CTInOut):
                 output_assignment[self.out_up] = 0
                 output_assignment[self.out_down] = 0
             elif current_state=="Neutral":
-                if inputs[self.in_dup] == 1:
-                    target_state = "Up"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_up] = 1
-                elif inputs[self.in_ddown] == 1:
-                    target_state = "Down"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_down] = 1
+                if inputs_available:
+                    if inputs[self.in_dup] == 1:
+                        target_state = "Up"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_up] = 1
+                    elif inputs[self.in_ddown] == 1:
+                        target_state = "Down"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_down] = 1
             elif current_state=="Up":
-                if inputs[self.in_obj] == 1:
-                    target_state = "Object"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_up] = 0
-                    output_assignment[self.out_down] = 1
-                elif inputs[self.in_ddown] == 1:
-                    assert inputs[self.in_dup] == 0
-                    target_state = "Down"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_up] = 0
-                    output_assignment[self.out_down] = 1
-                elif inputs[self.in_dup] == 0:
-                    target_state = "Neutral"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_up] = 0
+                if inputs_available:
+                    if inputs[self.in_obj] == 1:
+                        target_state = "Object"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_up] = 0
+                        output_assignment[self.out_down] = 1
+                    elif inputs[self.in_ddown] == 1:
+                        assert inputs[self.in_dup] == 0
+                        target_state = "Down"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_up] = 0
+                        output_assignment[self.out_down] = 1
+                    elif inputs[self.in_dup] == 0:
+                        target_state = "Neutral"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_up] = 0
             elif current_state=="Down":
-                if inputs[self.in_dup] == 1:
-                    assert inputs[self.in_ddown] == 0
-                    target_state = "Up"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_up] = 1
-                    output_assignment[self.out_down] = 0
-                elif inputs[self.in_ddown] == 0:
-                    target_state = "Neutral"
-                    transition_taken = True
-                    trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
-                    output_assignment[self.out_down] = 0
+                if inputs_available:
+                    if inputs[self.in_dup] == 1:
+                        assert inputs[self.in_ddown] == 0
+                        target_state = "Up"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_up] = 1
+                        output_assignment[self.out_down] = 0
+                    elif inputs[self.in_ddown] == 0:
+                        target_state = "Neutral"
+                        transition_taken = True
+                        trigger = StatechartSimulationUnit_CTInOut.TRIGGER_INPUT
+                        output_assignment[self.out_down] = 0
             elif current_state=="Object":
                 if self._biggerThan(elapsed, 1.0):
                     target_state = "Neutral"

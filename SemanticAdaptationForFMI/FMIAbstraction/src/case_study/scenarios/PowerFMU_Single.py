@@ -20,7 +20,7 @@ power = PowerFMU("power", 1e-08, 1e-05, 0.001,
                      K=1.8, 
                      R=0.15, 
                      L=0.036,
-                     V=12)
+                     V_a=12)
 
 power.enterInitMode()
 

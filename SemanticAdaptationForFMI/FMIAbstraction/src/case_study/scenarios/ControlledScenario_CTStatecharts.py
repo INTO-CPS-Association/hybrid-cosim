@@ -8,13 +8,12 @@ import logging
 
 from bokeh.plotting import figure, output_file, show
 
-from case_study.units.adaptations.InacurateControllerArmatureAdaptation_Event import InacurateControllerArmatureAdaptation_Event
-from case_study.units.adaptations.PowerInputAdaptation_Event import PowerInputAdaptation_Event
+from case_study.units.adaptations.InacurateControllerArmatureAdaptation_CT import InacurateControllerArmatureAdaptation_CT
 from case_study.units.ct_based.ObstacleFMU import ObstacleFMU
 from case_study.units.ct_based.PowerFMU import PowerFMU
 from case_study.units.ct_based.WindowFMU import WindowFMU
-from case_study.units.de_based.DriverControllerStatechartFMU_Event import DriverControllerStatechartFMU_Event
-from case_study.units.de_based.EnvironmentStatechartFMU_Event import EnvironmentStatechartFMU_Event
+from case_study.units.de_based.DriverControllerStatechartFMU_CTInOut import DriverControllerStatechartFMU_CTInOut
+from case_study.units.de_based.EnvironmentStatechartFMU_CTInOut import EnvironmentStatechartFMU_CTInOut
 
 
 NUM_RTOL = 1e-08
@@ -27,9 +26,9 @@ cosim_step_size = 0.001
 num_internal_steps = 10
 stop_time = 10;
 
-environment = EnvironmentStatechartFMU_Event("env", NUM_RTOL, NUM_ATOL)
+environment = EnvironmentStatechartFMU_CTInOut("env", NUM_RTOL, NUM_ATOL)
 
-controller = DriverControllerStatechartFMU_Event("controller", NUM_RTOL, NUM_ATOL)
+controller = DriverControllerStatechartFMU_CTInOut("controller", NUM_RTOL, NUM_ATOL)
 
 power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
                      J=0.085, 
@@ -40,9 +39,7 @@ power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps
                      V_a=12)
 
 armature_threshold = 20.0
-adapt_armature = InacurateControllerArmatureAdaptation_Event("arm_adapt", NUM_RTOL, NUM_ATOL, armature_threshold, True)
-
-adapt_power_input = PowerInputAdaptation_Event("power_adapt")
+adapt_armature = InacurateControllerArmatureAdaptation_CT("arm_adapt", NUM_RTOL, NUM_ATOL, armature_threshold, True)
 
 window_radius = 0.017
 
@@ -60,7 +57,6 @@ environment.enterInitMode()
 controller.enterInitMode()
 power.enterInitMode()
 adapt_armature.enterInitMode()
-adapt_power_input.enterInitMode()
 window.enterInitMode()
 obstacle.enterInitMode()
 
@@ -72,7 +68,7 @@ In this case we know that there is no direct feed-through between the power inpu
     before setting the new inputs to the power.
 """
 
-pOut = power.setValues(0, 0, {
+power.setValues(0, 0, {
                                  power.omega: 0.0, 
                                  power.theta: 0.0, 
                                  power.i: 0.0
@@ -90,46 +86,30 @@ obstacle.setValues(0, 0, {obstacle.x: wOut[window.x]})
 oOut = obstacle.getValues(0, 0, [obstacle.F])
 
 adapt_armature.setValues(0, 0, {adapt_armature.armature_current: pOut[power.i],
-                                adapt_armature.out_event: "" })
+                                adapt_armature.out_obj: 0.0 })
 
-adaptArmOut = adapt_armature.getValues(0, 0, [adapt_armature.out_event])
+adaptArmOut = adapt_armature.getValues(0, 0, [adapt_armature.out_obj])
 
-environment.setValues(0, 0, {environment.__current_state : "Neutral",
-                             environment.out_event : ""})
-envOut = environment.getValues(0, 0, [environment.out_event])
+envOut = environment.getValues(0, 0, [environment.out_up, environment.out_down])
 
-# coupling equation for the input event of the controller
-controller_in = adaptArmOut[adapt_armature.out_event] + envOut[environment.out_event]
-if adaptArmOut[adapt_armature.out_event] != "" and envOut[environment.out_event] != "":
-    controller_in = adaptArmOut[adapt_armature.out_event]
-controller.setValues(0, 0, {controller.in_event : controller_in,
-                            controller.__current_state: "Neutral",
-                            controller.out_event: ""})
+controller.setValues(0, 0, {controller.in_dup : envOut[environment.out_up],
+                            controller.in_ddown : envOut[environment.out_down],
+                            controller.in_obj : adaptArmOut[adapt_armature.out_obj]})
 
-cOut = controller.getValues(0, 0, [controller.out_event])
-
-adapt_power_input.setValues(0, 0, {adapt_power_input.in_event : cOut[controller.out_event],
-                                   adapt_power_input.out_down: 0.0,
-                                   adapt_power_input.out_up: 0.0})
-
-adaptPowerOut = adapt_power_input.getValues(0, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
-
+cOut = controller.getValues(0, 0, [controller.out_up, controller.out_down])
 
 # Coupling equation for power
 power_tau = - ( wOut[window.tau] + window_radius * oOut[obstacle.F])
 
 # Finally set the other power inputs
 power.setValues(0, 0, {power.tau: power_tau, 
-                       power.up: adaptPowerOut[adapt_power_input.out_up],
-                       power.down: adaptPowerOut[adapt_power_input.out_down]})
-
-
+                       power.up: cOut[controller.out_up],
+                       power.down: cOut[controller.out_down]})
 
 environment.exitInitMode()
 controller.exitInitMode()
 power.exitInitMode()
 adapt_armature.exitInitMode()
-adapt_power_input.exitInitMode()
 window.exitInitMode()
 obstacle.exitInitMode()
 
@@ -141,6 +121,8 @@ times = [0.0]
 
 time = 0.0
 
+iteration = 0 # For now this is always zero
+
 for step in range(1, int(stop_time / cosim_step_size) + 1):
     
     # Note that despite the fact that there is no feedthrough between 
@@ -149,52 +131,48 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     # value given for the inputs. However, that creates an algebraic loop, 
     # so for now, we just get old values for the inputs.
     
-    oOut = obstacle.getValues(step-1, 0, [obstacle.F])
-    wOut = window.getValues(step-1, 0, [window.tau, window.x])
-    adaptPowerOut = adapt_power_input.getValues(step-1, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
+    # Apart from that, the code below is the same as the one in the initialization
+    
+    oOut = obstacle.getValues(step-1, iteration, [obstacle.F])
+    wOut = window.getValues(step-1, iteration, [window.tau, window.x])
+    cOut = controller.getValues(step-1, iteration, [controller.out_up, controller.out_down])
     
     # Coupling equation for power
     power_tau = - ( wOut[window.tau] + window_radius * oOut[obstacle.F])
     
-    power.setValues(step, 0, {power.tau: power_tau, 
-                           power.up: adaptPowerOut[adapt_power_input.out_up],
-                           power.down: adaptPowerOut[adapt_power_input.out_down]})
+    # Set the delayed inputs to the power
+    power.setValues(step, iteration, {power.tau: power_tau, 
+                           power.up: cOut[controller.out_up],
+                           power.down: cOut[controller.out_down]})
     
-    power.doStep(time, step, 0, cosim_step_size)
+    power.doStep(time, step, iteration, cosim_step_size)
     
-    pOut = power.getValues(step, 0, [power.omega, power.theta, power.i])
+    pOut = power.getValues(step, iteration, [power.omega, power.theta, power.i])
     
-    window.setValues(step, 0, {window.omega_input: pOut[power.omega],
-                            window.theta_input: pOut[power.theta],
-                            window.theta: 0.0,
-                            window.omega: 0.0
+    window.setValues(step, iteration, {window.omega_input: pOut[power.omega],
+                            window.theta_input: pOut[power.theta]
                             })
-    window.doStep(time, step, 0, cosim_step_size) 
-    wOut = window.getValues(step, 0, [window.tau, window.x])
+    window.doStep(time, step, iteration, cosim_step_size) 
+    wOut = window.getValues(step, iteration, [window.tau, window.x])
     
-    obstacle.setValues(step, 0, {obstacle.x: wOut[window.x]})
-    obstacle.doStep(time, step, 0, cosim_step_size) 
-    oOut = obstacle.getValues(step, 0, [obstacle.F])
+    obstacle.setValues(step, iteration, {obstacle.x: wOut[window.x]})
+    obstacle.doStep(time, step, iteration, cosim_step_size) 
+    oOut = obstacle.getValues(step, iteration, [obstacle.F])
     
-    adapt_armature.setValues(step, 0, {adapt_armature.armature_current: pOut[power.i]})
-    adapt_armature.doStep(time, step, 0, cosim_step_size) 
-    adaptArmOut = adapt_armature.getValues(step, 0, [adapt_armature.out_event])
+    adapt_armature.setValues(step, iteration, {adapt_armature.armature_current: pOut[power.i]})
+    adapt_armature.doStep(time, step, iteration, cosim_step_size) 
+    adaptArmOut = adapt_armature.getValues(step, iteration, [adapt_armature.out_obj])
     
-    environment.doStep(time, step, 0, cosim_step_size) 
-    envOut = environment.getValues(step, 0, [environment.out_event])
+    environment.doStep(time, step, iteration, cosim_step_size) 
+    envOut = environment.getValues(step, iteration, [environment.out_up, environment.out_down])
     
     # coupling equation for the input event of the controller
-    controller_in = adaptArmOut[adapt_armature.out_event] + envOut[environment.out_event]
-    if adaptArmOut[adapt_armature.out_event] != "" and envOut[environment.out_event] != "":
-        controller_in = adaptArmOut[adapt_armature.out_event]
-    controller.setValues(step, 0, {controller.in_event : controller_in})
-    controller.doStep(time, step, 0, cosim_step_size) 
-    cOut = controller.getValues(step, 0, [controller.out_event])
-    
-    adapt_power_input.setValues(step, 0, {adapt_power_input.in_event : cOut[controller.out_event]})
-    adapt_power_input.doStep(time, step, 0, cosim_step_size) 
-    adaptPowerOut = adapt_power_input.getValues(step, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
-    
+    controller.setValues(step, iteration, {controller.in_dup : envOut[environment.out_up],
+                            controller.in_ddown : envOut[environment.out_down],
+                            controller.in_obj : adaptArmOut[adapt_armature.out_obj]})
+    controller.doStep(time, step, iteration, cosim_step_size) 
+    cOut = controller.getValues(step, iteration, [controller.out_up, controller.out_down])
+
     # Coupling equation for power
     power_tau = - ( wOut[window.tau] + window_radius * oOut[obstacle.F])
     
@@ -206,9 +184,9 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     and check for convergence.
     
     """
-    power.setValues(step, 0, {power.tau: power_tau, 
-                           power.up: adaptPowerOut[adapt_power_input.out_up],
-                           power.down: adaptPowerOut[adapt_power_input.out_down]})
+    power.setValues(step, iteration, {power.tau: power_tau, 
+                           power.up: cOut[controller.out_up],
+                           power.down: cOut[controller.out_down]})
     
     trace_omega.append(pOut[power.omega])
     trace_i.append(pOut[power.i])

@@ -105,6 +105,18 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         
         self.setValues(0, 0, {self.__current_state: self.__initial_state})
         
+        # Compute all default transitions at this point
+        state_snapshot = self.getValues(0, 0, [self.__current_state])
+        input_snapshot = {}
+        previous_input_snaptshop =  {}
+        
+        (next_state, output_assignments) = self._doStepFunction(0.0, 
+                                                state_snapshot, input_snapshot, previous_input_snaptshop)
+        
+        # Commit the new state and outputs.
+        AbstractSimulationUnit.setValues(self, 0, 0, {self.__current_state : next_state})
+        AbstractSimulationUnit.setValues(self, 0, 0, output_assignments)
+        
         AbstractSimulationUnit.enterInitMode(self)
         
         l.debug("<%s.StatechartSimulationUnit_CTInOut.enterInitMode()", self._name)
@@ -118,8 +130,10 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
             assert step == 0
             state_snapshot = self.getValues(step, iteration, [self.__current_state])
             input_snapshot = self.getValues(step, iteration, self._getInputVars())
+            previous_input_snaptshop =  {}
             
-            (next_state, output_assignments) = self._doStepFunction(0.0, state_snapshot, input_snapshot)
+            (next_state, output_assignments) = self._doStepFunction(0.0, 
+                                                    state_snapshot, input_snapshot, previous_input_snaptshop)
             
             # Commit the new state and outputs.
             AbstractSimulationUnit.setValues(self, step, iteration, {self.__current_state : next_state})
@@ -137,6 +151,8 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         
         l.debug(">%s._runAllEnabledTransitions(%f, %s, %s)", self._name, time, state, inputs)
         
+        inputs_available = len(inputs) > 0
+        
         transition_taken = True
         statechart_state = state[self.__current_state]
         output_assignments = {}
@@ -148,7 +164,7 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
             It will be merged with output_assignments
             """
             (out_values, new_state, transition_taken, trigger) = \
-                self._state_transition_function(statechart_state, inputs, previous_inputs, elapsed)
+                self._state_transition_function(statechart_state, inputs, previous_inputs, elapsed, inputs_available)
             if transition_taken:
                 l.debug("Transition taken from %s to %s because of %s. Produced assignments: %s.", 
                                 statechart_state, new_state, trigger, out_values)
@@ -157,6 +173,7 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
                 l.debug("Merged assignments: %s", output_assignments)
                 statechart_state = new_state
                 self.__last_transition_time = time
+            
         l.debug("Finished all enabled transitions.")
         
         l.debug("%s.state=%s", self._name, statechart_state)

@@ -114,8 +114,6 @@ class StatechartSimulationUnit_Event(AbstractSimulationUnit):
                 self.__last_transition_time = time
                 if trigger==StatechartSimulationUnit_Event.TRIGGER_INPUT:
                     inputToConsume = ""
-            else:
-                l.debug("No transition taken.")
         l.debug("Finished all enabled transitions.")
         
         l.debug("%s.state=%s", self._name, old_state)

@@ -24,7 +24,7 @@ class EnvironmentStatechartFMU_CTInOut(StatechartSimulationUnit_CTInOut):
         
         initial_state = "Initial"
                 
-        def state_transition(current_state, inputs, previous_inputs, elapsed):
+        def state_transition(current_state, inputs, previous_inputs, elapsed, inputs_available):
             l.debug(">%s.state_transition(%s, %s, %f)", self._name, current_state, inputs, elapsed)
             
             output_assignment = {}

@@ -25,7 +25,7 @@ power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size/num_internal_steps,
                      K=1.8, 
                      R=0.15, 
                      L=0.036,
-                     V=12)
+                     V_a=12)
 
 window = WindowFMU("window", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
                      J=0.085, 
