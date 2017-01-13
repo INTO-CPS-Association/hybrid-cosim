@@ -13,8 +13,8 @@ from case_study.units.adaptations.PowerInputAdaptation_Event import PowerInputAd
 from case_study.units.ct_based.ObstacleFMU import ObstacleFMU
 from case_study.units.ct_based.PowerFMU import PowerFMU
 from case_study.units.ct_based.WindowFMU import WindowFMU
-from case_study.units.de_based.DriverControllerStatechartFMU import DriverControllerStatechartFMU
-from case_study.units.de_based.EnvironmentStatechartFMU import EnvironmentStatechartFMU
+from case_study.units.de_based.DriverControllerStatechartFMU import DriverControllerStatechartFMU_Event
+from case_study.units.de_based.EnvironmentStatechartFMU import EnvironmentStatechartFMU_Event
 
 
 NUM_RTOL = 1e-08
@@ -27,9 +27,9 @@ cosim_step_size = 0.001
 num_internal_steps = 10
 stop_time = 10;
 
-environment = EnvironmentStatechartFMU("env", NUM_RTOL, NUM_ATOL)
+environment = EnvironmentStatechartFMU_Event("env", NUM_RTOL, NUM_ATOL)
 
-controller = DriverControllerStatechartFMU("controller", NUM_RTOL, NUM_ATOL)
+controller = DriverControllerStatechartFMU_Event("controller", NUM_RTOL, NUM_ATOL)
 
 power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
                      J=0.085, 

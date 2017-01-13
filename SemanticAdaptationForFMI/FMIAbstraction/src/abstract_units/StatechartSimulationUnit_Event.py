@@ -13,7 +13,7 @@ from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
 
 l = logging.getLogger()
 
-class StatechartSimulationUnit(AbstractSimulationUnit):
+class StatechartSimulationUnit_Event(AbstractSimulationUnit):
     
     TRIGGER_AFTER = "After"
     TRIGGER_INPUT = "Input"
@@ -112,7 +112,7 @@ class StatechartSimulationUnit(AbstractSimulationUnit):
                 output_event = out_event if out_event != "" else output_event
                 old_state = new_state
                 self.__last_transition_time = time
-                if trigger==StatechartSimulationUnit.TRIGGER_INPUT:
+                if trigger==StatechartSimulationUnit_Event.TRIGGER_INPUT:
                     inputToConsume = ""
             else:
                 l.debug("No transition taken.")
