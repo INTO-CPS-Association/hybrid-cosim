@@ -4,8 +4,11 @@ Created on Mar 5, 2016
 @author: claudio gomes
 '''
 
-from units.CTSimulationUnit import CTSimulationUnit
 import logging
+
+from abstract_units.CTSimulationUnit import CTSimulationUnit
+
+
 l = logging.getLogger()
 
 

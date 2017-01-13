@@ -2,12 +2,13 @@ import logging
 
 import numpy
 
-from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT
+from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
+    STEP_ACCEPT
 
 
 l = logging.getLogger()
 
-class InacurateControllerArmatureAdaptation(AbstractSimulationUnit):
+class InacurateControllerArmatureAdaptation_Event(AbstractSimulationUnit):
     """
     This is the adaptation of the armature signal coming from the power system and into the controller statechart.
     It therefore gets a continuous input and outputs events.
@@ -22,7 +23,7 @@ class InacurateControllerArmatureAdaptation(AbstractSimulationUnit):
         
     The detailed behaviour of this block is as follows:
     ______________________________
-    f = InacurateControllerArmatureAdaptation(...)
+    f = InacurateControllerArmatureAdaptation_Event(...)
     f.enterInitMode()
     f.setValues(...,armature)
         The FMU records this value in its internal state.

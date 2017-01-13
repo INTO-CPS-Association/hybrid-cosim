@@ -1,6 +1,10 @@
-from bokeh.plotting import figure, output_file, show
-from sampleunits.PowerFMU import PowerFMU
 import logging
+
+from bokeh.plotting import figure, output_file, show
+
+from case_study.units.ct_based.PowerFMU import PowerFMU
+
+
 l = logging.getLogger()
 l.setLevel(logging.DEBUG)
 

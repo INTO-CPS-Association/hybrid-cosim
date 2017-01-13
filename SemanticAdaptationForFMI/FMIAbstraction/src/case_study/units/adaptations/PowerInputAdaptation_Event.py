@@ -1,10 +1,12 @@
 import logging
 
-from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT
+from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
+    STEP_ACCEPT
+
 
 l = logging.getLogger()
 
-class PowerInputAdaptation(AbstractSimulationUnit):
+class PowerInputAdaptation_Event(AbstractSimulationUnit):
     """
     This is the adaptation of the events coming out of the Controller Statechart.
     It gets as input an event, and output two signals, to be coupled to the power system.
@@ -12,7 +14,7 @@ class PowerInputAdaptation(AbstractSimulationUnit):
     It's basically a ZOH.
     
     Example interaction:_______________
-    f = PowerInputAdaptation(...)
+    f = PowerInputAdaptation_Event(...)
     f.enterInitMode()
     f.setValues(...,"SomeInEvent")
         This tells the FMU what the input is.

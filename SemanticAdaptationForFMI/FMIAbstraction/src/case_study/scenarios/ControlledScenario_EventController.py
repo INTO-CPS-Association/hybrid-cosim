@@ -1,20 +1,21 @@
-import logging
-
-from bokeh.plotting import figure, output_file, show
-
-from sampleunits.DriverControllerStatechartFMU import DriverControllerStatechartFMU
-from sampleunits.EnvironmentStatechartFMU import EnvironmentStatechartFMU
-from sampleunits.InacurateControllerArmatureAdaptation import InacurateControllerArmatureAdaptation
-from sampleunits.ObstacleFMU import ObstacleFMU
-from sampleunits.PowerFMU import PowerFMU
-from sampleunits.PowerInputAdaptation import PowerInputAdaptation
-from sampleunits.WindowFMU import WindowFMU
-
 """
 In this scenario, the controller is a statchart that receives events at his input.
 The main semantic adaptation is getting the continuous armature signal coming from the power system,
 and converting it into an event.
 """
+
+import logging
+
+from bokeh.plotting import figure, output_file, show
+
+from case_study.units.adaptations.InacurateControllerArmatureAdaptation_Event import InacurateControllerArmatureAdaptation_Event
+from case_study.units.adaptations.PowerInputAdaptation_Event import PowerInputAdaptation_Event
+from case_study.units.ct_based.ObstacleFMU import ObstacleFMU
+from case_study.units.ct_based.PowerFMU import PowerFMU
+from case_study.units.ct_based.WindowFMU import WindowFMU
+from case_study.units.de_based.DriverControllerStatechartFMU import DriverControllerStatechartFMU
+from case_study.units.de_based.EnvironmentStatechartFMU import EnvironmentStatechartFMU
+
 
 NUM_RTOL = 1e-08
 NUM_ATOL = 1e-08
@@ -39,9 +40,9 @@ power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps
                      V=12)
 
 armature_threshold = 20.0
-adapt_armature = InacurateControllerArmatureAdaptation("arm_adapt", NUM_RTOL, NUM_ATOL, armature_threshold, True)
+adapt_armature = InacurateControllerArmatureAdaptation_Event("arm_adapt", NUM_RTOL, NUM_ATOL, armature_threshold, True)
 
-adapt_power_input = PowerInputAdaptation("power_adapt")
+adapt_power_input = PowerInputAdaptation_Event("power_adapt")
 
 window_radius = 0.017
 

@@ -1,4 +1,5 @@
-from units.CTSimulationUnit_Euler import CTSimulationUnit_Euler
+from abstract_units.CTSimulationUnit_Euler import CTSimulationUnit_Euler
+
 
 class PowerFMU(CTSimulationUnit_Euler):
     

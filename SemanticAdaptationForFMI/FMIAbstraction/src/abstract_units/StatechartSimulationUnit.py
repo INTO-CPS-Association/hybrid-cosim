@@ -7,7 +7,10 @@ import logging
 
 import numpy
 
-from units.AbstractSimulationUnit import AbstractSimulationUnit, STEP_ACCEPT
+from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
+    STEP_ACCEPT
+
+
 l = logging.getLogger()
 
 class StatechartSimulationUnit(AbstractSimulationUnit):

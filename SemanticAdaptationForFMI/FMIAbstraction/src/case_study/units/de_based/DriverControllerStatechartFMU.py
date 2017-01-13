@@ -1,4 +1,4 @@
-from units.StatechartSimulationUnit import StatechartSimulationUnit
+from abstract_units.StatechartSimulationUnit import StatechartSimulationUnit
 
 
 class DriverControllerStatechartFMU(StatechartSimulationUnit):
@@ -6,7 +6,7 @@ class DriverControllerStatechartFMU(StatechartSimulationUnit):
     This is a simple controller for the power window case study.
     It takes input events (dup, ddown, dstop, obj) representing the wishes of the driver 
         and whether an object has been detected,
-        and produces output events (up, down, stop), 
+        and produces *output events* (up, down, stop), 
         representing instructions for the power system.
     It has the states
         Neutral    (initial)

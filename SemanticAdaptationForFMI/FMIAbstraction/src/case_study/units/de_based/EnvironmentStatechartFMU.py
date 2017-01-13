@@ -1,6 +1,6 @@
 import logging
 
-from units.StatechartSimulationUnit import StatechartSimulationUnit
+from abstract_units.StatechartSimulationUnit import StatechartSimulationUnit
 
 
 l = logging.getLogger()
@@ -13,6 +13,7 @@ class EnvironmentStatechartFMU(StatechartSimulationUnit):
         Up
         Down
     And the transitions are self explanatory.
+    The outputs are events.
     """
     
     def __init__(self, name, num_rtol, num_atol):

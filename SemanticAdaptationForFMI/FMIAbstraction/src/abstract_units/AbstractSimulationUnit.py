@@ -3,9 +3,12 @@ Created on Mar 5, 2016
 
 @author: claudio gomes
 '''
-from units.Utils import Utils
 
 import logging
+
+from abstract_units.Utils import Utils
+
+
 l = logging.getLogger()
 
 INIT_MODE = "Initialization"
