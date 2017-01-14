@@ -1,7 +1,7 @@
 """
-In this scenario, the controller is a statchart that receives events at his input.
-The main semantic adaptation is getting the continuous armature signal coming from the power system,
-and converting it into an event.
+This scenario covers the following adaptations:
+- Step delay and decouple adaptation to all power outputs and to the obstacle output, to break the algebraic loops.
+- Inaccurate threshold crossing adaptation to the armature current output.
 """
 
 import logging
@@ -20,6 +20,7 @@ NUM_ATOL = 1e-08
 
 l = logging.getLogger()
 l.setLevel(logging.DEBUG)
+
 
 cosim_step_size = 0.001
 num_internal_steps = 1
@@ -55,53 +56,59 @@ adapt_armature.enterInitMode()
 window.enterInitMode()
 obstacle.enterInitMode()
 
-# Solve initialisation.
-"""
-The initialisation may impose a completely different order for the execution of the FMUs.
-In this case we know that there is no direct feed-through between the power input and its outputs,
-    so we can safely set its initial state, get its output, and then compute all the other FMUs,
-    before setting the new inputs to the power.
-There is also a tight coupling between the window and the obstacle FMU but we 
-    know what the initial force is, so we can use that to set the inputs and outputs in the right order,
-    without having to do a fixed point iteration.
-    But in the general case, we would need a fixed point iteration.
-"""
+step = 0
+iteration = 0
 
-power.setValues(0, 0, {
+# Set environment initial inputs
+# Nothing to do
+
+# Get environment initial outputs
+envOut = environment.getValues(step, iteration, [environment.out_up, environment.out_down])
+
+# Set power initial state
+power.setValues(step, iteration, {
                                  power.omega: 0.0, 
                                  power.theta: 0.0, 
-                                 power.i: 0.0
+                                 power.i: 0.0,
+                                 power.tau: 0.0, # Delayed input
+                                 power.up: 0.0, # Delayed input
+                                 power.down: 0.0    # Delayed input
                                  })
-pOut = power.getValues(0, 0, [power.omega, power.theta, power.i])
+# Get power initial outputs
+pOut = power.getValues(step, iteration, [power.omega, power.theta, power.i])
 
-window.setValues(0, 0, {window.omega_input: pOut[power.omega],
+# Set obstacle initial inputs
+# Assume they are zero because the outputs of the window are delayed.
+obstacle.setValues(step, iteration, {obstacle.x: 0.0})
+# Get obstacle outputs
+oOut = obstacle.getValues(step, iteration, [obstacle.F])
+
+# Set window inputs
+window.setValues(step, iteration, {window.omega_input: pOut[power.omega],
                             window.theta_input: pOut[power.theta],
+                            window.F_obj: oOut[obstacle.F]
                             })
-wOut = window.getValues(0, 0, [window.x])
+# Get window outputs
+wOut = window.getValues(step, iteration, [window.x, window.tau])
 
-obstacle.setValues(0, 0, {obstacle.x: wOut[window.x]})
-oOut = obstacle.getValues(0, 0, [obstacle.F])
-
-window.setValues(0, 0, {window.F_obj: oOut[obstacle.F]})
-wOut = window.getValues(0, 0, [window.tau])
-
-adapt_armature.setValues(0, 0, {adapt_armature.armature_current: pOut[power.i],
+# Set adapt armature inputs and initial state
+adapt_armature.setValues(step, iteration, {adapt_armature.armature_current: pOut[power.i],
                                 adapt_armature.out_obj: 0.0 })
+# Get adapt armature outputs
+adaptArmOut = adapt_armature.getValues(step, iteration, [adapt_armature.out_obj])
 
-adaptArmOut = adapt_armature.getValues(0, 0, [adapt_armature.out_obj])
-
-envOut = environment.getValues(0, 0, [environment.out_up, environment.out_down])
-
-controller.setValues(0, 0, {controller.in_dup : envOut[environment.out_up],
+# Set the initial inputs to the controller
+controller.setValues(step, iteration, {controller.in_dup : envOut[environment.out_up],
                             controller.in_ddown : envOut[environment.out_down],
                             controller.in_obj : adaptArmOut[adapt_armature.out_obj]})
+# Get the controller output
+cOut = controller.getValues(step, iteration, [controller.out_up, controller.out_down])
 
-cOut = controller.getValues(0, 0, [controller.out_up, controller.out_down])
-
-# Finally set the other power inputs
-power.setValues(0, 0, {power.tau: wOut[window.tau], 
+# Set the improved inputs to the components that got delayed inputs.
+power.setValues(step, iteration, {power.tau: wOut[window.tau], 
                        power.up: cOut[controller.out_up],
                        power.down: cOut[controller.out_down]})
+obstacle.setValues(step, iteration, {obstacle.x: wOut[window.x]})
 
 environment.exitInitMode()
 controller.exitInitMode()
@@ -122,68 +129,78 @@ iteration = 0 # For now this is always zero
 
 for step in range(1, int(stop_time / cosim_step_size) + 1):
     
-    # Note that despite the fact that there is no feedthrough between 
-    # the inputs and the outputs of the power system, 
-    # the internal solver would still benefit from an up-to-date 
-    # value given for the inputs. However, that creates an algebraic loop, 
-    # so for now, we just get old values for the inputs.
+    """
+    We have delays the following inputs:
+    - control inputs to the power
+    - window tau input to the power
+    - window height input to the obstacle
     
-    # Compute environment
+    The order of computation in the scenario is as follows:
+    environment
+    power
+    obstacle
+    window
+    armature adaptation
+    controller
+    
+    """
+    
+    # Set environment initial inputs
+    # Nothing to do
+    
+    # Get environment initial outputs
     environment.doStep(time, step, iteration, cosim_step_size) 
     envOut = environment.getValues(step, iteration, [environment.out_up, environment.out_down])
     
-    # Get delayed output from power, to break the algebraic loop.
-    pOut = power.getValues(step-1, iteration, [power.omega, power.theta, power.i])
+    # get power and obstacle delayed inputs
+    cOut = controller.getValues(step-1, iteration, [controller.out_up, controller.out_down])
+    wOut = window.getValues(step-1, iteration, [window.x, window.tau])
     
-    # Compute armature
-    adapt_armature.setValues(step, iteration, {adapt_armature.armature_current: pOut[power.i]})
-    adapt_armature.doStep(time, step, iteration, cosim_step_size) 
-    adaptArmOut = adapt_armature.getValues(step, iteration, [adapt_armature.out_obj])
+    # Set power inputs
+    power.setValues(step, iteration, {
+                                     power.tau: wOut[window.tau], # Delayed input
+                                     power.up: cOut[controller.out_up], # Delayed input
+                                     power.down: cOut[controller.out_down]    # Delayed input
+                                     })
+    power.doStep(time, step, iteration, cosim_step_size)
+    # Get power outputs
+    pOut = power.getValues(step, iteration, [power.omega, power.theta, power.i])
     
-    # Compute controller
-    controller.setValues(step, iteration, {controller.in_dup : envOut[environment.out_up],
-                            controller.in_ddown : envOut[environment.out_down],
-                            controller.in_obj : adaptArmOut[adapt_armature.out_obj]})
-    controller.doStep(time, step, iteration, cosim_step_size) 
-    cOut = controller.getValues(step, iteration, [controller.out_up, controller.out_down])
-    
-    # Get delayed outputs from window, to break the algebraic loop it was with the obstacle.
-    wOut = window.getValues(step-1, iteration, [window.tau, window.x])
-    
-    # Compute obstacle
-    obstacle.setValues(step, iteration, {obstacle.x: wOut[window.x]})
-    obstacle.doStep(time, step, iteration, cosim_step_size) 
+    # Set obstacle inputs
+    # The outputs of the window are delayed.
+    obstacle.setValues(step, iteration, {obstacle.x: wOut[window.x]}) # Delayed input
+    obstacle.doStep(time, step, iteration, cosim_step_size)
+    # Get obstacle outputs
     oOut = obstacle.getValues(step, iteration, [obstacle.F])
     
-    # Compute the window, with the delayed inputs from the power
+    # Set window inputs
     window.setValues(step, iteration, {window.omega_input: pOut[power.omega],
-                                       window.theta_input: pOut[power.theta],
-                                       window.F_obj: oOut[obstacle.F]
-                            })
-    window.doStep(time, step, iteration, cosim_step_size) 
-    wOut = window.getValues(step, iteration, [window.tau, window.x])
+                                window.theta_input: pOut[power.theta],
+                                window.F_obj: oOut[obstacle.F]
+                                })
+    window.doStep(time, step, iteration, cosim_step_size)
+    # Get window outputs
+    wOut = window.getValues(step, iteration, [window.x, window.tau])
     
-    # Compute the power
+    # Set adapt armature inputs and initial state
+    adapt_armature.setValues(step, iteration, {adapt_armature.armature_current: pOut[power.i]})
+    adapt_armature.doStep(time, step, iteration, cosim_step_size)
+    # Get adapt armature outputs
+    adaptArmOut = adapt_armature.getValues(step, iteration, [adapt_armature.out_obj])
+    
+    # Set the initial inputs to the controller
+    controller.setValues(step, iteration, {controller.in_dup : envOut[environment.out_up],
+                                controller.in_ddown : envOut[environment.out_down],
+                                controller.in_obj : adaptArmOut[adapt_armature.out_obj]})
+    controller.doStep(time, step, iteration, cosim_step_size)
+    # Get the controller output
+    cOut = controller.getValues(step, iteration, [controller.out_up, controller.out_down])
+    
+    # Set the improved inputs to the components that got delayed inputs.
+    """
     power.setValues(step, iteration, {power.tau: wOut[window.tau], 
                            power.up: cOut[controller.out_up],
                            power.down: cOut[controller.out_down]})
-    
-    power.doStep(time, step, iteration, cosim_step_size)
-    pOut = power.getValues(step, iteration, [power.omega, power.theta, power.i])
-    
-    """
-    Here is where we would compute the inputs that were previously delays and
-    repeat the step if these were too different.
-    """
-    
-    # Update the delayed inputs
-    
-    """
-    adapt_armature.setValues(step, iteration, {adapt_armature.armature_current: pOut[power.i]})
-    
-    window.setValues(step, iteration, {window.omega_input: pOut[power.omega],
-                                       window.theta_input: pOut[power.theta]})
-    
     obstacle.setValues(step, iteration, {obstacle.x: wOut[window.x]})
     """
     
