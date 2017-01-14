@@ -22,7 +22,7 @@ class PowerFMU(CTSimulationUnit_Euler):
         def der_theta(x, u):
             return x[self.omega]
         def der_omega(x, u):
-            return (K * x[self.i] + u[self.tau] - b * x[self.omega]) / J
+            return (K * x[self.i] - u[self.tau] - b * x[self.omega]) / J
         def der_i(x, u):
             volt = get_v(u[self.up], u[self.down])
             return (volt - K * x[self.omega] - R * x[self.i]) / L

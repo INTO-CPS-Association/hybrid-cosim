@@ -108,8 +108,11 @@ class AbstractSimulationUnit(object):
     def _doInternalSteps(self, time, step, iteration, cosim_step_size):
         raise "Must be implemented in subclasses"
 
-    def __computeOutputs(self, step, iteration):
-        l.debug(">__computeOutputs(%d, %d)", step, iteration)
+    def __computeOutputs(self, step, iteration, whichOnes=None):
+        l.debug(">__computeOutputs(%d, %d, %s)", step, iteration, whichOnes)
+        
+        var_names = self.__algebraic_vars if whichOnes==None else whichOnes
+        
         # This does not support algebraic loops.
         
         # Get the state and input vars to be used for the computation of the values
@@ -123,12 +126,12 @@ class AbstractSimulationUnit(object):
         
         l.debug("outputs to update = %s", self.__algebraic_vars)
         
-        for var in self.__algebraic_vars:
+        for var in var_names:
             new_value = self.__algebraic_functions[var](current_state_snaptshot, current_input_snaptshot)
             Utils.copyValueToStateTrace(self.__state, var, step, iteration, new_value)
         
         l.debug("Updated portion of the state:\n%s", 
-                    self._printState(step, iteration, self.__algebraic_functions.keys()))
+                    self._printState(step, iteration, var_names))
         
         l.debug("<__computeOutputs()")
     
@@ -179,7 +182,7 @@ class AbstractSimulationUnit(object):
     def getValues(self, step, iteration, var_names):
         l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
         if self.__areAlgVarsDirty(step, iteration, var_names):
-            self.__computeOutputs(step, iteration)
+            self.__computeOutputs(step, iteration, whichOnes=var_names)
             self.__markAlgVars(step, iteration, dirty=False, whichOnes=var_names);
         
         values = {}

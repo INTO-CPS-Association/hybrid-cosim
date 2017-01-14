@@ -22,16 +22,14 @@ stop_time = 1.0;
 power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
                      J=0.085, 
                      b=5, 
-                     K=1.8, 
+                     K=7.45, 
                      R=0.15, 
                      L=0.036,
                      V_a=12)
 
 window = WindowFMU("window", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
-                     J=0.085, 
-                     r=0.017, 
-                     b = 150, 
-                     c = 1e3) # c = 1e5 makes this an unstable system.
+                     r=0.11, 
+                     b = 10)
 
 power.enterInitMode()
 window.enterInitMode()
@@ -49,9 +47,7 @@ power.setValues(0, 0, {power.i: 0.0,
 pOut = power.getValues(0, 0, [power.omega, power.theta])
 
 window.setValues(0, 0, {window.omega_input: pOut[power.omega],
-                            window.theta_input: pOut[power.theta],
-                            window.theta: 0.0,
-                            window.omega: 0.0
+                            window.theta_input: pOut[power.theta]
                             })
 
 wOut = window.getValues(0, 0, [window.tau])
@@ -80,7 +76,7 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     wOut = window.getValues(step, 0, [window.tau, window.x])
     
     # Coupling equation
-    power_tau = - wOut[window.tau]
+    power_tau = wOut[window.tau]
     
     power.setValues(step, 0, {power.tau: power_tau,
                                   power.up: env_up(time),

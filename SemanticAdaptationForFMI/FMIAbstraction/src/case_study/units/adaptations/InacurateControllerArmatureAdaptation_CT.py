@@ -55,7 +55,7 @@ class InacurateControllerArmatureAdaptation_CT(AbstractSimulationUnit):
         self.__threshold = threshold
         
         self.armature_current = "armature_current"
-        self.out_obj = "out_event"
+        self.out_obj = "out_obj"
         input_vars = [self.armature_current]
         state_vars = [self.out_obj]
         
