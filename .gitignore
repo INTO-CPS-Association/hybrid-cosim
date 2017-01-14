@@ -3,3 +3,4 @@
 /SemanticAdaptationForFMI/FMIAbstraction/src/abstract_units/*.pyc
 /SemanticAdaptationForFMI/FMIAbstraction/src/case_study/*.pyc
 /SemanticAdaptationForFMI/FMIAbstraction/src/case_study/units/*.pyc
+/SemanticAdaptationForFMI/FMIAbstraction/src/case_study/units/adaptations/*.pyc
