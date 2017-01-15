@@ -183,18 +183,18 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         return (statechart_state, output_assignments)
     
     
-    def _doInternalSteps(self, time, step, iteration, cosim_step_size):
+    def _doInternalSteps(self, time, step, iteration, step_size):
         l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", 
-                self._name, time, step, iteration, cosim_step_size)
+                self._name, time, step, iteration, step_size)
         
-        assert self._biggerThan(cosim_step_size, 0), "cosim_step_size too small: {0}".format(cosim_step_size)
+        assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations involving this component are not supported."
         
         state_snapshot = self.getValues(step-1, iteration, [self.__current_state])
         input_snapshot = self.getValues(step, iteration, self._getInputVars())
         previous_input_snaptshop = self.getValues(step-1, -1, self._getInputVars())
         
-        (next_state, output_assignments) = self._doStepFunction(time+cosim_step_size, state_snapshot, input_snapshot, previous_input_snaptshop)
+        (next_state, output_assignments) = self._doStepFunction(time+step_size, state_snapshot, input_snapshot, previous_input_snaptshop)
         
         # Commit the new state and outputs.
         self.setValues(step, iteration, {self.__current_state : next_state})
@@ -202,7 +202,7 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         # TODO Zero order hold the remaining outputs.
         self._ZOHOldValues(step, iteration)
         
-        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, cosim_step_size)
-        return (STEP_ACCEPT, cosim_step_size)
+        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, step_size)
+        return (STEP_ACCEPT, step_size)
 
           

@@ -15,11 +15,11 @@ def env_up(time):
 def env_down(time):
     return 0.0 if time < 6 else 1.0
 
-cosim_step_size = 0.001
-num_internal_steps = 10
-stop_time = 1.0;
+START_STEP_SIZE = 0.001
+FMU_START_RATE = 10
+STOP_TIME = 1.0;
 
-power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
+power = PowerFMU("power", 1e-08, 1e-08, START_STEP_SIZE/FMU_START_RATE, 
                      J=0.085, 
                      b=5, 
                      K=7.45, 
@@ -27,7 +27,7 @@ power = PowerFMU("power", 1e-08, 1e-08, cosim_step_size/num_internal_steps,
                      L=0.036,
                      V_a=12)
 
-window = WindowFMU("window", 1e-08, 1e-08, cosim_step_size/num_internal_steps, 
+window = WindowFMU("window", 1e-08, 1e-08, START_STEP_SIZE/FMU_START_RATE, 
                      r=0.11, 
                      b = 10)
 
@@ -64,14 +64,14 @@ times = [0.0]
 
 time = 0.0
 
-for step in range(1, int(stop_time / cosim_step_size) + 1):
+for step in range(1, int(STOP_TIME / START_STEP_SIZE) + 1):
     
     # set old values for window (this is not ideal)
     pOut = power.getValues(step-1, 0, [power.omega, power.theta, power.i])
     window.setValues(step, 0, {window.omega_input: pOut[power.omega],
                             window.theta_input: pOut[power.theta]})
     
-    window.doStep(time, step, 0, cosim_step_size)
+    window.doStep(time, step, 0, START_STEP_SIZE)
     
     wOut = window.getValues(step, 0, [window.tau, window.x])
     
@@ -82,14 +82,14 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
                                   power.up: env_up(time),
                                   power.down: env_down(time)})
     
-    power.doStep(time, step, 0, cosim_step_size)
+    power.doStep(time, step, 0, START_STEP_SIZE)
     
     pOut = power.getValues(step, 0, [power.omega, power.theta, power.i])
     
     trace_omega.append(pOut[power.omega])
     trace_i.append(pOut[power.i])
     trace_x.append(wOut[window.x])
-    time += cosim_step_size
+    time += START_STEP_SIZE
     times.append(time)
 
 color_pallete = [

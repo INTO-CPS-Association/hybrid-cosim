@@ -23,15 +23,15 @@ NUM_ATOL = 1e-08
 l = logging.getLogger()
 l.setLevel(logging.DEBUG)
 
-cosim_step_size = 0.001
-num_internal_steps = 10
-stop_time = 10;
+START_STEP_SIZE = 0.001
+FMU_START_RATE = 10
+STOP_TIME = 10;
 
 environment = EnvironmentStatechartFMU_Event("env", NUM_RTOL, NUM_ATOL)
 
 controller = DriverControllerStatechartFMU_Event("controller", NUM_RTOL, NUM_ATOL)
 
-power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
+power = PowerFMU("power", NUM_RTOL, NUM_ATOL, START_STEP_SIZE/FMU_START_RATE, 
                      J=0.085, 
                      b=5, 
                      K=1.8, 
@@ -45,13 +45,13 @@ adapt_armature = InacurateControllerArmatureAdaptation_Event("arm_adapt", NUM_RT
 adapt_power_input = PowerInputAdaptation_Event("power_adapt")
 
 
-window = WindowFMU("window", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
+window = WindowFMU("window", NUM_RTOL, NUM_ATOL, START_STEP_SIZE/FMU_START_RATE, 
                      J=0.085, 
                      r=0.017, 
                      b = 150, 
                      c = 1e3) # c = 1e5 makes this an unstable system.
 
-obstacle = ObstacleFMU("obstacle", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
+obstacle = ObstacleFMU("obstacle", NUM_RTOL, NUM_ATOL, START_STEP_SIZE/FMU_START_RATE, 
                      c=1e5, 
                      fixed_x=0.45)
 
@@ -142,7 +142,7 @@ times = [0.0]
 
 time = 0.0
 
-for step in range(1, int(stop_time / cosim_step_size) + 1):
+for step in range(1, int(STOP_TIME / START_STEP_SIZE) + 1):
     
     # Note that despite the fact that there is no feedthrough between 
     # the inputs and the outputs of the power system, 
@@ -158,26 +158,26 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
                            power.up: adaptPowerOut[adapt_power_input.out_up],
                            power.down: adaptPowerOut[adapt_power_input.out_down]})
     
-    power.doStep(time, step, 0, cosim_step_size)
+    power.doStep(time, step, 0, START_STEP_SIZE)
     pOut = power.getValues(step, 0, [power.omega, power.theta, power.i])
     
     obstacle.setValues(step, 0, {obstacle.x: wOut[window.x]})
-    obstacle.doStep(time, step, 0, cosim_step_size) 
+    obstacle.doStep(time, step, 0, START_STEP_SIZE) 
     oOut = obstacle.getValues(step, 0, [obstacle.F])
         
     window.setValues(step, 0, {window.omega_input: pOut[power.omega],
                                window.theta_input: pOut[power.theta],
                                window.F_obj: oOut[obstacle.F]
                             })
-    window.doStep(time, step, 0, cosim_step_size) 
+    window.doStep(time, step, 0, START_STEP_SIZE) 
     wOut = window.getValues(step, 0, [window.tau, window.x])
     
     
     adapt_armature.setValues(step, 0, {adapt_armature.armature_current: pOut[power.i]})
-    adapt_armature.doStep(time, step, 0, cosim_step_size) 
+    adapt_armature.doStep(time, step, 0, START_STEP_SIZE) 
     adaptArmOut = adapt_armature.getValues(step, 0, [adapt_armature.out_event])
     
-    environment.doStep(time, step, 0, cosim_step_size) 
+    environment.doStep(time, step, 0, START_STEP_SIZE) 
     envOut = environment.getValues(step, 0, [environment.out_event])
     
     # coupling equation for the input event of the controller
@@ -185,11 +185,11 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     if adaptArmOut[adapt_armature.out_event] != "" and envOut[environment.out_event] != "":
         controller_in = adaptArmOut[adapt_armature.out_event]
     controller.setValues(step, 0, {controller.in_event : controller_in})
-    controller.doStep(time, step, 0, cosim_step_size) 
+    controller.doStep(time, step, 0, START_STEP_SIZE) 
     cOut = controller.getValues(step, 0, [controller.out_event])
     
     adapt_power_input.setValues(step, 0, {adapt_power_input.in_event : cOut[controller.out_event]})
-    adapt_power_input.doStep(time, step, 0, cosim_step_size) 
+    adapt_power_input.doStep(time, step, 0, START_STEP_SIZE) 
     adaptPowerOut = adapt_power_input.getValues(step, 0, [adapt_power_input.out_up, adapt_power_input.out_down])
     
     # Finally set the other power inputs
@@ -208,7 +208,7 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     trace_i.append(pOut[power.i])
     trace_x.append(wOut[window.x])
     trace_F.append(oOut[obstacle.F])
-    time += cosim_step_size
+    time += START_STEP_SIZE
     times.append(time)
 
 color_pallete = [

@@ -39,21 +39,21 @@ trace_i = [0.0]
 trace_omega = [0.0]
 times = [0.0]
 
-cosim_step_size = 0.01;
-stop_time = 10.0;
+START_STEP_SIZE = 0.01;
+STOP_TIME = 10.0;
 time = 0.0
-l.debug("cosim_step_size=%f", cosim_step_size)
+l.debug("START_STEP_SIZE=%f", START_STEP_SIZE)
 
-for step in range(1, int(stop_time / cosim_step_size) + 1):
+for step in range(1, int(STOP_TIME / START_STEP_SIZE) + 1):
     power.setValues(step, 0, {power.tau: 0.0,
                                   power.up: env_up(time),
                                   power.down: env_down(time)})
-    power.doStep(time, step, 0, cosim_step_size)
+    power.doStep(time, step, 0, START_STEP_SIZE)
     values = power.getValues(step, 0, [power.omega, power.i])
     times.append(time)
     trace_omega.append(values[power.omega])
     trace_i.append(values[power.i])
-    time += cosim_step_size
+    time += START_STEP_SIZE
 
 color_pallete = [
                 "#e41a1c",

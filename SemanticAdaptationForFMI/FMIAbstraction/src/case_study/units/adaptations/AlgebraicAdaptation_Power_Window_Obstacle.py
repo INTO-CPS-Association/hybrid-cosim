@@ -16,14 +16,14 @@ class AlgebraicAdaptation_Power_Window_Obstacle(AbstractSimulationUnit):
     window, and obstacle units.
     """
     
-    def __init__(self, name, num_rtol, num_atol, cosim_step_size, num_internal_steps):
+    def __init__(self, name, num_rtol, num_atol, START_STEP_SIZE, FMU_START_RATE):
         
         self._num_rtol = num_rtol
         self._num_atol = num_atol
         
         self._max_iterations = 100
         
-        self._power = PowerFMU("power", num_rtol, num_atol, cosim_step_size/num_internal_steps, 
+        self._power = PowerFMU("power", num_rtol, num_atol, START_STEP_SIZE/FMU_START_RATE, 
                      J=0.085, 
                      b=5, 
                      K=7.45, 
@@ -34,12 +34,11 @@ class AlgebraicAdaptation_Power_Window_Obstacle(AbstractSimulationUnit):
         self.omega = self._power.omega
         self.theta= self._power.theta
         
-        
-        self._window = WindowFMU("window", num_rtol, num_atol, cosim_step_size/num_internal_steps,
+        self._window = WindowFMU("window", num_rtol, num_atol, START_STEP_SIZE/FMU_START_RATE,
                      r=0.11, 
                      b = 10)
         
-        self._obstacle = ObstacleFMU("obstacle", num_rtol, num_atol, cosim_step_size/num_internal_steps, 
+        self._obstacle = ObstacleFMU("obstacle", num_rtol, num_atol, START_STEP_SIZE/FMU_START_RATE, 
                      c=1e5, 
                      fixed_x=0.45)
         
@@ -66,12 +65,12 @@ class AlgebraicAdaptation_Power_Window_Obstacle(AbstractSimulationUnit):
     def _biggerThan(self, a, b):
         return not numpy.isclose(a,b, self._num_rtol, self._num_atol) and a > b
     
-    def _doInternalSteps(self, time, step, iteration, cosim_step_size):
-        l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, cosim_step_size)
+    def _doInternalSteps(self, time, step, iteration, step_size):
+        l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, step_size)
         
-        assert self._biggerThan(cosim_step_size, 0), "cosim_step_size too small: {0}".format(cosim_step_size)
+        assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported outside of this component."
-        
+         
         converged = False
         internal_iteration = 0
         
@@ -85,20 +84,20 @@ class AlgebraicAdaptation_Power_Window_Obstacle(AbstractSimulationUnit):
                                      self._power.up: cOut[self.up],
                                      self._power.down: cOut[self.down]
                                      })
-            self._power.doStep(time, step, iteration, cosim_step_size)
+            self._power.doStep(time, step, iteration, step_size)
             pOut = self._power.getValues(step, iteration, [self._power.omega, 
                                                            self._power.theta, 
                                                            self._power.i])
             
             self._obstacle.setValues(step, iteration, {self._obstacle.x: wOut[self._window.x]}) # Delayed input
-            self._obstacle.doStep(time, step, iteration, cosim_step_size)
+            self._obstacle.doStep(time, step, iteration, step_size)
             oOut = self._obstacle.getValues(step, iteration, [self._obstacle.F])
             
             self._window.setValues(step, iteration, {self._window.omega_input: pOut[self._power.omega],
                                         self._window.theta_input: pOut[self._power.theta],
                                         self._window.F_obj: oOut[self._obstacle.F]
                                         })
-            self._window.doStep(time, step, iteration, cosim_step_size)
+            self._window.doStep(time, step, iteration, step_size)
             wOut_corrected = self._window.getValues(step, iteration, [self._window.x, self._window.tau])
             
             l.debug("Iteration step completed:")
@@ -128,8 +127,8 @@ class AlgebraicAdaptation_Power_Window_Obstacle(AbstractSimulationUnit):
                                          self.F: oOut[self._obstacle.F]
                                          });
         
-        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, cosim_step_size)
-        return (STEP_ACCEPT, cosim_step_size)
+        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, step_size)
+        return (STEP_ACCEPT, step_size)
     
     def setValues(self, step, iteration, values):
         l.debug(">%s.AlgebraicAdaptation_Power_Window_Obstacle.setValues(%d, %d, %s)", self._name, step, iteration, values)

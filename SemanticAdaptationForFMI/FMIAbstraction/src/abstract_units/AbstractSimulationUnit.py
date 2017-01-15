@@ -118,8 +118,9 @@ class AbstractSimulationUnit(object):
         
         result = self._doInternalSteps(time, step, current_iteration, step_size)
         l.debug("<%s.doStep()=%s", self._name, result)
+        return result
     
-    def _doInternalSteps(self, time, step, iteration, cosim_step_size):
+    def _doInternalSteps(self, time, step, iteration, step_size):
         raise "Must be implemented in subclasses"
 
     def __computeOutputs(self, step, iteration, whichOnes=None):

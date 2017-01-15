@@ -3,7 +3,7 @@ from abstract_units.CTSimulationUnit_Euler import CTSimulationUnit_Euler
 
 class PowerFMU(CTSimulationUnit_Euler):
     
-    def __init__(self, name, num_rtol, num_atol, internal_step_size, J, b, K, R, L, V_a):
+    def __init__(self, name, num_rtol, num_atol, start_step_size, J, b, K, R, L, V_a):
         self.name = name
         
         self.up = "up"
@@ -36,7 +36,7 @@ class PowerFMU(CTSimulationUnit_Euler):
         algebraic_functions = {}
         
         CTSimulationUnit_Euler.__init__(self, name, 
-                                        num_rtol, num_atol, internal_step_size, 
+                                        num_rtol, num_atol, start_step_size, 
                                         state_derivatives, algebraic_functions, input_vars)
     
     

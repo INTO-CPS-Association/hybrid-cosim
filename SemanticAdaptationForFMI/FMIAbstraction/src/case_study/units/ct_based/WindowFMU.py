@@ -3,7 +3,7 @@ from abstract_units.CTSimulationUnit_Euler import CTSimulationUnit_Euler
 
 class WindowFMU(CTSimulationUnit_Euler):
     
-    def __init__(self, name, num_rtol, num_atol, internal_step_size, r, b):
+    def __init__(self, name, num_rtol, num_atol, start_step_size, r, b):
         self.omega_input = "omega_input"
         self.theta_input = "theta_input"
         self.tau = "tau"
@@ -43,6 +43,6 @@ class WindowFMU(CTSimulationUnit_Euler):
                             self.tau: calc_tau
                             }
         
-        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, algebraic_functions, input_vars)
+        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, start_step_size, state_derivatives, algebraic_functions, input_vars)
     
     

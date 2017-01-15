@@ -69,10 +69,10 @@ class InacurateControllerArmatureAdaptation_Event(AbstractSimulationUnit):
     def _biggerThan(self, a, b):
         return not numpy.isclose(a,b, self._num_rtol, self._num_atol) and a > b
     
-    def _doInternalSteps(self, time, step, iteration, cosim_step_size):
-        l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, cosim_step_size)
+    def _doInternalSteps(self, time, step, iteration, step_size):
+        l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, step_size)
         
-        assert self._biggerThan(cosim_step_size, 0), "cosim_step_size too small: {0}".format(cosim_step_size)
+        assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
         current_input = self.getValues(step, iteration, self._getInputVars())[self.armature_current]
@@ -91,7 +91,7 @@ class InacurateControllerArmatureAdaptation_Event(AbstractSimulationUnit):
         l.debug("%s.output_event=%s", self._name, output_event)
         self.setValues(step, iteration, {self.out_event: output_event})
         
-        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, cosim_step_size)
-        return (STEP_ACCEPT, cosim_step_size)
+        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, step_size)
+        return (STEP_ACCEPT, step_size)
     
     

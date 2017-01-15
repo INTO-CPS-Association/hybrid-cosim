@@ -22,15 +22,15 @@ l = logging.getLogger()
 l.setLevel(logging.DEBUG)
 
 
-cosim_step_size = 0.001
-num_internal_steps = 1
-stop_time = 6;
+START_STEP_SIZE = 0.001
+FMU_START_RATE = 1
+STOP_TIME = 6;
 
 environment = EnvironmentStatechartFMU_CTInOut("env", NUM_RTOL, NUM_ATOL)
 
 controller = DriverControllerStatechartFMU_CTInOut("controller", NUM_RTOL, NUM_ATOL)
 
-power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
+power = PowerFMU("power", NUM_RTOL, NUM_ATOL, START_STEP_SIZE/FMU_START_RATE, 
                      J=0.085, 
                      b=5, 
                      K=7.45, 
@@ -41,11 +41,11 @@ power = PowerFMU("power", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps
 armature_threshold = 5
 adapt_armature = InacurateControllerArmatureAdaptation_CT("arm_adapt", NUM_RTOL, NUM_ATOL, armature_threshold, True)
 
-window = WindowFMU("window", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps,
+window = WindowFMU("window", NUM_RTOL, NUM_ATOL, START_STEP_SIZE/FMU_START_RATE,
                      r=0.11, 
                      b = 10)
 
-obstacle = ObstacleFMU("obstacle", NUM_RTOL, NUM_ATOL, cosim_step_size/num_internal_steps, 
+obstacle = ObstacleFMU("obstacle", NUM_RTOL, NUM_ATOL, START_STEP_SIZE/FMU_START_RATE, 
                      c=1e5, 
                      fixed_x=0.45)
 
@@ -125,9 +125,10 @@ times = [0.0]
 
 time = 0.0
 
-iteration = 0 # For now this is always zero
+# This is always zero because we do not keep track of intermediate values in fixed point iterations
+iteration = 0 
 
-for step in range(1, int(stop_time / cosim_step_size) + 1):
+for step in range(1, int(STOP_TIME / START_STEP_SIZE) + 1):
     
     """
     We have delays the following inputs:
@@ -149,7 +150,7 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     # Nothing to do
     
     # Get environment initial outputs
-    environment.doStep(time, step, iteration, cosim_step_size) 
+    environment.doStep(time, step, iteration, START_STEP_SIZE) 
     envOut = environment.getValues(step, iteration, [environment.out_up, environment.out_down])
     
     # get power and obstacle delayed inputs
@@ -162,14 +163,14 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
                                      power.up: cOut[controller.out_up], # Delayed input
                                      power.down: cOut[controller.out_down]    # Delayed input
                                      })
-    power.doStep(time, step, iteration, cosim_step_size)
+    power.doStep(time, step, iteration, START_STEP_SIZE)
     # Get power outputs
     pOut = power.getValues(step, iteration, [power.omega, power.theta, power.i])
     
     # Set obstacle inputs
     # The outputs of the window are delayed.
     obstacle.setValues(step, iteration, {obstacle.x: wOut[window.x]}) # Delayed input
-    obstacle.doStep(time, step, iteration, cosim_step_size)
+    obstacle.doStep(time, step, iteration, START_STEP_SIZE)
     # Get obstacle outputs
     oOut = obstacle.getValues(step, iteration, [obstacle.F])
     
@@ -178,13 +179,13 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
                                 window.theta_input: pOut[power.theta],
                                 window.F_obj: oOut[obstacle.F]
                                 })
-    window.doStep(time, step, iteration, cosim_step_size)
+    window.doStep(time, step, iteration, START_STEP_SIZE)
     # Get window outputs
     wOut = window.getValues(step, iteration, [window.x, window.tau])
     
     # Set adapt armature inputs and initial state
     adapt_armature.setValues(step, iteration, {adapt_armature.armature_current: pOut[power.i]})
-    adapt_armature.doStep(time, step, iteration, cosim_step_size)
+    adapt_armature.doStep(time, step, iteration, START_STEP_SIZE)
     # Get adapt armature outputs
     adaptArmOut = adapt_armature.getValues(step, iteration, [adapt_armature.out_obj])
     
@@ -192,7 +193,7 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     controller.setValues(step, iteration, {controller.in_dup : envOut[environment.out_up],
                                 controller.in_ddown : envOut[environment.out_down],
                                 controller.in_obj : adaptArmOut[adapt_armature.out_obj]})
-    controller.doStep(time, step, iteration, cosim_step_size)
+    controller.doStep(time, step, iteration, START_STEP_SIZE)
     # Get the controller output
     cOut = controller.getValues(step, iteration, [controller.out_up, controller.out_down])
     
@@ -209,7 +210,7 @@ for step in range(1, int(stop_time / cosim_step_size) + 1):
     trace_i.append(pOut[power.i])
     trace_x.append(wOut[window.x])
     trace_F.append(oOut[obstacle.F])
-    time += cosim_step_size
+    time += START_STEP_SIZE
     times.append(time)
 
 color_pallete = [

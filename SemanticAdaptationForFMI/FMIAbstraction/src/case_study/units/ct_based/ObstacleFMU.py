@@ -3,7 +3,7 @@ from abstract_units.CTSimulationUnit_Euler import CTSimulationUnit_Euler
 
 class ObstacleFMU(CTSimulationUnit_Euler):
     
-    def __init__(self, name, num_rtol, num_atol, internal_step_size, c, fixed_x):
+    def __init__(self, name, num_rtol, num_atol, start_step_size, c, fixed_x):
         self.x = "x"
         self.F = "F"
         
@@ -18,6 +18,6 @@ class ObstacleFMU(CTSimulationUnit_Euler):
                             self.F : calc_F
                             }
         
-        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, internal_step_size, state_derivatives, algebraic_functions, input_vars)
+        CTSimulationUnit_Euler.__init__(self, name, num_rtol, num_atol, start_step_size, state_derivatives, algebraic_functions, input_vars)
     
     

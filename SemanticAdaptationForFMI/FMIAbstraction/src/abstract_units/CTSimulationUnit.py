@@ -38,10 +38,10 @@ class CTSimulationUnit(AbstractSimulationUnit):
     def _doNumericalStep(self, next_x, previous_x, inputs, time, step, iteration, next_cosim_time):
         raise "To be implemented by subclasses"
     
-    def _doInternalSteps(self, time, step, iteration, cosim_step_size):
-        l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, cosim_step_size)
+    def _doInternalSteps(self, time, step, iteration, step_size):
+        l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, step_size)
         
-        assert self._biggerThan(cosim_step_size, 0), "cosim_step_size too small: {0}".format(cosim_step_size)
+        assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
         # Use double buffering in the internal steps. 
@@ -53,7 +53,7 @@ class CTSimulationUnit(AbstractSimulationUnit):
         l.debug("Initialising input buffer...")
         input_buffer = self.getValues(step, iteration, self._getInputVars())
         
-        next_cosim_time = time+cosim_step_size
+        next_cosim_time = time+step_size
         
         internal_time = time;
         
@@ -80,7 +80,7 @@ class CTSimulationUnit(AbstractSimulationUnit):
         # Commit the new state
         self.setValues(step, iteration, state_buffers[previous_state_idx])
         
-        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, cosim_step_size)
-        return (STEP_ACCEPT, cosim_step_size)
+        l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, step_size)
+        return (STEP_ACCEPT, step_size)
 
                 
