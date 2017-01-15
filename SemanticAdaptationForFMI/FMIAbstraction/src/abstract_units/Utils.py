@@ -25,12 +25,22 @@ class Utils(object):
     @staticmethod
     def copyValueToStateTrace(target, var, step, iteration, value):
         assert target.has_key(var)
+        assert step <= len(target[var])
         if step == len(target[var]):
             target[var].append([value])
+        elif step < len(target[var]):
+            assert step == len(target[var]) - 1, "Makes no sense to rewrite past steps, without rolling back first."
+            if iteration == len(target[var][step]):
+                target[var][step].append(value)
+            elif iteration < len(target[var][step]):
+                assert iteration == len(target[var][step]) - 1, "Weird use of the iteration records. Either rewrite the last iteration, or never rewrite them (in case you want to keep track of them."
+                target[var][step][iteration] = value
+        """
         elif iteration == len(target[var][step]):
             target[var][step].append(value)
         else:
             target[var][step][iteration] = value
+        """
     
     @staticmethod
     def trimList(listToTrim, target_size):

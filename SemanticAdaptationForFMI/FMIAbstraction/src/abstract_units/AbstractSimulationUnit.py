@@ -78,14 +78,28 @@ class AbstractSimulationUnit(object):
         Utils.trimList(self.__computed_time, toStep)
         raise "To be finished"
     
-    def __recordTime(self, current_time, step, current_iteration, step_size):
-        if current_iteration == 0:
+    def __recordTime(self, time, step, iteration, step_size):
+        assert step <= len(self.__computed_time)
+        if step == len(self.__computed_time):
+            assert iteration == 0
+            self.__computed_time.append([time + step_size])
+        elif step < len(self.__computed_time):
+            assert step == len(self.__computed_time) -1, "Makes no sense to rewrite past times, without rolling back first."
+            if iteration == len(self.__computed_time[step]):
+                self.__computed_time[step].append(time + step_size)
+            elif iteration < len(self.__computed_time[step]):
+                assert iteration == len(self.__computed_time[step]) - 1, "Weird use of the iteration records. Either rewrite the last iteration, or keep tracking them."
+                self.__computed_time[step][iteration] = time + step_size
+                
+        """
+        if iteration == 0:
             assert step == len(self.__computed_time)
-            self.__computed_time.append([current_time + step_size])
+            self.__computed_time.append([time + step_size])
         else:
             assert step == len(self.__computed_time) - 1
-            assert current_iteration == len(self.__computed_time[step])
-            self.__computed_time[step].append(current_time + step_size)
+            assert iteration == len(self.__computed_time[step])
+            self.__computed_time[step].append(time + step_size)
+        """
        
     def doStep(self, time, step, current_iteration, step_size):
         l.debug(">%s.doStep(t=%f, s=%d, i=%d, H=%f)", self._name,  time, step, current_iteration, step_size)
