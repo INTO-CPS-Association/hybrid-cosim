@@ -60,10 +60,6 @@ class CTSimulationUnit(AbstractSimulationUnit):
         (do_next_step, micro_step_size) = (True, 0.0)
         
         while do_next_step:
-            
-            internal_time += micro_step_size
-            l.debug("internal_time=%f", internal_time)
-            
             # TODO Any input extrapolation would be done here by changing the input_buffer
             
             # flip the buffers
@@ -75,10 +71,13 @@ class CTSimulationUnit(AbstractSimulationUnit):
             next_state = state_buffers[next_state_idx]
             
             (do_next_step, micro_step_size) = self._doNumericalStep(next_state, previous_state, input_buffer, internal_time, step, iteration, next_cosim_time)
-        
+            
+            internal_time += micro_step_size
+            l.debug("internal_time=%f", internal_time)
+            
         
         # Commit the new state
-        self.setValues(step, iteration, state_buffers[previous_state_idx])
+        self.setValues(step, iteration, state_buffers[next_state_idx])
         
         l.debug("<%s._doInternalSteps() = (%s, %d)", self._name, STEP_ACCEPT, step_size)
         return (STEP_ACCEPT, step_size)

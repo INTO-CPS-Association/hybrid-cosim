@@ -28,12 +28,14 @@ class CTSimulationUnit_Euler(CTSimulationUnit):
         
         self.__start_step_size = start_step_size
     
-    def _doNumericalStep(self, next_x, previous_x, inputs, time, step, iteration, STEP_TIME):
+    def _doNumericalStep(self, next_x, previous_x, inputs, time, step, iteration, stop_time):
         l.debug(">%s._doNumericalStep(%s, %s, %s, %f, %d, %d, %f)", 
-                self._name, next_x, previous_x, inputs, time, step, iteration, STEP_TIME)
+                self._name, next_x, previous_x, inputs, time, step, iteration, stop_time)
         
-        hit_stop_time = self._biggerThan(time + self.__start_step_size, STEP_TIME)
-        step_size = STEP_TIME - time if hit_stop_time else self.__start_step_size
+        hit_stop_time = self._biggerThan(time + self.__start_step_size, stop_time)
+        step_size = stop_time - time if hit_stop_time else self.__start_step_size
+        l.debug(">%s.step_size=%f", 
+                self._name, step_size)
         for state_var in self._state_derivatives.keys():
             state_derivative_function = self._state_derivatives[state_var]
             der_state_var = state_derivative_function(previous_x, inputs)
