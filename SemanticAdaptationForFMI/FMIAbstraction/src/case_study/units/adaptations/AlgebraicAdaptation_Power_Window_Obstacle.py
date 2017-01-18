@@ -71,7 +71,7 @@ class AlgebraicAdaptation_Power_Window_Obstacle(AbstractSimulationUnit):
         assert step_size > 0.0, "step_size too small: {0}".format(step_size)
         #assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported outside of this component."
-         
+        
         converged = False
         internal_iteration = 0
         

@@ -190,7 +190,8 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         assert iteration == 0, "Fixed point iterations involving this component are not supported."
         
         state_snapshot = self.getValues(step-1, iteration, [self.__current_state])
-        input_snapshot = self.getValues(step, iteration, self._getInputVars())
+        # zoh=True means that the unit tolerates both Gauss Seidel and Jacobi Iterations
+        input_snapshot = self.getValues(step, iteration, self._getInputVars(), zoh=True)
         previous_input_snaptshot = self.getValues(step-1, -1, self._getInputVars())
         
         (next_state, output_assignments) = self._doStepFunction(time+step_size, state_snapshot, input_snapshot, previous_input_snaptshot)

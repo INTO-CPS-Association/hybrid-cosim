@@ -9,6 +9,7 @@ import numpy
 
 from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
     STEP_ACCEPT
+from sympy.parsing.maxima import var_name
 
 
 l = logging.getLogger()
@@ -52,7 +53,8 @@ class CTSimulationUnit(AbstractSimulationUnit):
         next_state_idx = 0;
         previous_state_idx = 1;
         l.debug("Initialising input buffer...")
-        input_buffer = self.getValues(step, iteration, self._getInputVars())
+        # This tolerates both Jacobi and Gauss Seidel iteration.
+        input_buffer = self.getValues(step, iteration, self._getInputVars(), zoh=True)
         
         next_cosim_time = time+step_size
         

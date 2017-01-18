@@ -195,7 +195,7 @@ class AbstractSimulationUnit(object):
         l.debug("<%s.setValues()", self._name)
         
     
-    def getValues(self, step, iteration, var_names=None):
+    def getValues(self, step, iteration, var_names=None, zoh=False):
         var_names = self.__state.keys() if var_names==None else var_names
         l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
         if self.__areAlgVarsDirty(step, iteration, var_names):
@@ -205,9 +205,17 @@ class AbstractSimulationUnit(object):
         values = {}
         for var in var_names:
             assert self.__state.has_key(var)
-            assert step < len(self.__state[var]), "State is not initialized: " + str(self.__state)
-            assert iteration < len(self.__state[var][step])
-            values[var] = self.__state[var][step][iteration]
+            stepToAccess = step
+            iterationToAccess = iteration
+            if stepToAccess >= len(self.__state[var]) and zoh:
+                assert stepToAccess == len(self.__state[var]), "Inconsistent state at step %d.".format(step)
+                stepToAccess = step-1
+                iterationToAccess = -1
+                l.debug("Getting old value for %s at step %d.", var, stepToAccess)
+                
+            assert stepToAccess < len(self.__state[var]), "State is not initialized: " + str(self.__state)
+            assert iterationToAccess < len(self.__state[var][stepToAccess])
+            values[var] = self.__state[var][stepToAccess][iterationToAccess]
         
         l.debug("<%s.getValues()=%s", self._name, values)
         return values

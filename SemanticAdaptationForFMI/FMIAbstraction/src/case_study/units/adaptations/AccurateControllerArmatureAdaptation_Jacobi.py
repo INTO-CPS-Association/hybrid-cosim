@@ -8,7 +8,7 @@ from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
 
 l = logging.getLogger()
 
-class AccurateControllerArmatureAdaptation(AbstractSimulationUnit):
+class AccurateControllerArmatureAdaptation_Jacobi(AbstractSimulationUnit):
     """
     This is the adaptation of the armature signal coming from the power system and into the controller statechart.
     The input will be the armature continuous signal.
@@ -50,10 +50,10 @@ class AccurateControllerArmatureAdaptation(AbstractSimulationUnit):
         #assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
-        # This unit works best with a gauss seidel
-        current_input = self.getValues(step, iteration, 
+        # This unit works only for Jacobi
+        current_input = self.getValues(step-1, iteration, 
                                        self._getInputVars())[self.armature_current]
-        previous_input = self.getValues(step-1, iteration, 
+        previous_input = self.getValues(step-2, iteration, 
                                         self._getInputVars())[self.armature_current]
         
         output_value = 0
