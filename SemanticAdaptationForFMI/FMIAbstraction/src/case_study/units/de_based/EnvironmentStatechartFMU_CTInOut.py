@@ -28,7 +28,7 @@ class EnvironmentStatechartFMU_CTInOut(StatechartSimulationUnit_CTInOut):
             l.debug(">%s.state_transition(%s, %s, %f)", self._name, current_state, inputs, elapsed)
             
             output_assignment = {}
-            target_state = ""
+            target_state = current_state
             transition_taken = False
             trigger = StatechartSimulationUnit_CTInOut.TRIGGER_DEFAULT
             

@@ -149,8 +149,6 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         """
         l.debug(">%s._doStepFunction(%f, %s, %s)", self._name, time, state, inputs)
         
-        l.debug(">%s._runAllEnabledTransitions(%f, %s, %s)", self._name, time, state, inputs)
-        
         inputs_available = len(inputs) > 0
         
         transition_taken = True
@@ -187,14 +185,15 @@ class StatechartSimulationUnit_CTInOut(AbstractSimulationUnit):
         l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", 
                 self._name, time, step, iteration, step_size)
         
-        assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
+        assert step_size > 0.0, "step_size too small: {0}".format(step_size)
+        #assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations involving this component are not supported."
         
         state_snapshot = self.getValues(step-1, iteration, [self.__current_state])
         input_snapshot = self.getValues(step, iteration, self._getInputVars())
-        previous_input_snaptshop = self.getValues(step-1, -1, self._getInputVars())
+        previous_input_snaptshot = self.getValues(step-1, -1, self._getInputVars())
         
-        (next_state, output_assignments) = self._doStepFunction(time+step_size, state_snapshot, input_snapshot, previous_input_snaptshop)
+        (next_state, output_assignments) = self._doStepFunction(time+step_size, state_snapshot, input_snapshot, previous_input_snaptshot)
         
         # Commit the new state and outputs.
         self.setValues(step, iteration, {self.__current_state : next_state})

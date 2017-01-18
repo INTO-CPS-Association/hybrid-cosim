@@ -41,7 +41,8 @@ class CTSimulationUnit(AbstractSimulationUnit):
     def _doInternalSteps(self, time, step, iteration, step_size):
         l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, step_size)
         
-        assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
+        assert step_size > 0.0, "step_size too small: {0}".format(step_size)
+        #assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
         # Use double buffering in the internal steps. 
