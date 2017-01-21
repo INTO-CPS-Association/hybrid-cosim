@@ -58,16 +58,35 @@ class AccurateControllerArmatureAdaptation(AbstractSimulationUnit):
         
         output_value = 0
         
-        l.debug("%s.previous_input=%f", self._name, previous_input)
-        l.debug("%s.current_input=%f", self._name, current_input)
+        l.debug("%s.previous_input=%.6f", self._name, previous_input)
+        l.debug("%s.current_input=%.6f", self._name, current_input)
         
         step_info = STEP_ACCEPT
         proposed_step_size = step_size
         
         if self.__crossUpward:
+            if previous_input < self.__threshold and current_input > self.__threshold:
+                l.debug("Crossing detected from %.6f to %.6f", 
+                        previous_input, current_input)
+                if self._biggerThan(current_input, self.__threshold):
+                    l.debug("But step too large.")
+                    step_info = STEP_DISCARD
+                    
+                    # Convert this into a zero crossing problem
+                    negative_value = previous_input - self.__threshold
+                    positive_value = current_input - self.__threshold
+                    
+                    # Estimate the step size by regula-falsi
+                    proposed_step_size = (step_size * (- negative_value)) / (positive_value - negative_value)
+                    assert proposed_step_size > 0.0, "Problem with the signals and tolerances. All hope is lost."
+                else:
+                    l.debug("And step size is acceptable.")
+                    output_value = 1
+                    
+            """
             if (not self._biggerThan(previous_input, self.__threshold)) \
                     and self._biggerThan(current_input, self.__threshold):
-                l.debug("Crossing detected from %f to %f", 
+                l.debug("Crossing detected from %.6f to %.6f", 
                         previous_input, current_input)
                 l.debug("But step too large.")
                 step_info = STEP_DISCARD
@@ -86,6 +105,7 @@ class AccurateControllerArmatureAdaptation(AbstractSimulationUnit):
                         previous_input, current_input)
                 l.debug("And step size is acceptable.")
                 output_value = 1
+            """
                 
         
         l.debug("%s.output_value=%s", self._name, output_value)

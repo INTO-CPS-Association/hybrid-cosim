@@ -50,6 +50,8 @@ class AbstractSimulationUnit(object):
         self.__algebraic_vars = algebraic_functions.keys()
         self.__state_and_input_vars = list(state_vars)
         self.__state_and_input_vars.extend(input_vars)
+        self.__output_vars = list(state_vars)
+        self.__output_vars.extend(self.__algebraic_vars)
         
         assert len(self.__state_and_input_vars) == len(self.__input_vars) + len(self.__state_vars)
         
@@ -196,7 +198,7 @@ class AbstractSimulationUnit(object):
         
     
     def getValues(self, step, iteration, var_names=None, zoh=False):
-        var_names = self.__state.keys() if var_names==None else var_names
+        var_names = self.__output_vars if var_names==None else var_names
         l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
         if self.__areAlgVarsDirty(step, iteration, var_names):
             self.__computeOutputs(step, iteration, whichOnes=var_names)

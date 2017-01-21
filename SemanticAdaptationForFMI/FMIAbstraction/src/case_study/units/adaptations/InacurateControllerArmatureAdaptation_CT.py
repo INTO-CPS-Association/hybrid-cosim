@@ -75,8 +75,8 @@ class InacurateControllerArmatureAdaptation_CT(AbstractSimulationUnit):
         #assert self._biggerThan(step_size, 0), "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
-        current_input = self.getValues(step-1, iteration, self._getInputVars())[self.armature_current]
-        previous_input = self.getValues(step-2, iteration, self._getInputVars())[self.armature_current]
+        current_input = self.getValues(step, iteration, self._getInputVars())[self.armature_current]
+        previous_input = self.getValues(step-1, iteration, self._getInputVars())[self.armature_current]
         
         output_value = 0
         
