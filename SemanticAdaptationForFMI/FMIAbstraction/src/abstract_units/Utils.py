@@ -33,7 +33,7 @@ class Utils(object):
         if step == len(target[var]):
             target[var].append([value])
         elif step < len(target[var]):
-            assert step == len(target[var]) - 1, "Makes no sense to rewrite past steps, without rolling back first."
+            assert step == len(target[var]) - 1, "Makes no sense to rewrite past steps, without rolling back first. len(target[var])={}".format(len(target[var]))
             if iteration == len(target[var][step]):
                 target[var][step].append(value)
             elif iteration < len(target[var][step]):
@@ -48,8 +48,10 @@ class Utils(object):
     
     @staticmethod
     def trimList(listToTrim, target_size):
-        assert target_size <= len(listToTrim)
         assert target_size >= 0
+        if target_size > len(listToTrim):
+            return
+        
         while target_size < len(listToTrim):
             del listToTrim[-1]
         assert target_size == len(listToTrim)

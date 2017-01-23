@@ -75,13 +75,25 @@ class AbstractSimulationUnit(object):
         return self.__input_vars
     
     def rollback(self, toStep):
+        l.debug(">%s.rollback(%d)", self._name, toStep)
         # Cleans the computed_time from toStep onwards.
         assert toStep <= len(self.__computed_time), "Cannot rollback to a future step"
-        Utils.trimList(self.__computed_time, toStep)
-        raise "To be finished"
+        
+        Utils.trimList(self.__computed_time, toStep+1)
+        
+        for var in self.__state.keys():
+            l.debug("Rolling back %s...", var)
+            Utils.trimList(self.__state[var], toStep+1)
+            l.debug("len(self.__state[var])=%d", len(self.__state[var]))
+        
+        
+        l.debug("<%s.rollback()", self._name)
+    
+    def commit(self, step):
+        pass
     
     def __recordTime(self, time, step, iteration, step_size):
-        assert step <= len(self.__computed_time)
+        assert step <= len(self.__computed_time), "step = " + str(step) + " len(self.__computed_time)=" + str(len(self.__computed_time))
         if step == len(self.__computed_time):
             assert iteration == 0
             self.__computed_time.append([time + step_size])

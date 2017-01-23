@@ -75,6 +75,7 @@ class MultiRateAdaptationUnit(AbstractSimulationUnit):
             self._y.append(None)
         
         self._step = 0
+        self._last_commited_step = 0
         
         GaussSeidelMaster.start_initialize(self._order, self._units)
         
@@ -91,6 +92,26 @@ class MultiRateAdaptationUnit(AbstractSimulationUnit):
 
         l.debug("<%s.MultiRateAdaptationUnit.exitInitMode()", self._name)
     
+    def rollback(self, toStep):
+        l.debug(">%s.MultiRateAdaptationUnit.rollback()", self._name)
+        AbstractSimulationUnit.rollback(self, toStep)
+        
+        for unit in self._units:
+            unit.rollback(self._last_commited_step)
+        
+        self._step = self._last_commited_step
+        
+        l.debug("<%s.MultiRateAdaptationUnit.rollback()", self._name)
+    
+    def commit(self, step):
+        l.debug(">%s.MultiRateAdaptationUnit.commit()", self._name)
+        self._last_commited_step = self._step
+        
+        for unit in self._units:
+            unit.commit(self._step)
+        
+        l.debug("<%s.MultiRateAdaptationUnit.commit()", self._name)
+        
     
     def _doInternalSteps(self, time, step, iteration, step_size):
         l.debug(">%s._doInternalSteps(%f, %d, %d, %f)", self._name, time, step, iteration, step_size)
@@ -100,6 +121,8 @@ class MultiRateAdaptationUnit(AbstractSimulationUnit):
         
         next_external_cosim_time = time+step_size
         
+        l.debug("%s: Next cosim synch time=%f", self._name, next_external_cosim_time)
+        
         max_step_size = step_size/self._start_rate
         
         H = max_step_size
@@ -107,7 +130,7 @@ class MultiRateAdaptationUnit(AbstractSimulationUnit):
         l.debug("max_step_size=%f", max_step_size)
         
         internal_time = time;
-
+        
         u = []
         H_proposed = []
         
@@ -123,20 +146,25 @@ class MultiRateAdaptationUnit(AbstractSimulationUnit):
             
             self._step = self._step + 1
             
-            if (internal_time + H) >= next_external_cosim_time:
+            if (internal_time + H) > next_external_cosim_time:
                 H = next_external_cosim_time - internal_time
+                l.debug("Adjusting step size to meet synch point: H=%f", H)
+            
+            assert H > 0.0
             
             (H,_) = GaussSeidelMaster.do_cosim_step(internal_time, self._step, self._order, self._units, self._coupling, 
                                             u, self._y, H_proposed, 
                                             H, last_rollback_step,
                                             min_steps_before_increase, max_step_size, 0.0)
             
-            if (internal_time + H) >= next_external_cosim_time:
-                do_next_step = False
-            
             l.debug("step size taken by internal units=%f", H)
             internal_time = internal_time + H
             l.debug("internal_time=%f", internal_time)
+            if internal_time > next_external_cosim_time or \
+                    self._isClose(internal_time, next_external_cosim_time):
+                do_next_step = False
+                l.debug("Finished step: %d.", self._step)
+            
             
         l.debug("<%s._doInternalSteps() = (%s, %f)", self._name, STEP_ACCEPT, step_size)
         return (STEP_ACCEPT, step_size)

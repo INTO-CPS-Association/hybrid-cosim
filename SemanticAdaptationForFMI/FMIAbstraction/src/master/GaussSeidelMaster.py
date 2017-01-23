@@ -64,12 +64,17 @@ class GaussSeidelMaster():
             min_H = min(H_proposed)
             if min_H < H:
                 l.debug("Rolling back step: %d at time %f", step, t)
+                for unit in units:
+                    unit.rollback(step)
                 ok = False
                 last_rollback_step = step
                 l.debug("Decreasing step size from %f to %f...", H, min_H)            
                 H = min_H
             else:
                 ok = True
+        
+        for unit in units:
+            unit.commit(step)
             
         if (step - last_rollback_step) > min_steps_before_increase \
             and H < max_step_size:
