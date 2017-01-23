@@ -5,7 +5,7 @@ from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
 
 l = logging.getLogger()
 
-class StepDelay(AbstractSimulationUnit):
+class DecoupleAdaptation(AbstractSimulationUnit):
     
     def __init__(self, name):
         
@@ -24,7 +24,7 @@ class StepDelay(AbstractSimulationUnit):
         assert step_size > 0.0, "step_size too small: {0}".format(step_size)
         assert iteration == 0, "Fixed point iterations not supported yet."
         
-        previous_input = self.getValues(step-1, iteration, self._getInputVars())[self.in_v]
+        previous_input = self.getValues(step, iteration, self._getInputVars())[self.in_v]
         
         l.debug("%s.previous_input=%f", self._name, previous_input)
         
@@ -35,11 +35,11 @@ class StepDelay(AbstractSimulationUnit):
         return (STEP_ACCEPT, step_size)
     
     def enterInitMode(self):
-        l.debug(">%s.StepDelay.enterInitMode()", self._name)
+        l.debug(">%s.DecoupleAdaptation.enterInitMode()", self._name)
         AbstractSimulationUnit.enterInitMode(self)
         
         # Add a dummy value at time 0, just to fill in the array
         self.setValues(0, 0, {self.in_v: 0.0})
         
-        l.debug("<%s.StepDelay.enterInitMode()", self._name)
+        l.debug("<%s.DecoupleAdaptation.enterInitMode()", self._name)
     

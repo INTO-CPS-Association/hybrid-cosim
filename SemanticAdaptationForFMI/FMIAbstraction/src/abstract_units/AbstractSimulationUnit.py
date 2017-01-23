@@ -93,19 +93,10 @@ class AbstractSimulationUnit(object):
                 assert iteration == len(self.__computed_time[step]) - 1, "Weird use of the iteration records. Either rewrite the last iteration, or keep tracking them."
                 self.__computed_time[step][iteration] = time + step_size
                 
-        """
-        if iteration == 0:
-            assert step == len(self.__computed_time)
-            self.__computed_time.append([time + step_size])
-        else:
-            assert step == len(self.__computed_time) - 1
-            assert iteration == len(self.__computed_time[step])
-            self.__computed_time[step].append(time + step_size)
-        """
        
     def doStep(self, time, step, current_iteration, step_size):
         l.debug(">%s.doStep(t=%f, s=%d, i=%d, H=%f)", self._name,  time, step, current_iteration, step_size)
-        assert self._mode == STEP_MODE
+        assert self._mode == STEP_MODE, "Wrong mode: " + self._mode
         assert step_size > 0
         
         """ This is not done here because it may not be possible to do it for 
@@ -145,7 +136,7 @@ class AbstractSimulationUnit(object):
         
         for var in var_names:
             new_value = self.__algebraic_functions[var](current_state_snaptshot, current_input_snaptshot)
-            Utils.copyValueToStateTrace(self.__state, var, step, iteration, new_value)
+            Utils.copyValueToStateTrace(self.__state, var, step, iteration, new_value, ensureExists=True)
         
         l.debug("Updated portion of the state:\n%s", 
                     self._printState(step, iteration, var_names))
@@ -187,17 +178,21 @@ class AbstractSimulationUnit(object):
                     return True
         return False
         
-    def setValues(self, step, iteration, values):
+    def setValues(self, step, iteration, values, ensureExists=True):
         l.debug(">%s.setValues(%d, %d, %s)", self._name, step, iteration, values)
-        Utils.copyMapToStateTrace(self.__state, step, iteration, values)
         
-        self.__markAlgVars(step, iteration, dirty=True);
-        
-        l.debug("New state: \n%s", self._printState(step,iteration, values.keys()))
+        if values != None:
+            Utils.copyMapToStateTrace(self.__state, step, iteration, values, ensureExists)
+            
+            self.__markAlgVars(step, iteration, dirty=True);
+            
+            l.debug("New state: \n%s", self._printState(step,iteration, values.keys()))
+        else:
+            l.debug("No values to set.")
         l.debug("<%s.setValues()", self._name)
         
     
-    def getValues(self, step, iteration, var_names=None, zoh=False):
+    def getValues(self, step, iteration, var_names=None, zoh=False, ensureExists=False):
         var_names = self.__output_vars if var_names==None else var_names
         l.debug(">%s.getValues(%d, %d, %s)", self._name, step, iteration, var_names)
         if self.__areAlgVarsDirty(step, iteration, var_names):
@@ -206,18 +201,21 @@ class AbstractSimulationUnit(object):
         
         values = {}
         for var in var_names:
-            assert self.__state.has_key(var)
-            stepToAccess = step
-            iterationToAccess = iteration
-            if stepToAccess >= len(self.__state[var]) and zoh:
-                assert stepToAccess == len(self.__state[var]), "Inconsistent state at step %d.".format(step)
-                stepToAccess = step-1
-                iterationToAccess = -1
-                l.debug("Getting old value for %s at step %d.", var, stepToAccess)
-                
-            assert stepToAccess < len(self.__state[var]), "State is not initialized: " + str(self.__state)
-            assert iterationToAccess < len(self.__state[var][stepToAccess])
-            values[var] = self.__state[var][stepToAccess][iterationToAccess]
+            if ensureExists:
+                assert self.__state.has_key(var)
+            
+            if self.__state.has_key(var):
+                stepToAccess = step
+                iterationToAccess = iteration
+                if stepToAccess >= len(self.__state[var]) and zoh:
+                    assert stepToAccess == len(self.__state[var]), "Inconsistent state at step %d.".format(step)
+                    stepToAccess = step-1
+                    iterationToAccess = -1
+                    l.debug("Getting old value for %s at step %d.", var, stepToAccess)
+                    
+                assert stepToAccess < len(self.__state[var]), "State is not initialized: " + str(self.__state)
+                assert iterationToAccess < len(self.__state[var][stepToAccess])
+                values[var] = self.__state[var][stepToAccess][iterationToAccess]
         
         l.debug("<%s.getValues()=%s", self._name, values)
         return values

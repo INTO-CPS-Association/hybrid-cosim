@@ -7,9 +7,9 @@ Created on Mar 5, 2016
 class Utils(object):
     
     @staticmethod
-    def copyMapToStateTrace(target, step, iteration, source):
+    def copyMapToStateTrace(target, step, iteration, source, ensureExists):
         for var in source:
-            Utils.copyValueToStateTrace(target, var, step, iteration, source[var])
+            Utils.copyValueToStateTrace(target, var, step, iteration, source[var], ensureExists)
     
     @staticmethod
     def getValuesUpToDate(source, vars_to_select, step, iteration):
@@ -23,8 +23,12 @@ class Utils(object):
         return result
     
     @staticmethod
-    def copyValueToStateTrace(target, var, step, iteration, value):
-        assert target.has_key(var)
+    def copyValueToStateTrace(target, var, step, iteration, value, ensureExists):
+        if ensureExists:
+            assert target.has_key(var)
+        elif not target.has_key(var):
+            return
+        
         assert step <= len(target[var])
         if step == len(target[var]):
             target[var].append([value])
