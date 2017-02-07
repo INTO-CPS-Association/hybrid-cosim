@@ -11,7 +11,7 @@ out rules {
 // algebraic loop
 semantic adaptation power_window_obstacle_sa // without master -> not necessary: custom control rules override master
 for fmu power, window_sa, obstacle
-input ports up (m/s^2), down
+input ports up, down
 output ports armature_current
 //algebraic loop fix point iteration at reaction_torque and height with absolute tolerance = 1e-8 and relative tolerance = 0.0001
 param MAXITER = 100;
@@ -39,11 +39,68 @@ control rules {
 		temp_reaction_torque := reaction_torque;
 		//local_step(power); // with delayed input for reaction_torque
 		//local_step(obstacle); // with delayed input for height
-		local_step(h, power, obstacle, window_sa); // acts like the Local master but cannot not advance time, so will always roll-back for safety (must be in one statements because a full step is done here), but how do we get the inner
+		local_step(power);
+		local_step(obstacle);
+		local_step(window_sa);
+		//local_step(H, power, obstacle, window_sa); // acts like the Local master but cannot not advance time, so will always roll-back for safety (must be in one statements because a full step is done here), but how do we get the inner
 		if (is_close(temp_height, height, REL_TOL, ABS_TOL) and is_close(temp_reaction_torque, reaction_torque, REL_TOL, ABS_TOL)) { // todo: set tolerance
 			converged := true;
 		}
 	}
+	return H;
+}
+
+// this is the one for the paper
+semantic adaptation window_obstacle_sa_loop// overrides master -> not necessary: custom control rules override master
+for fmu window_sa, obstacle
+input ports motor_speed
+output ports reaction_torque
+param MAXITER = 100;
+param REL_TOL = 1e-8;
+param ABS_TOL = 1e-8;
+control rules {
+	var prev_height; // to compare new value with previous value
+	var window_state;
+	var obstacle_state;
+	height := height; // do_step will always use the last values, local_step does not advance time so will replace the last signal values! therefore, we must set the signal at time t+h of reaction_torque and height. this is done by a very weird statement:
+	reaction_force := 0; // and just initialise other values at time t+h
+	for (var iter in 0 .. MAXITER) {
+		prev_height := height;
+		local_step(obstacle); // with delayed input for height. overwrite current time step: basically a set_state (state at previous time step), do_step (with time step H)
+		local_step(window_sa);
+		if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
+			break;
+		}
+	}
+	return H;
+}
+
+// other version without local_step
+semantic adaptation window_obstacle_sa_loop2// overrides master -> not necessary: custom control rules override master
+for fmu window_sa, obstacle
+input ports motor_speed
+output ports reaction_torque
+param MAXITER = 100;
+param REL_TOL = 1e-8;
+param ABS_TOL = 1e-8;
+control rules {
+	var prev_height; // to compare new value with previous value
+	var window_state;
+	var obstacle_state;
+	for (var iter in 0 .. MAXITER) {
+		window_state := get_state(window_sa);
+		obstacle_state := get_state(obstacle);
+		prev_height := height;
+		do_step(obstacle, H); // with delayed input for height
+		do_step(window_sa, H);
+		if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
+			break;
+		} else {
+			set_state(window_sa, window_state);
+			set_state(obstacle, obstacle_state);
+		}
+	}
+	return H;
 }
 
 

@@ -8,7 +8,7 @@ full internal dependencies
 fmu controller
 type discrete event
 input ports obj_detected, passenger_up, passenger_down, driver_up, driver_down
-output ports up, down, stop, next
+output ports up, down, stop
 full internal dependencies
 
 fmu power

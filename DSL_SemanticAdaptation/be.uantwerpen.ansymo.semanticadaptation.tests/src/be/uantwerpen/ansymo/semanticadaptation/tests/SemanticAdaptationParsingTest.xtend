@@ -41,7 +41,7 @@ class SemanticAdaptationParsingTest extends AbstractSemanticAdaptationTest{
 	@Test def powerwindow_algebraic_loop_iteration_BASE() { __parseNoErrors('input/powerwindow_algebraic_loop_iteration_BASE.sa') }
 	@Test def powerwindow_algebraic_loop_iteration() { __parseNoErrors('input/powerwindow_algebraic_loop_iteration.sa') }
 	@Test def powerwindow_controller_delay() { __parseNoErrors('input/powerwindow_controller_delay.sa') }
-	@Test def powerwindow_controller_delay_BASE() { __parseNoErrorsPrint('input/powerwindow_controller_delay_BASE.sa') }
+	@Test def powerwindow_controller_delay_BASE() { __parseNoErrors('input/powerwindow_controller_delay_BASE.sa') }
 	@Test def powerwindow_multi_rate() { __parseNoErrors('input/powerwindow_multi_rate.sa') }
 	@Test def powerwindow_multi_rate_BASE() { __parseNoErrors('input/powerwindow_multi_rate_BASE.sa') }
 	@Test def powerwindow() { __parseNoErrors('input/powerwindow.sa') }

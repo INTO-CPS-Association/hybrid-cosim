@@ -88,7 +88,7 @@ OutRulesBlock:
 	{OutRulesBlock} ('out' globalvars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
 
 ControlRuleBlock:
-	{ControlRuleBlock} 'control' 'rules' '{' controlrule=ControlRule '}'; // TODO: multiple rules or just one?
+	{ControlRuleBlock} ('control' globalvars+=Declaration)*  'control' 'rules' '{' controlrule=ControlRule '}'; // TODO: multiple rules or just one?
 
 DataRule: // condition -> state transition --> output function
 	(((condition=RuleCondition "->" statetransitionfunction=StateTransitionFunction) | ConditionStateTransition | ConditionLessRule) ("-->" outputfunction=OutputFunction)? | AlgebraicLoopSolution) ';';
@@ -142,7 +142,7 @@ ControlRule:
 	{ImpliedControlRule} 'implied' | // the default
 	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
 	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
-	StateTransitionFunction;
+	{CustomControlRule} statements+=Statement* returnstatement=ReturnStatement;
 
 AnonymousFunction: // has access to ports
 	{FunctionExpression} '{=' code=Expression '}'| 
@@ -314,18 +314,24 @@ BuiltinFunction:
 	{Max} name='max' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
 	{Min} name='min' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
 	{Abs} name='abs' '(' args=ArithmeticExpression ')' |
-	{Close} name='is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' | 
-	{IsSet} name='is_set' '(' args=Variable ')'// a, b, relative tolerance, absolute tolerance 
+	{Close} name='is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |  // a, b, relative tolerance, absolute tolerance 
+	{IsSet} name='is_set' '(' args=Variable ')' | 
+	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' H=ArithmeticExpression ')' |
+	{GetState} name='get_state' '(' fmu=[FMU] ')' |
+	{GetNextInternalTimeStep} name='get_next_time_step' '(' fmu=[FMU] ')' // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
 	;
 	
 Procedure:
 	{Reject} name='reject' |
 	{Step} name='local_step' '(' fmu=[FMU] ')' |
-	{Discard} name='discard' '(' args=Variable ')'; // arg: new proposed step size
+	{Discard} name='discard' '(' args=Variable ')' |
+	{DoStep} name='do_step' '(' fmu=[FMU] ',' H=ArithmeticExpression ')' |
+	{SetState} name='set_state' '(' fmu=[FMU] ',' state=Var ')'; // arg: new proposed step size
 	
 Var:
-	{StepSize} name='h' | 
+	{StepSize} name='H' | 
 	{CurrentTime} name='t' | 
+	{Max} name='MAX' |
 	{GenericSignal} name='signal' ('[' (
 		index=NOW | 
 		index=PREV | 
