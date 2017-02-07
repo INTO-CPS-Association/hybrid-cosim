@@ -1,0 +1,12 @@
+import PowerWindowModel
+import Controller_SA
+
+module Algebraic_Loop_SA
+
+// this one could be joined with the one below, if we assume certain priorities in executing the rules
+semantic adaptation window_sa
+for fmu window
+out rules {
+	reaction_torque := -reaction_torque;
+	delay at reaction_torque and height;
+}

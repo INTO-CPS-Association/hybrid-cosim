@@ -1,0 +1,17 @@
+import PowerWindowModel
+import Controller_SA
+
+// this one could be joined with the one below, if we assume certain priorities in executing the rules
+semantic adaptation window_sa
+for fmu window
+out rules {
+	reaction_torque := -reaction_torque;
+}
+
+// algebraic loop
+semantic adaptation power_window_obstacle_sa
+for fmu power, window_sa, obstacle
+input ports up, down // optional, can be figured out from model
+output ports armature_current // optional, can be figured out from model
+successive substitution starts at reaction_torque and height with absolute tolerance = 1e-8 and relative tolerance = 0.0001
+

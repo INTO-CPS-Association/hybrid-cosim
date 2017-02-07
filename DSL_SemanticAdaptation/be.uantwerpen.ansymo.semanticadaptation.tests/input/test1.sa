@@ -1,0 +1,29 @@
+semantic adaptation TEST
+for discrete event
+input ports x[1 .. 2] (kg.m/s 2), y, z
+output ports a, b, c
+extract directionalderivative 
+{= (signal-signal[prev]) / h }
+{
+	def firstorder(s) {
+		var temp;
+		temp = s-s[prev];
+		return temp / h;
+	}
+	return firstorder(x);
+}
+
+in rules with zero crossing tolerance = 0.001, no hold { // for CT to inner DE
+	not x[prev]+3 > 2+2*floor(y[now]+round(8.2)) and y < 4 -> todo --> todo;
+	x >! 2 with tolerance = 0.0001 -> "high" --> no hold; // means condition -> IN action -> UPDATE IN action
+	x >! 1 or x <! 2 -> "low" --> no hold;
+	x <! 1 -> "off"; // i.e., no hold is the default
+	otherwise(x) -> null --> zero order hold;
+	quantize(y, "off", 1, "low", 2, "high") --> no hold;
+	quantize(z, ="event"+floor(z + 0.5)) --> no hold;
+	quantize(z, ="event"+round(z)) --> no hold;
+	quantize z every 2 offset 1 --> no hold;
+}
+//out rules with buffer[10] {}
+out rules {}
+control rules {}

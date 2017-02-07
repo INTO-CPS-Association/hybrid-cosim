@@ -1,0 +1,21 @@
+import PowerWindowModel
+
+module Controller_SA
+
+semantic adaptation armature_current_sa
+for fmu controller
+control rules { triggered by signal == true }
+in rules with crossing absolute tolerance = 1e-8 and relative tolerance = 0.0001, no hold {
+	armature_current >! 5 -> obj_detected := true;
+	otherwise(armature_current) -> obj_detected := false;
+}
+
+semantic adaptation in_out_sa
+for fmu controller
+out rules with zero order hold {
+	"up" -> up := 1;
+	"stop" -> { up := 0; down := 0; };
+	"down" -> down := 1;
+	delay at up and down;
+}
+

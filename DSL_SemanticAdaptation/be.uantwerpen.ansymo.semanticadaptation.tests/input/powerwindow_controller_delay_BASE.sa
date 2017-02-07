@@ -1,0 +1,48 @@
+import PowerWindowModel
+
+module Controller_SA
+
+semantic adaptation controller_sa
+for fmu controller
+input ports armature_current -> obj_detected, passenger_up, passenger_down, driver_up, driver_down, next
+output ports up, down
+param REL_TOL = 0.0001;
+param ABS_TOL = 1e-8;
+param CROSSING = 5;
+param init_armature_current = CROSSING;
+param init_up = 0;
+param init_down = 0;
+control rules { triggered by signal == true or t >= next_transition }
+in var next_transition := -1;
+in var stored_armature_current := init_armature_current;
+in rules {
+	true -> {
+		obj_detected := false;
+		if (not (not is_close(stored_armature_current, CROSSING, REL_TOL, ABS_TOL) and stored_armature_current > CROSSING)
+					and (not is_close(armature_current, CROSSING, REL_TOL, ABS_TOL) and armature_current > CROSSING)) { // crossing, but not within tolerance
+			var negative_value := stored_armature_current - CROSSING;
+			var positive_value := armature_current - CROSSING;
+			var new_step_size := (h * (- negative_value)) / (positive_value - negative_value);
+			discard(new_step_size);
+		} else {
+			if (not (not is_close(stored_armature_current, CROSSING, REL_TOL, ABS_TOL) and stored_armature_current > CROSSING)
+						and is_close(armature_current, CROSSING, REL_TOL, ABS_TOL)) { // crossing within tolerance found
+				obj_detected := true;
+			}
+		}
+		stored_armature_current := armature_current;
+	} --> { };
+	next > 0 -> { next_transition := t + next; } --> { };
+}
+out var stored_up := init_up;
+out var stored_down := init_down;
+out rules {
+	up == true -> { up := 1; } --> { };
+	otherwise up -> { } --> { };
+	down == true -> { down := 1; } --> { };
+	otherwise down -> { } --> { };
+	stop == true -> { up := 0; down := 0; } --> { };
+	otherwise stop -> { } --> { };
+	true -> { up := stored_up; stored_up := up; } --> { };
+	true -> { down := stored_down; stored_down := down; } --> { }; 
+}

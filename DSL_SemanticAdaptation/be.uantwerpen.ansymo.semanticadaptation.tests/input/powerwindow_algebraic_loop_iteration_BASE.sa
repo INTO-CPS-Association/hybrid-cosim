@@ -1,0 +1,49 @@
+import PowerWindowModel
+import Controller_SA
+
+// this one could be joined with the one below, if we assume certain priorities in executing the rules
+semantic adaptation window_sa
+for fmu window
+out rules {
+	true -> {reaction_torque := -reaction_torque; } --> { };
+}
+
+// algebraic loop
+semantic adaptation power_window_obstacle_sa // without master -> not necessary: custom control rules override master
+for fmu power, window_sa, obstacle
+input ports up (m/s^2), down
+output ports armature_current
+//algebraic loop fix point iteration at reaction_torque and height with absolute tolerance = 1e-8 and relative tolerance = 0.0001
+param MAXITER = 100;
+param REL_TOL = 1e-8;
+param ABS_TOL = 1e-8;
+control rules {
+	// do_step will always use the last values, do_step does not advance time so will replace the last signal values! 
+	// therefore, we must set the signal at time t+h of reaction_torque and height
+	// this is done by a very weird statement:
+	reaction_torque := reaction_torque;
+	height := height;
+	// and just initialise other values at time t+h
+	armature_current := 0;
+	motor_speed := 0;
+	reaction_force := 0;
+	// now, all inputs are set at time t+h and we can start substituting them
+	var converged := false;
+	var temp_height; // to compare new value with previous value
+	var temp_reaction_torque; // to compare new value with previous value
+	for (var iter in 0 .. MAXITER) {
+		if (converged) {
+			break;
+		}
+		temp_height := height;
+		temp_reaction_torque := reaction_torque;
+		//local_step(power); // with delayed input for reaction_torque
+		//local_step(obstacle); // with delayed input for height
+		local_step(h, power, obstacle, window_sa); // acts like the Local master but cannot not advance time, so will always roll-back for safety (must be in one statements because a full step is done here), but how do we get the inner
+		if (is_close(temp_height, height, REL_TOL, ABS_TOL) and is_close(temp_reaction_torque, reaction_torque, REL_TOL, ABS_TOL)) { // todo: set tolerance
+			converged := true;
+		}
+	}
+}
+
+

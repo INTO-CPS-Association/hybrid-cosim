@@ -1,0 +1,365 @@
+grammar be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation with org.eclipse.xtext.common.Terminals
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+generate semanticAdaptation "http://www.uantwerpen.be/ansymo/semanticadaptation/SemanticAdaptation"
+
+SemanticAdaptation:
+	(imports+=Import)*
+	('module' name=ID)?
+	(elements+=Component)*;
+
+Import:
+	'import' module=[SemanticAdaptation];
+	
+Component:
+	FMU | Connection;
+
+Connection:
+	src=[SpecifiedPort] '->' tgt=[SpecifiedPort];
+
+FMU:
+	AtomicFMU | CompositeFMU | Adaptation;
+
+AtomicFMU:
+	'fmu' name=ID
+	('type' type=ModelType)?
+	('input' 'ports' inports+=Port ("," inports+=Port)*)?
+	('output' 'ports' outports+=Port ("," outports+=Port)* )?
+	('full' 'internal' 'dependencies')?
+	;
+
+CompositeFMU:
+	'fmu' name=ID
+	'composed' 'of' instances+=[FMU] (',' instances+=[FMU])*
+	('input' 'ports' inports+=Port ("," inports+=Port)*)?
+	('output' 'ports' outports+=Port ("," outports+=Port)* )?;
+
+Adaptation:
+	({Adaptation} 'semantic' 'adaptation' name=ID | 
+	{AdaptationWithSpecificMaster} 'semantic' 'adaptation' name=ID 'without' 'master')
+	/*'for' type=ModelType*/ ('for' ('fmu' instances+=[FMU] (',' instances+=[FMU])* /*| 'signal' ports+=[SpecifiedPort] (',' ports+=[SpecifiedPort])**/) )? // only multiple instances in case of CT because we only have CT master?
+	('input' 'ports' inports+=Port ("," inports+=Port)*)? // only in case of instance-specific SA
+	('output' 'ports' outports+=Port ("," outports+=Port)* )? // only in case of instance-specific SA
+	('param' params+=ParamDeclaration)*
+//	(globalvars+=Declaration)*
+	// algebraic loop generates an FMU encapsulating the loop
+	// note that the order of semantic adaptations is prefixed in case of a algebraic loop:
+	// adaptations on internal signals of the loop are inner most, then the algebraic loop iteration, then adaptations on external signals
+	(generalrules+=GeneraleRule)*
+	((in=InRulesBlock)? & (out=OutRulesBlock)? & (control=ControlRuleBlock)?)
+//	('contains' '{' adaptations+=Adaptation+ '}')? // I prefer no structural information here, this belongs to a graphical model
+	;
+	
+ModelType: DE | UT | CT | DT;
+	
+DE: 'DE' | 'de' | 'DiscreteEvent' | 'Discrete' 'Event' | 'discrete' 'event';
+UT: 'UT' | 'ut' | 'Untimed' | 'untimed';
+CT: 'CT' | 'ct' | 'ContinuousTime' | 'Continuous' 'Time' | 'continuous' 'time';
+DT: 'DT' | 'dt' | 'DiscreteTime' | 'Discrete' 'Time' | 'discrete' 'time';
+
+GeneraleRule:
+	AlgebraicLoopSolution | MultiRate | Derivative;
+
+AlgebraicLoopSolution:
+	{AlgebraicLoopSolutionFixPointIteration} 'successive' 'substitution' 'starts' 'at' signals+=[SpecifiedPort] (('and'|',') signals+=[SpecifiedPort])? 'with' params+=SettingAssignment ('and' params+=SettingAssignment)* | 
+	{AlgebraicLoopSolutionDelayIntroduction} 'delay' 'at' signals+=[SpecifiedPort] (('and'|',') signals+=[SpecifiedPort])?; // TODO: must be in in or out rule
+	
+MultiRate:
+	'multiply' 'rate' rate=INT 'times' ('with' interpolation=Interpolation)?; // default first order interpolation
+
+Interpolation:
+	({ZeroOrderInterpolation} 'no' | {FirstOrderInterpolation} 'first' 'order' | {SecondOrderInterpolation} 'second' 'order' | {ThirdOrderInterpolation} 'third' 'order' | {FourthOrderInterpolation} 'fourth' 'order') 'interpolation' | // automatically does lower order interpolation in the beginning of simulation when no previous signal values are available
+	{CustomOrderInterpolation} 'interpolation' 'of' 'order' order=INT | 
+	{CustomInterpolation} 'interpolation' function=AnonymousFunction;
+	
+Derivative:
+	{PredefinedDerivative} 'with' (directionalderivative?='directionalderivative'? & timederivative?='timederivative'?) |
+	{DefinedDerivative} 'extract' (extractdirectionalderivative?='directionalderivative'? & // decide sensitivity
+				extracttimederivative?='timederivative'? & // decide sensitivity
+				extractsensitivity+=AnonymousFunction* );  // new sensitivity definitions
+
+InOutRules:
+	InRulesBlock | OutRulesBlock;
+
+InRulesBlock:
+	{InRulesBlock} ('in' globalvars+=Declaration)* 'in' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
+
+OutRulesBlock:
+	{OutRulesBlock} ('out' globalvars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
+
+ControlRuleBlock:
+	{ControlRuleBlock} 'control' 'rules' '{' controlrule=ControlRule '}'; // TODO: multiple rules or just one?
+
+DataRule: // condition -> state transition --> output function
+	(((condition=RuleCondition "->" statetransitionfunction=StateTransitionFunction) | ConditionStateTransition | ConditionLessRule) ("-->" outputfunction=OutputFunction)? | AlgebraicLoopSolution) ';';
+
+GeneralSetting:
+	{GeneralVariableSetting} strategy=RuleStrategy params+=SettingAssignment ('and' params+=SettingAssignment)* | 
+	OutputFunction;
+	
+SettingAssignment:
+	setting=RuleSetting '=' expr=Expression;
+	
+RuleCondition:
+	{RuleCondition} condition=Expression (params+=SettingAssignment ('and' params+=SettingAssignment)*)? | 
+	{CompositeRuleCondition} '{' statements+=Statement* returnstatement=ReturnStatement '}';
+
+RuleSetting:
+	{AbsoluteTolerance} 'absolute' 'tolerance' | // todo relative/absolute tolerance (look up float equality)
+	{RelativeTolerance} 'relative' 'tolerance'; // todo relative/absolute tolerance (look up float equality)
+	// otherwise null
+	
+RuleStrategy:
+	{Crossing} 'crossing';
+	
+StateTransitionFunction:
+	{StateTransitionFunction} expression=Expression |
+	{StateTransitionFunction} '{' statements+=Statement* '}' |
+	{StateTransitionFunction} assignment=Assignment;// |
+	//{StoreNull} ('null' | 'nothing') |
+	//{StateTransitionFunction} 'todo';
+
+ConditionLessRule:
+	assignment=Assignment;
+
+ConditionStateTransition:
+	quantization=Quantize;
+
+Quantize returns ConditionStoreStrategy:
+	{FiniteQuantize} 'quantize' '(' signal=[SpecifiedPort] ',' zones+=StringLiteral (',' boundaries+=ArithmeticExpression ',' zones+=StringLiteral)* ')' |
+	{FunctionQuantize} 'quantize' '(' signal=[SpecifiedPort] ',' '=' function=ArithmeticExpression ')' |
+	{LinearQuantize} 'quantize' signal=[SpecifiedPort] 'every' steps=ArithmeticExpression ('with'? 'offset' offset=ArithmeticExpression)?;
+	
+OutputFunction:
+	{NoHold} 'no' 'hold' |
+	{ZeroOrderHold} (('zero' 'order' 'hold') | 'ZOH') |
+	{FirstOrderHold} (('first' 'order' 'hold') | 'FOH') |
+	{CustomOutputFunction} expr=Expression |
+	{CompositeOutputFunction} '{' statements+=Statement* (returnstatement=ReturnStatement)? '}';
+	
+ControlRule:
+	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
+	{ImpliedControlRule} 'implied' | // the default
+	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
+	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
+	StateTransitionFunction;
+
+AnonymousFunction: // has access to ports
+	{FunctionExpression} '{=' code=Expression '}'| 
+	{FunctionBody} '{' statements+=Statement* returnstatement=ReturnStatement '}' |  // should return something
+	FunctionDeclaration; // TODO: should return something
+	
+/*[SpecifiedPort]: // if ports need owners
+	port=[Port] |
+	{Output[SpecifiedPort]} owner=[FMU] '.' port=[Port] | 
+	{Input[SpecifiedPort]} owner=[FMU] '<-' port=[Port];*/
+SpecifiedPort: Port;
+
+Port:
+	// TODO: add initial values to ports (to do 1st, 2nd, ... order stuff)
+	// TODO: add internal destination/source of port
+	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
+	name=ID (':=' initval=LiteralOrArray)? ( multiplicity=Multiplicity )? ( '(' unity=Unity ')' )? ('->' target=[SpecifiedPort] | '-->' dependency+=[SpecifiedPort] (dependency+=[SpecifiedPort])*)?;
+
+Multiplicity:
+	'[' (lower=INT '..')? upper=INT ']';
+
+Unity:
+	DivideUnity;
+	
+DivideUnity returns Unity:
+	MultiplyUnity (({DivideUnity.left=current} '/') right=MultiplyUnity)*;
+
+MultiplyUnity returns Unity:
+	AtomicUnity (({MultiplyUnity.left=current} '.') right=AtomicUnity)*;
+
+AtomicUnity:
+	name=ID ('^' (power=INT | power=INTTYPE))?; // somehow LETTERS as name does not work, so power will never be parsed...
+
+//FunctionBody:
+//	statements+=Statement* returnstatement=ReturnStatement;
+	
+Statement:
+	NestableStatement | FunctionDeclaration;
+
+NestableStatement:
+	Declaration | (Assignment  ';') | (Procedure  ';') | For | If | BreakStatement;
+	
+For:
+	'for' '(' 'var' iterator=DeclaredParameter 'in' iterable=Range ')' '{' (statements+=NestableStatement)* '}';
+	
+If:
+	'if' '(' ifcondition=Expression ')' '{' (ifstatements+=NestableStatement)* '}' ('else' '{' (elsestatements+=NestableStatement)* '}')?;
+	
+FunctionDeclaration:
+	'def' name=ID ('(' args+=DeclaredParameter (',' args+=DeclaredParameter)* ')')? 
+	'{' statements+=Statement* returnstatement=ReturnStatement '}';
+
+Declaration:
+	'var' name=ID (':=' expr=Expression)? ';';
+
+ParamDeclaration:
+	name=ID '=' expr=Expression ';';
+
+ReturnStatement:
+	'return' Expression ';';
+
+BreakStatement:
+	{BreakStatement} 'break' ';';
+
+DeclaredParameter:
+	name=ID;
+	
+AbstractDeclaration: // can contain overlapping elements as long as it is only used as reference
+	Port | ParamDeclaration | Declaration | DeclaredParameter | FunctionDeclaration;
+
+LValueDeclaration: // can contain overlapping elements as long as it is only used as reference
+	Port | ParamDeclaration | Declaration | DeclaredParameter;
+
+Assignment:
+	lvalue=Variable ':=' expr=Expression; // TODO: to what can be assigned? only local vars?
+
+Expression:
+	OrExpression;
+
+OrExpression returns Expression:
+	AndExpression ({Or.left=current} 'or' right=AndExpression)*;
+
+AndExpression returns Expression:
+	NotExpression ({And.left=current} 'and' right=NotExpression)*;
+	
+NotExpression returns Expression:
+	{Not} 'not' left=GreaterThanExpression | 
+	GreaterThanExpression;
+	
+GreaterThanExpression returns Expression:
+	LessThanExpression ({GreaterThan.left=current} '>' right=ArithmeticExpression)?;
+	
+LessThanExpression returns Expression:
+	GreaterThanOrEqualsExpression ({LessThan.left=current} '<' right=ArithmeticExpression)?;
+
+GreaterThanOrEqualsExpression returns Expression:
+	LessThanOrEqualsExpression ({GreaterThanOrEquals.left=current} '>=' right=ArithmeticExpression)?;
+	
+LessThanOrEqualsExpression returns Expression:
+	EqualsExpression ({LessThanOrEquals.left=current} '<=' right=ArithmeticExpression)?;
+
+EqualsExpression returns Expression:
+	NotEqualsExpression ({Equals.left=current} '==' right=ArithmeticExpression)?;
+	
+NotEqualsExpression returns Expression:
+	CrossesFromBelowExpression ({NotEquals.left=current} '!=' right=ArithmeticExpression)?;
+		
+CrossesFromBelowExpression returns Expression:
+	CrossesFromAboveExpression ({CrossesFromBelow.left=current} '>!' right=ArithmeticExpression)?;
+	
+CrossesFromAboveExpression returns Expression:
+	BooleanFunction ({CrossesFromAbove.left=current} '<!' right=BooleanFunction)?;
+	
+BooleanFunction returns Expression:
+	{Otherwise} 'otherwise' '(' ref=[SpecifiedPort] ')' |
+	{Otherwise} 'otherwise' ref=[SpecifiedPort] |
+	ArithmeticExpression;
+
+ArithmeticExpression returns Expression:
+	Addition;
+
+Addition returns Expression:
+	Multiplication (({Plus.left=current} '+' | {Minus.left=current} '-') right=Multiplication)*;
+
+Multiplication returns Expression:
+	Range (({Multi.left=current} '*' | {Div.left=current} '/') right=Range)*;
+
+Range returns Expression:
+	UnaryOrPrimaryExpression ({Range.left=current} '..' right=UnaryOrPrimaryExpression)?;
+
+UnaryOrPrimaryExpression returns Expression:
+	NegationExpression | PrimaryExpression;
+	
+NegationExpression returns Expression:
+	{Neg} '-' right=PrimaryExpression;
+
+PrimaryExpression returns Expression:
+	'(' Expression ')' | Literal | BuiltinFunction | Var;
+
+LiteralOrArray:
+	{ArrayLiteral} '[' elements+=Literal (',' elements+=Literal)* ']' |
+	Literal;
+
+Literal:
+	IntLiteral | RealLiteral | StringLiteral | BoolLiteral | NullLiteral; //| StepLiteral;
+
+IntLiteral:
+	value=INTTYPE | value=INT;
+	
+RealLiteral:
+	value=REALTYPE;
+	
+StringLiteral:
+	value=STRING;
+	
+BoolLiteral:
+	value=('true'|'false');
+	
+//StepLiteral:
+//	value=('accept'|'discard');
+	
+NullLiteral:
+	value='null';
+	
+BuiltinFunction:
+	{Floor} name='floor' '(' args+=ArithmeticExpression ')' | 
+	{Ceil} name='ceil' '(' args+=ArithmeticExpression ')' | 
+	{Round} name='round' '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)? ')' |
+	{Max} name='max' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
+	{Min} name='min' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
+	{Abs} name='abs' '(' args=ArithmeticExpression ')' |
+	{Close} name='is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' | 
+	{IsSet} name='is_set' '(' args=Variable ')'// a, b, relative tolerance, absolute tolerance 
+	;
+	
+Procedure:
+	{Reject} name='reject' |
+	{Step} name='local_step' '(' fmu=[FMU] ')' |
+	{Discard} name='discard' '(' args=Variable ')'; // arg: new proposed step size
+	
+Var:
+	{StepSize} name='h' | 
+	{CurrentTime} name='t' | 
+	{GenericSignal} name='signal' ('[' (
+		index=NOW | 
+		index=PREV | 
+		index=INTTYPE |
+		index=INT // TODO: int must be less than -1, TODO: expression
+		) ']')? |
+	Variable |
+	FunctionCall; // add "directionalderivative"
+	
+Variable:
+	ref=[LValueDeclaration] ('[' (
+		index=NOW | 
+		index=PREV | 
+		index=INTTYPE |
+		index=INT  // TODO: int must be less than -1, TODO: expression
+		) ']')?; // TODO: NO RECURSION (must terminate)
+
+FunctionCall:
+	ref=[FunctionDeclaration] '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)* ')'; // TODO: NO RECURSION (must terminate)
+
+//SignedInt returns ecore::EInt:
+//	('-'|'+')? INT;
+
+//SignedReal returns ecore::EBigDecimal:
+//	'-'? REAL;
+
+terminal INTTYPE returns ecore::EInt : '-' INT;
+	
+terminal REALTYPE returns ecore::EFloat : '-'? ((( INT '.' INT | '.' INT | INT '.') (('e'|'E') ('-'|'+') INT)?) | (INT ('e'|'E') ('-'|'+') INT));
+//terminal UNSREALTYPE returns ecore::EFloat : ((( INT '.' INT | '.' INT | INT '.') (('e'|'E') ('-'|'+') INT)?) | (INT ('e'|'E') ('-'|'+') INT));
+	
+terminal NOW returns ecore::EInt: 'now';
+terminal PREV returns ecore::EInt: 'prev';
+	
+//terminal REAL returns ecore::EBigDecimal: INT? '.' INT;
+
+//terminal LETTERS returns ecore::EString: ('a'..'z' | 'A'..'Z')+;
