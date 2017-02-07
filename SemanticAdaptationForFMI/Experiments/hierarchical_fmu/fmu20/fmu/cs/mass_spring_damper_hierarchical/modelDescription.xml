@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<fmiModelDescription
+  fmiVersion="2.0"
+  modelName="mass_spring_damper_hierarchical"
+  guid="{ae8ba062-ad27-4bfb-8ce5-54c82e9d7e35}"
+  numberOfEventIndicators="0">
+
+<CoSimulation
+  modelIdentifier="mass_spring_damper_hierarchical"
+  canHandleVariableCommunicationStepSize="true"/>
+
+<LogCategories>
+  <Category name="logAll"/>
+  <Category name="logError"/>
+  <Category name="logFmiCall"/>
+  <Category name="logEvent"/>
+</LogCategories>
+
+<ModelVariables>
+  <!-- Index for next variable = 1 -->
+  <ScalarVariable name="x" valueReference="0" description="the only state"
+                  causality="local" variability="continuous" initial="exact">
+    <Real start="1" />
+  </ScalarVariable>
+  <!-- Index for next variable = 2 -->
+  <ScalarVariable name="der(x)" valueReference="1" description="time derivative of x" causality="local" variability="continuous" initial="exact">
+    <Real derivative="1" start="0"/>
+  </ScalarVariable>
+  <!-- Index for next variable = 3 -->
+  <ScalarVariable name="der(der(x))" valueReference="2" description="time derivative of der(x)" causality="local" variability="continuous" initial="calculated">
+    <Real derivative="2"/>
+  </ScalarVariable>
+  <!-- Index for next variable = 4 -->
+  <ScalarVariable name="F_in" valueReference="3" description="Force input"
+                  causality="input" variability="continuous">
+    <Real start="0" />
+  </ScalarVariable>
+  <!-- Index for next variable = 5 -->
+  <ScalarVariable name="k" valueReference="4"
+                  causality="parameter" variability="fixed" initial="exact">
+    <Real start="1"/>
+  </ScalarVariable>
+  <!-- Index for next variable = 6 -->
+  <ScalarVariable name="c" valueReference="5"
+                  causality="parameter" variability="fixed" initial="exact">
+    <Real start="1"/>
+  </ScalarVariable>
+  <!-- Index for next variable = 7 -->
+  <ScalarVariable name="m" valueReference="6"
+                  causality="parameter" variability="fixed" initial="exact">
+    <Real start="1"/>
+  </ScalarVariable>
+</ModelVariables>
+
+<ModelStructure>
+  <Derivatives>
+    <Unknown index="2" />
+  </Derivatives>
+  <InitialUnknowns>
+    <Unknown index="1"/>
+    <Unknown index="2"/>
+    <Unknown index="3"/>
+  </InitialUnknowns>
+</ModelStructure>
+
+</fmiModelDescription>
