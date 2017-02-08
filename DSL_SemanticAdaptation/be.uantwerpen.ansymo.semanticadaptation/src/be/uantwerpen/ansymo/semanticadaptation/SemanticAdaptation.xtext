@@ -46,7 +46,9 @@ Adaptation:
 	// note that the order of semantic adaptations is prefixed in case of a algebraic loop:
 	// adaptations on internal signals of the loop are inner most, then the algebraic loop iteration, then adaptations on external signals
 	(generalrules+=GeneraleRule)*
-	((in=InRulesBlock)? & (out=OutRulesBlock)? & (control=ControlRuleBlock)?)
+	(control=ControlRuleBlock)?
+	(in=InRulesBlock)?
+	(out=OutRulesBlock)?
 //	('contains' '{' adaptations+=Adaptation+ '}')? // I prefer no structural information here, this belongs to a graphical model
 	;
 	
@@ -88,7 +90,7 @@ OutRulesBlock:
 	{OutRulesBlock} ('out' globalvars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
 
 ControlRuleBlock:
-	{ControlRuleBlock} ('control' globalvars+=Declaration)*  'control' 'rules' '{' controlrule=ControlRule '}'; // TODO: multiple rules or just one?
+	/*('control' globalvars+=Declaration)**/ ControlRule; // TODO: multiple rules or just one?
 
 DataRule: // condition -> state transition --> output function
 	(((condition=RuleCondition "->" statetransitionfunction=StateTransitionFunction) | ConditionStateTransition | ConditionLessRule) ("-->" outputfunction=OutputFunction)? | AlgebraicLoopSolution) ';';
@@ -138,11 +140,11 @@ OutputFunction:
 	{CompositeOutputFunction} '{' statements+=Statement* (returnstatement=ReturnStatement)? '}';
 	
 ControlRule:
-	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
 	{ImpliedControlRule} 'implied' | // the default
+	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
 	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
 	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
-	{CustomControlRule} statements+=Statement* returnstatement=ReturnStatement;
+	{CustomControlRule} 'control' '{' ControlRulestatements+=Statement* returnstatement=ReturnStatement '}'; // TODO: how do we know if control is given?
 
 AnonymousFunction: // has access to ports
 	{FunctionExpression} '{=' code=Expression '}'| 
@@ -160,6 +162,7 @@ Port:
 	// TODO: add internal destination/source of port
 	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
 	name=ID (':=' initval=LiteralOrArray)? ( multiplicity=Multiplicity )? ( '(' unity=Unity ')' )? ('->' target=[SpecifiedPort] | '-->' dependency+=[SpecifiedPort] (dependency+=[SpecifiedPort])*)?;
+	// TODO: -> output port of wrapped FMU to output port of SA FMU (only used in SA!)
 
 Multiplicity:
 	'[' (lower=INT '..')? upper=INT ']';
@@ -214,7 +217,7 @@ AbstractDeclaration: // can contain overlapping elements as long as it is only u
 	Port | ParamDeclaration | Declaration | DeclaredParameter | FunctionDeclaration;
 
 LValueDeclaration: // can contain overlapping elements as long as it is only used as reference
-	Port | ParamDeclaration | Declaration | DeclaredParameter;
+	Port | ParamDeclaration | Declaration | DeclaredParameter; // TODO: fmu.port
 
 Assignment:
 	lvalue=Variable ':=' expr=Expression; // TODO: to what can be assigned? only local vars?
@@ -318,8 +321,8 @@ BuiltinFunction:
 	{IsSet} name='is_set' '(' args=Variable ')' | 
 	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' H=ArithmeticExpression ')' |
 	{GetState} name='get_state' '(' fmu=[FMU] ')' |
-	{GetNextInternalTimeStep} name='get_next_time_step' '(' fmu=[FMU] ')' // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
-	;
+	{GetNextInternalTimeStep} name='get_next_time_step' '(' fmu=[FMU] ')' | // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
+	{Elapsed} name='elapsed' '(' fmu=[FMU] ')';
 	
 Procedure:
 	{Reject} name='reject' |
@@ -330,7 +333,8 @@ Procedure:
 	
 Var:
 	{StepSize} name='H' | 
-	{CurrentTime} name='t' | 
+	{CurrentTime} name='t' |
+	{ElapsedTime} name='e' | // min (elapsed(fmu1), elapsed(fmu2), ...)
 	{Max} name='MAX' |
 	{GenericSignal} name='signal' ('[' (
 		index=NOW | 

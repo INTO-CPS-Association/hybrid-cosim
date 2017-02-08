@@ -4,7 +4,7 @@ semantic adaptation controller_sa
 for fmu controller
 input ports armature_current -> obj_detected, passenger_up, passenger_down, driver_up, driver_down, next
 output ports up, down
-control rules { triggered by signal == true or t >= get_next_time_step(controller) }
+triggered by signal == true or t >= get_next_time_step(controller)
 in rules with crossing absolute tolerance = 1e-8 and relative tolerance = 0.0001, no hold {
 	armature_current >! 5 -> obj_detected := true;
 	otherwise(armature_current) -> obj_detected := false;
