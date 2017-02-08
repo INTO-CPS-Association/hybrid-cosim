@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<fmiModelDescription
+  fmiVersion="2.0"
+  modelName="PW_Controller"
+  guid='{f4893318-1565-4931-b8c8-8a19fb3fcfda}'
+  numberOfEventIndicators="1">
+
+<CoSimulation
+  modelIdentifier="PW_Controller"
+  canHandleVariableCommunicationStepSize="true"/>
+
+<LogCategories>
+  <Category name="logAll"/>
+  <Category name="logError"/>
+  <Category name="logFmiCall"/>
+  <Category name="logEvent"/>
+</LogCategories>
+
+
+<ModelVariables>
+  <ScalarVariable name="driver_up" valueReference="0" description="driver push up button = 1; no push = 0"
+                  causality="input" variability="enum" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+  <ScalarVariable name="driver_down" valueReference="1" description="driver push down button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+  <ScalarVariable name="driver_up_stop" valueReference="2" description="driver stops push up button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+    <ScalarVariable name="driver_down_stop" valueReference="3" description="driver stops push down button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+    <ScalarVariable name="passenger_up" valueReference="4" description="passenger  push up button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+    <ScalarVariable name="passenger_down" valueReference="5" description="passenger  push down button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+    <ScalarVariable name="passenger_up_stop" valueReference="6" description="passenger stop push up button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+    <ScalarVariable name="passenger_down_stop" valueReference="7" description="passenger stop push down button = 1"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+      <ScalarVariable name="obj_detected" valueReference="8" description="Object detected"
+                  causality="input" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+        <ScalarVariable name="motor_up" valueReference="9" description="motor command up = 1"
+                  causality="output" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+        <ScalarVariable name="motor_down" valueReference="10" description="motor command down = 1"
+                  causality="output" variability="discrete" initial="exact">
+    <Boolean start="0"/>
+  </ScalarVariable>
+</ModelVariables>
+
+
+<ModelStructure>
+</ModelStructure>
+
+</fmiModelDescription>
