@@ -9,11 +9,10 @@ out rules {
 }
 
 // algebraic loop, simply use delay... written in baseDSL
-semantic adaptation window_sa_delay with master
+semantic adaptation window_sa_delay //with master
 for fmu window_sa // inner SA, makes it possible to enforce order among adaptations this way
 param init_height = 0;
 param init_reaction_torque = 0;
-control rules { implied }
 out var stored_height := init_height;
 out var stored_reaction_torque := init_reaction_torque;
 out rules {

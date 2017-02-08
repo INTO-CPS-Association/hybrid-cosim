@@ -1,4 +1,4 @@
-semantic adaptation window_obstacle_sa_loop// overrides master -> not necessary: custom control rules override master
+semantic adaptation window_obstacle_sa_loop
 for fmu window_sa, obstacle
 input ports motor_speed
 output ports reaction_torque
@@ -6,15 +6,21 @@ param MAXITER = 100;
 param REL_TOL = 1e-8;
 param ABS_TOL = 1e-8;
 control rules {
-	height := height; // do_step will always use the last values, local_step does not advance time so will replace the last signal values! therefore, we must set the signal at time t+h of reaction_torque and height. this is done by a very weird statement:
-	reaction_force := 0; // and just initialise other values at time t+h
-	var prev_height; // to compare new value with previous value
+	var prev_height;
+	var window_state;
+	var obstacle_state;
 	for (var iter in 0 .. MAXITER) {
+		window_state := get_state(window_sa);
+		obstacle_state := get_state(obstacle);
 		prev_height := height;
-		local_step(obstacle); // with delayed input for height
-		local_step(window_sa);
+		do_step(obstacle, H); // with delayed input for height
+		do_step(window_sa, H);
 		if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
 			break;
+		} else {
+			set_state(window_sa, window_state);
+			set_state(obstacle, obstacle_state);
 		}
 	}
+	return H;
 }
