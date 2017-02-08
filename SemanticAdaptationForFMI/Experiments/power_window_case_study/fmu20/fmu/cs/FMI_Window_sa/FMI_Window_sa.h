@@ -5,11 +5,10 @@
  *      Author: Joachim
  */
 
-#ifndef PW_CONTROLLER_H_
-#define PW_CONTROLLER_H_
+#ifndef FMI_WINDOW_SA_H_
+#define FMI_WINDOW_SA_H_
 
-#include "Powerwindow.h"
-#include "PowerwindowRequired.h"
+#include "fmi2.h"
 
 typedef enum {
     fmuInstantiated = 0,
@@ -40,9 +39,12 @@ typedef struct {
     fmi2Boolean stopTimeDefined;
     fmi2Real tolerance;
     fmi2Boolean toleranceDefined;
-    Powerwindow *Handle;
-    fmi_timer *thePWTimer;
+    FMU inner;
+    char *fmuResourceLocation_inner;
+    fmi2Component c_inner;
 } FMUInstance; // At the moment, most of the variables not really used since multiple instances of an FMU are not supported at the moment (performance issues)
 
 
-#endif /* PW_CONTROLLER_H_ */
+
+
+#endif /* FMI_WINDOW_SA_H_ */

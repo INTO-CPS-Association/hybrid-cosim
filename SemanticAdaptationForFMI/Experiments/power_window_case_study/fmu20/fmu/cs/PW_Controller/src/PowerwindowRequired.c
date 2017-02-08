@@ -33,7 +33,7 @@
 
 void powerwindow_timeradvance(fmi_timer *theTimer, double currentTime){
 	theTimer->currentTime = currentTime;
-	if (theTimer->active && is_close(theTimer->nextTime, theTimer->currentTime, 0,1e-4,1e-8)){
+	if (theTimer->active && is_close(theTimer->nextTime, theTimer->currentTime,1e-4,1e-8)){
 		/* We have a timer event */
 		theTimer->callback(theTimer->handle, theTimer->evid);
 		if(theTimer->isPeriodic){

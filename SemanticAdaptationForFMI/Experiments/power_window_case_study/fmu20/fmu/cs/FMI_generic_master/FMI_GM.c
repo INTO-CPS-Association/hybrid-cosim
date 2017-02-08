@@ -184,12 +184,12 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
     fi->isVisible = visible;
     fi->state = fmuInstantiated;
     /* Load the inner FMUs:*/
-    loadDll("libFMI_SEL", &(fi->fmu_order[0]), "libFMI_SEL.dll");
-    loadDll("libFMI_control_master.dll", &(fi->fmu_order[1]),"libFMI_control_master.dll");
-    loadDll("libFMI_TD", &(fi->fmu_order[2]), "libFMI_TD.dll");
-    fi->fmuResourceLocation_order[0] = "libFMI_SEL.dll";
-    fi->fmuResourceLocation_order[1] = "libFMI_control_master.dll";
-    fi->fmuResourceLocation_order[2] ="libFMI_TD.dll";
+    loadDll("libFMI_SEL.dll", &(fi->fmu_order[0]), "FMI_SEL");
+    loadDll("libFMI_control_master.dll", &(fi->fmu_order[1]),"FMI_control_master");
+    loadDll("libFMI_TD.dll", &(fi->fmu_order[2]), "FMI_TD");
+    fi->fmuResourceLocation_order[0] = "libFMI_SEL";
+    fi->fmuResourceLocation_order[1] = "libFMI_control_master";
+    fi->fmuResourceLocation_order[2] ="libFMI_TD";
     /*Instantiate inner components*/
     for (int i=0; i<3; i++){
         fi->c_order[i] = fi->fmu_order[i].instantiate("inner", fmi2CoSimulation, "1", fi->fmuResourceLocation_order[i] , fi->functions, visible, 0);

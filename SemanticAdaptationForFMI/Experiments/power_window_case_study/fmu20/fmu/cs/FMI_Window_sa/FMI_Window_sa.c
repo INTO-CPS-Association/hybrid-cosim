@@ -7,48 +7,30 @@ Template for a sc FMU
 
 #define MODEL_IDENTIFIER CM
 #define MODEL_GUID "{41f87101-edf2-4eef-90f3-42db56d4565f}"
-#define FMI2_FUNCTION_PREFIX PW_CONTROL_MASTER
+#define FMI2_FUNCTION_PREFIX FMI_WINDOW_SA
 
 
 #include <stdio.h>
 #include "string.h"
 #include "fmi2Functions.h"
 #include <float.h>
-#include "FMI_CM.h"
+#include "FMI_Window_sa.h"
 #include <math.h>
 #include "fmi2.h"
 #include "sim_support.h"
 
 
-#define NUMBER_OF_REALS 0
+#define NUMBER_OF_REALS 4
 #define NUMBER_OF_STRINGS 0
-#define NUMBER_OF_BOOLEANS 12
+#define NUMBER_OF_BOOLEANS 0
 #define NUMBER_OF_INTEGERS 0
-/*
- * The input
- */
 
-#define _in_obj_detected 0
-#define _in_driver_up 1
-#define _in_driver_up_stop 2
-#define _in_driver_down 3
-#define _in_driver_down_stop 4
-#define _in_passenger_up 5
-#define _in_passenger_up_stop 6
-#define _in_passenger_down 7
-#define _in_passenger_down_stop 8
 
-/*
- * Control in
- */
-#define _in_control 9
+#define _in_speed_motor 0
+#define _out_window_height 1
+#define _out_window_speed 2
+#define _out_window_torque 3
 
-/*
- * The output:
-*/
-
-#define _out_motor_up 10
-#define _out_motor_down 11
 
  double relativeError(double a, double b){
 	return fabs((a - b) / a);
@@ -184,8 +166,8 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
     fi->isVisible = visible;
     fi->state = fmuInstantiated;
     /* Load the inner FMUs:*/
-    loadDll("libpw_controller.dll", &(fi->inner), "PW_Controller");
-    fi->fmuResourceLocation_inner = "libpw_controller";
+    loadDll("PW_Window.dll", &(fi->inner), "PW_Window_");
+    fi->fmuResourceLocation_inner = "PW_Window_";
     /*Instantiate inner components*/
     fi->c_inner = fi->inner.instantiate("inner", fmi2CoSimulation, "1", fi->fmuResourceLocation_inner, fi->functions, visible, 0);
     return fi;
@@ -214,7 +196,6 @@ fmi2Status fmi2SetupExperiment(fmi2Component fc, fmi2Boolean toleranceDefined, f
 		fi->tolerance = tolerance;
 	}
 
-	fi->accumulator = 0;
 	/*
 	 * setup inner
 	 */
@@ -272,40 +253,13 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	FMUInstance* fi = (FMUInstance *)fc;
 	fmi2Status simStatus = fmi2OK;
     printf("%s in fmiDoStep()\n",fi->instanceName);
-    /*
-     * Get next timer event:
-     */
-    fmi2ValueReference vr_nte[1] ={0};
-    fi->inner.getReal(fi->c_inner,vr_nte,1,&(fi->nextTimerEvent));
-
-    if(fi->b[_in_control]){
-        	fmi2ValueReference vr_booleans[9] = {0,1,2,3,4,5,6,7,8};
-        	fi->inner.setBoolean(fi->c_inner,vr_booleans,9,&(fi->b[0]));
-        	simStatus = fi->inner.doStep(fi->c_inner,currentCommPoint,fi->accumulator, fmi2True);
-        	if (simStatus == fmi2OK){
-        		fi->accumulator = 0;
-        	}
-    else if(fi->nextTimerEvent != 0 && fi->nextTimerEvent-(currentCommPoint+commStepSize) <= 0){
-    	if(is_close(fi->nextTimerEvent-(currentCommPoint+commStepSize),0,1e-4,1e-8)){
-    		simStatus = fi->inner.doStep(fi->c_inner,currentCommPoint,fi->accumulator, fmi2True);
-    		fi->accumulator = 0;
-    	}else{
-    		simStatus = fmi2Discard;
-    		fi->currentTime = fi->nextTimerEvent;
-    	}
-    }
-    }else{
-    	fi->accumulator+=commStepSize;
-
-    }
-
-    if(simStatus == fmi2OK){
-    	fmi2ValueReference vr_outvalues_inner[2] = {9,10};
-    	fi->inner.getBoolean(fi->c_inner,vr_outvalues_inner,2,&(fi->b[_out_motor_up]));
-    	const fmi2ValueReference vr_timer_next_event[1] = {0};
-    	fi->inner.getReal(fi->c_inner,vr_timer_next_event,1,&(fi->nextTimerEvent));
-    	fi->currentTime = currentCommPoint + commStepSize;
-    }
+    fmi2ValueReference to_inner[1]={5};
+    fmi2ValueReference from_inner[3] = {7,9,10};
+    fi->inner.setReal(fi->c_inner,to_inner,1,&(fi->r[_in_speed_motor]));
+    fi->inner.doStep(fi->c_inner, currentCommPoint, commStepSize, noPrevFMUState);
+    fi->inner.getReal(fi->c_inner, from_inner, 3, &(fi->r[_out_window_height]));
+    /* SA */
+    fi->r[_out_window_torque] = -(fi->r[_out_window_torque]);
 	return simStatus;
 }
 
@@ -437,6 +391,7 @@ fmi2Status fmi2SetFMUstate (fmi2Component c, fmi2FMUstate FMUstate) {
     fi->startTime = orig->startTime;
     fi->stopTime = orig->stopTime;
 	fi->currentTime = orig->currentTime;
+
 	printf("setting real values\n");
 	//copy r
 	int i=0;

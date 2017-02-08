@@ -16,6 +16,7 @@ Template for a sc FMU
 #include "fmi2Functions.h"
 #include <float.h>
 #include "PW_Controller.h"
+#include "PowerwindowRequired.h"
 
 
 #define NUMBER_OF_REALS 1
