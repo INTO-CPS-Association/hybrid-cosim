@@ -1,0 +1,54 @@
+// If the control rules block is defined, then the generic master will not be used. So the code in the block has to ensure that FMUs are run and synchronized correctly. If the block is not defined, then the generic master will be used.
+control rules {
+	// This block gets executed whenever there is a call to doStep of the adapted FMU.
+	var step_size;
+	if ((t + H) >= next_internal_transition) {
+		// Set the last given inputs to the controller
+		controller.setValues("passenger_up", stored_passenger_up)
+		...
+		controller.setValues("driver_stop", stored_driver_stop)
+		
+		step_size := controller.do_step(last_transition_time, (t+H) - last_transition_time); // do a step, then decide next internal transition
+		last_transition_time := t + H
+		next_internal_transition := NULL // reset this to null, so that it will be executed when the next input is given.
+	}
+	return step_size; // For this adaptation, it should never be the case that  step_size < (t+H) - last_transition_time
+}
+
+// Any in or state variable declared at the global level will be part of the state of the adapted FMU, so that rollback can work.
+in var next_internal_transition;
+in var last_transition_time;
+in var stored_passenger_up;
+...
+in var stored_driver_stop;
+// The state of the adapted FMU also includes the aggregation of the states of each original FMU, plus the previous inputs fed to them (this last bit is explained in the hierarchical co-simulation section)
+
+in rules {
+	// This block is run when the setValues function of the adapted FMU is called.
+	// each rule is tried in order and the first one evaluating to true gets executed.
+	not is_set(next_internal_transition) -> {
+		// This block gets executed when the above condition is evaluated to true.
+		next_internal_transition := controller.getMaxStepSize() + t;
+	} --> {
+		// This block is executed whenever the doStep of the adapted FMU is run.
+		// Following its execution, the control rules block will be executed.
+		// If there is no control rules block, this block will still be executed before the generic master is executed, with the inputs being set directly from the inputs to the outputs.
+		// Maybe setting any input port in this block will prevent the generic master from reseting that input port (this has some nuances that need to be investigated)
+		// Nothing to do here.
+	};
+	is_set(next_internal_transition) -> {
+		// Store the inputs to the controller
+		stored_passenger_up := passenger_up;
+		...
+		stored_driver_stop := driver_stop;
+	}
+}
+
+out rules{
+	// These rules are evaluated when a getValues function is called
+	true -> {
+		// This block is executed at the end of the control rules block, or at the end of the execution of a single step of the generic master (in case there is no control rules block)
+	} --> {
+		// This block is executed when there is a call to getValues to the adapted FMU.
+	}
+}

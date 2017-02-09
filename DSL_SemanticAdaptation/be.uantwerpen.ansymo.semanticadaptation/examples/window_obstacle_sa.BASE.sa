@@ -1,0 +1,105 @@
+import PowerWindowModel
+import Window_SA
+
+module WindowObstacle_SA
+
+semantic adaptation window_obstacle_sa
+
+/*
+Notice that we're importing the Window_SA module... that's where the window_sa FMU is defined.
+*/
+for fmu window_sa, obstacle
+
+input ports displacement -> displacement,
+			speed;
+
+output ports tau -> tau;
+
+in var previous_speed := 0;
+in var future_speed := 0;
+param RATE := 10;
+
+in rules {
+	true -> {
+		/*
+		These instructions would violate the principle that multiple calls to setValues can be made:
+		previous_speed := future_speed;
+		future_speed := speed;
+		
+		Upon execution, this block must call setValues of the original FMUs (window_sa and obstacle).
+		The correct thing then is to execute the next block and then do the setValues of the original FMUs.
+		*/
+	} --> {
+		/*
+		This block will be called whenever any of the input ports that are unconnected in the original FMUs is read, in the control rules block.
+		The following variables are available in this block:
+			dt - In the control rules block, (t + dt) is the time that will be passed to the doStep function of the inner FMU. In the control rules block, this can be computed by doing dt := inner_time - t.
+			h - this is the communication step size that will be sent to the inner FMU.
+			t - This is the communication time also available at the control rules block.
+		
+		As previously described, the displacement input port is taken care of automatically by the declaration "displacement -> displacement" in the input ports.
+		So the declaration would be equivalent to having this intruction in this block.
+		displacement := displacement;
+		*/
+		speed := previous_speed + (future_speed - previous_speed)*dt;
+	}
+}
+
+control rules {
+	var h := H/RATE
+	
+	/*
+	The two instructions below need to be made, because previously they were made in the sa_in block, but multiple calls to the sa_in block would make them fail.
+	*/
+	previous_speed := future_speed;
+	future_speed := speed;
+	
+	for (var iter in 0 .. RATE) { // multi-rate loop
+		var prev_height := height
+		var inner_time := t
+		for (var iter in 0 .. MAXITER) {
+			transaction(obstacle) // Inspired by transactions in databases.
+			transaction(window_sa)
+			obstacle.doStep(inner_time,h)
+			window_sa.doStep(inner_time,h)
+			
+			if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
+				commit(obstacle);
+				commit(window_sa);
+				break;
+			} else {
+				prev_height := height;
+				rollback(obstacle)
+				rollback(window_sa)
+			}
+			
+			/*
+			The above block of statements is equivalent to the following:
+			var obstacle_state := getState(obstacle)
+			var window_sa_state := getState(window_sa)
+			
+			obstacle.set("height", height)
+			obstacle.doStep(inner_time,h)
+			reaction_force := obstacle.get("reaction_force")
+			window_sa.set("reaction_force", reaction_force)
+			window_sa.doStep(inner_time,h)
+			height := window_sa.get("height")
+			if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
+				// The commits don't do anything, as far as I see. But they serve an analysis which ensures that states are correctly obtained and restored.
+				break;
+			} else {
+				prev_height := height;
+				obstacle.setState(obstacle_state);
+				window_sa.setState(window_sa_state);
+			}
+			*/
+		}
+		var inner_time := t + h;
+	}
+}
+
+out rules {
+	true -> { } --> { }; 
+}
+
+

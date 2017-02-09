@@ -1,0 +1,185 @@
+import ../powerwindow_model_only.sa
+
+module WindowObstacleSA
+
+semantic adaptation window_obstacle_sa
+
+for fmu window, 
+		obstacle;
+
+param RATE = 10;
+param init_displacement = 10;
+
+var previous_displacement := init_armature_current;
+var stored_displacement := init_displacement;
+var stored_speed := init_speed;
+
+out rules {
+	true -> {
+		stored_armature_current := armature_current;
+		stored_displacement := displacement;
+		stored_speed := speed;
+	} --> {
+		speed := stored_speed;
+		displacement := stored_displacement;
+		armature_current := stored_armature_current;
+	}; 
+}
+
+import PowerWindowModel
+
+/*
+Declares the name of the module. 
+Any importing document can refer to any of the declarations in this document by, e.g., Controller_SA.controller_sa (refers to the adapted FMU created by the code in this page)
+*/
+module Controller_SA
+
+/*
+Declares the name of the adapted FMU.
+The resulting FMU will probably have a name that is something like "Controller_SA.controller_sa".
+There may be extra information required for an appropriate generation of the adapted FMU, so we may have to add extra declarations here.
+I'm thinking of things such as company, documentation, etc...
+For now, this is fine.
+*/
+semantic adaptation controller_sa
+
+/*
+Declares the set of original FMUs to be adapted.
+The names of the original FMU have to be the fully qualified names, that is, Module_Full_Name.FMU_Name.
+*/
+for fmu PowerWindowModel.controller
+
+/*
+Declare the input ports of the adapted FMU.
+Previously, there was a connection "armature_current -> object_detected", but that connection is no longer used, since the port object_detected is set explicitly in the code.
+If these are ommited, then any input port that is not connected in the set of original FMUs declared above, will be assumed to be an input port of the adapted FMU.
+In this later case, there may be ports with the same name, so for the code generation, the output ports of the adapted FMU need to be unique (maybe some prefix should be used).
+*/
+input ports armature_current, 
+			passenger_up, 
+			passenger_down, 
+			driver_up, 
+			driver_down;
+
+/*
+Declares the output ports of the adapted FMU.
+If no ports are declared, then it is assumed that the output ports are the same as the union of the output ports of the connected FMUs.
+The same remarks apply to the uniqueness of the output ports in the adapted FMU.
+*/
+output ports up, down;
+
+/*
+Declares the parameters in the model.
+These will be just constants in the generated code, so they have to be resolved at compile time.
+*/
+param REL_TOL = 0.0001;
+param ABS_TOL = 1e-8;
+param CROSSING = 5;
+param init_armature_current = CROSSING;
+param init_up = 0;
+param init_down = 0;
+
+/*
+Declare state variables.
+These are variables that are apart of the state of the adapted FMU.
+It is important to know them because the rollback support should be provided automatically.
+*/
+var internal_transition;
+var stored_armature_current := init_armature_current;
+var stored_up := init_up;
+var stored_down := init_down;
+/*
+Previously variables were declared as:
+control var internal_transition;
+But, to the best of my knowledge, I don't see the utility of the control var (or the in vars.)
+What's their difference to "in var"
+Are they only available in the control rules block?
+But the in vars are also available in the control rules block...
+So I propose to remove the control/in/out qualifiers, and just assume that any var declared at the global level, will be part of the state.
+What were the arguments to having a distinction between the vars?
+*/
+
+/*
+Declares control block.
+Before it was called control rules, but I suggest just calling it control, because there are no rules. 
+To my understanding, it is called whenever there is a doStep on the adapted FMU.
+If the control rules block is defined, then the generic master will not be used. 
+So the code in the block has to ensure that FMUs are run and synchronized correctly. 
+If the control block is not defined, then the generic master will be used.
+The other blocks (in, out, and so on) will still be executed, even if there is no control rules block.
+*/
+control {
+	var step_size;
+	...
+	return step_size;
+}
+
+/*
+This block is run when the setValues function of the adapted FMU is called.
+*/
+in rules {
+	/*
+	Each of the conditions below are evaluated in order and the first one to evaluate to true is selected.
+	Ambiguity: are all conditions evaluated always, or do we stop at the first one?
+	Assuming there are no side effects, it seems more efficient to stop the first that evals to true.
+	*/
+
+	condition1 -> {
+		/*
+		This block is run when doStep of the adapted FMU is called, and condition1 evals to true.
+		Notice that multiple calls to the setValues function can be made before calling doStep, so these blocks may be run several times. 
+		They should therefore not include counters, or stuff like that depends on the number of calls made by setValues before calling doStep.
+		*/
+	} --> {
+		/*
+		I'm still not sure of the conditions that make this block run.
+		Possible interpretations:
+			- This block runs immediately before the control block is used.
+				Problems: Its pretty much useless for multi-rate adaptations, where the control block may run the internal FMUs multiple times. In those intemediate setValue and doStep calls, the control block code would still have to make the interpolation work. This also violates the data/control separation.
+				Good things: If there is no control rules block, the generic master algorithm would be used, so this interpretation is fine.
+			- This block is called by an explicit instruction within the control rules block.
+				Problems: I cannot think of any right now.
+				Good things: It allows multi-rate adaptation to be done in a somewhat flexible manner.
+		Regardless of the possible interpretations, there is still the problem of how to resolve multiple instructions.
+		What kind of instructions are allowed here?
+		Certainly, when the control rules calls this block, which instructions should be executed? 
+		It may not make sense to execute all of them, if the control just wants to compute one value...
+		
+		Another pitfall of this block is the following scenario: suppose setValue of the FMU is called twice before the doStep is called.
+			In addition, suppose that two different rules were evaluated in each call.
+			Then, when the control rules is executed, the update_in block of the most recently evaluated rule should be the one used, right?
+		*/
+		original_fmu1_input := expression1
+		original_fmu2_input := expression2
+	};
+
+	condition2 -> {
+		in_block2
+	} --> { update_in_block2 };
+	
+	...
+}
+
+out rules {
+	/*
+	This block is run when the control rules block has values to be propagated to the state of the adapted FMU.
+	The same alternative interpretations identified before apply to this block: when should it be called?
+	If the control block is doing a multi-rate adaptation, it makes no sense to call this block at everypoint.
+	We are only interested in getting values at the end of the multi-rate adaptation iteration (or am I missing something?).
+	So, similarly to the previous case, I suggest that there is a function call, that can be used to invoke this block.
+	When there is no control block defined, then this block is called simply at the end of the co-simulation step of the internal generic master.
+	
+	If the control block calls this block multiple times, and multiple rules are selected at each time, then the must recently selected rule will be applied.
+	Do you agree with this?
+	*/
+	
+	condition1 -> {
+		/*
+		This block is run when condition1 is evaluated to true.
+		*/
+	} --> {
+		/*
+		This block is run when getValues is called on the adapted FMU, and the block above was the most recently executed block.
+		*/
+	}; 
+}

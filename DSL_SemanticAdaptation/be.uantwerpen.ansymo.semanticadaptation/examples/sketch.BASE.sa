@@ -1,0 +1,54 @@
+import ExternalModule
+module LocalModule
+semantic adaptation Adapted_FMU_Name
+for fmu fmu1, fmu2, ... ;
+
+input ports in_port_1, 
+			in_port_2,
+				...
+			;
+
+input ports out_port_1, 
+			out_port_2,
+			...
+			;
+
+param 	p1 := c1,
+		p2 := c2,
+		...
+		;
+
+in var 	iv1 := init_iv1,
+		iv2 := init_iv2,
+		...
+		;
+
+out var ov1 := init_ov1,
+		ov2 := init_ov2,
+		...
+		;
+
+in rules {
+	in_condition_1 -> {
+		sa_in_1
+	} --> { update_in_1 }; 
+	in_condition_2 -> {
+		sa_in_2
+	} --> { update_in_2 }; 
+	...
+}
+
+control rules {
+	...
+	return step_size;
+}
+
+out rules {
+	in_condition_1 -> {
+		sa_in_1
+	} --> { update_in_1 }; 
+	in_condition_2 -> {
+		sa_in_2
+	} --> { update_in_2 }; 
+	...
+}

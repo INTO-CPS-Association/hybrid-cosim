@@ -1,0 +1,39 @@
+import PowerWindowModel
+
+module Window_SA
+
+semantic adaptation window_sa
+
+for fmu window
+
+/*
+No need to have input ports declared for this model.
+Every input port of the original FMU will be automatically assumed to be an input port of the adapted FMU.
+Having no input ports declaration is equivalent to having this:
+input ports reaction_force (N) --> reaction_force (N),
+			displacement (rad) --> displacement (rad),
+			speed (rad/s) --> speed (rad/s);
+If the units are not declared, then they are assumed to be equal and brought from the scenario description.
+*/
+
+/*
+Declares two output ports, and specified how height is mapped to disp.
+Here, the units need to be specified, so that the conversion can take place.
+The units of disp can be either obtained from the scenario, or specified explicitly here.
+*/
+output ports height (m) -> disp (cm), tau; 
+/*
+There are alternatives ways that this can be interpreted:
+disp  := arbitrary_function(height) * 100 or arbitrary_function(height * 100) (they are not necessarily equal)
+We pick the first one, so what we have is this:
+disp := arbitrary_function(height);
+disp := disp*100; // This part never has to be coded.
+*/
+
+out rules {
+	true -> { } --> { 
+		tau := -reaction_torque; 
+	}; 
+}
+
+

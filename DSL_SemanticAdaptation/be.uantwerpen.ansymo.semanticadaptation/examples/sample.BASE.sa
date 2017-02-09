@@ -1,0 +1,205 @@
+import PowerWindowModel
+
+/*
+Declares the name of the module. 
+Any importing document will import this module by calling "import Controller_SA" and can refer to any of the declarations in this document by, e.g., controller_sa (which refers to the adapted FMU created by the code in this page)
+*/
+module Controller_SA
+
+/*
+Declares the name of the adapted FMU.
+The resulting FMU will probably have a name that is something like "controller_sa".
+There may be extra information required for an appropriate generation of the adapted FMU, so we may have to add extra declarations here.
+I'm thinking of things such as company, documentation, etc...
+For now, this is fine.
+*/
+semantic adaptation controller_sa
+
+// How is the input/output feedthrough calculated?
+// canInterpolateInputs flag
+// I/O feedthrough
+
+/*
+Declares the set of original FMUs to be adapted.
+*/
+for fmu controller, fmu2, fmu3, semantic_adaptation;
+
+/*
+Declare the input ports of the SA FMU.
+If these are omitted, then any input port that is not connected in the set of original FMUs declared above, will be assumed to be an input port of the adapted FMU.
+In this later case, there may be ports with the same name, so for the code generation, the output ports of the adapted FMU need to be unique (maybe some prefix should be used).
+*/
+input ports armature_current, 
+			passenger_up, 
+			passenger_down, 
+			driver_up, 
+			driver_down;
+
+/*
+Declares the output ports of the adapted FMU.
+If no ports are declared, then it is assumed that the output ports are the same as the union of the output ports of the connected FMUs.
+The same remarks apply to the uniqueness of the output ports in the adapted FMU.
+Example, if F1 and F2 are FMUs wrapped by the semantic adaptation and they both have the same output port, then they need to be refered to (when assignments are made in the code) as follows:
+	F1.out := 1
+	F2.out := 2
+*/
+output ports up, down;
+
+/*
+Declares the parameters in the model.
+In the FMU description, these have to have a value, so they have to be resolved at compile time.
+*/
+param REL_TOL = 0.0001;
+
+/*
+Declare variables.
+These are variables that are part of the state of the adapted FMU.
+It is important to know them because the rollback support should be provided automatically.
+There are two kinds of variables:
+	in vars - These can be assigned in the sa_in block, and read in the update_in and control rules block.
+	out vars - These can be assigned in the update_out block, and read in the sa_out block.
+
+The state of the SA FMU should contain:
+	the states of the original FMUs
+	the previous inputs provided to the original FMUs
+	the values of the state variables
+	the values of the computed variables (such as the elapsed time for each FMU)
+*/
+in var stored_down := 10;
+out var some_var := some_expression;
+
+/*
+Declares control rules block.
+This block is called whenever there is a doStep call on the SA FMU.
+If the control block is not defined, then the generic master will be used.
+If the control rules block is defined, then the generic master will not be used. 
+The code in the block has to ensure that FMUs are run and synchronized correctly.
+A few variables are available:
+	the in vars  (can just be read)
+	time_of_last_doStep (will not be implemented)
+	elapsed(fmu1) (elapsed time since last doStep of fmu1, can just be read)
+	e = min(elapsed(fmu1),..., elapsed(fmuN)) (can just be read)
+	H (the co-simulation step size) (can just be read)
+	t (the communication time passed in the doStep) (can just be read)
+*/
+control rules {
+	/*
+	Local variables can be declared.
+	*/
+	var step_size;
+	...
+	
+	/*
+	The proposed step size must be returned.
+	*/
+	return step_size;
+}
+
+/*
+This block is run when the setValues function of the SA FMU is called.
+*/
+in rules {
+	
+	/*
+	This block is run whenever there is a call to setValues on the adapted FMU.
+	*/
+	
+	condition_1 -> {
+		sa_in_1
+	} --> { update_in_1 }; 
+	...
+	condition_N -> {
+		sa_in_N
+	} --> { update_in_N }; 
+	
+	/*
+	Each of the conditions above are evaluated in order and ALL the ones that are evaluate to true are executed.
+	Example scenario that forces the inputs to the FMUs to be set:
+		saFMU1 is the adapted FMU1, and it wraps an original FMU.
+		Has the following declaration:
+			Input ports in (m) -> in (cm)
+			Output ports out -> out.			
+		
+		Scenario:
+		saFMU1.setValues(“in”, 1) // Forwards 1 to inner FMU.
+		V1 = saFMU1.getValues(“out”)  //out1 is calced from inner FMU.
+		saFMU1.setValues(“in”, 2)
+		V2 = saFMU1.getValues(“out”)
+		V2 != V1 should be the case, in case there is a feedthrough.
+	*/
+
+	condition1 -> {
+		In var Stored_input := input 
+		// This is not allowed.
+		In var doStepCall := doStepCall + 1
+/*
+		This block is run when doStep of the adapted FMU is called, and condition1 evals to true.
+		Notice that multiple calls to the setValues function can be made before calling doStep, so these blocks may be run several times. 
+		They should therefore not include counters, or stuff like that depends on the number of calls made by setValues before calling doStep.
+		*/
+	} --> {
+		/*
+		I'm still not sure of the conditions that make this block run.
+		Possible interpretations:
+			- This block runs immediately before the control block is used.
+				Problems: It's pretty much useless for multi-rate adaptations, where the control block may run the internal FMUs multiple times. In those intermediate setValue and doStep calls, the control block code would still have to make the interpolation work. This also violates the data/control separation.
+				Good things: If there is no control rules block, the generic master algorithm would be used, so this interpretation is fine.
+			- This block is called by an explicit instruction within the control rules block.
+				Problems: I cannot think of any right now.
+				Good things: It allows multi-rate adaptation to be done in a somewhat flexible manner.
+		Regardless of the possible interpretations, there is still the problem of how to resolve multiple instructions.
+		What kind of instructions are allowed here?
+		Certainly, when the control rules calls this block, which instructions should be executed? 
+		It may not make sense to execute all of them, if the control just wants to compute one value...
+		
+		Another pitfall of this block is the following scenario: suppose setValue of the FMU is called twice before the doStep is called.
+			In addition, suppose that two different rules were evaluated in each call.
+			Then, when the control rules is executed, the update_in block of the most recently evaluated rule should be the one used, right?
+		
+		*/
+		// Not allowed
+		invar := 10
+		// Allowed
+		fmu1.input_port := F(t, invar1, …, invarN)
+		original_fmu1_input := expression1
+		original_fmu2_input := expression2
+	};
+
+	condition2 -> {
+		in_block2
+	} --> { update_in_block2 };
+	
+	...
+}
+
+out rules {
+	/*
+	This block is run when the control rules block has values to be propagated to the state of the adapted FMU.
+	The same alternative interpretations identified before apply to this block: when should it be called?
+	If the control block is doing a multi-rate adaptation, it makes no sense to call this block at everypoint.
+	We are only interested in getting values at the end of the multi-rate adaptation iteration (or am I missing something?).
+	So, similarly to the previous case, I suggest that there is a function call, that can be used to invoke this block.
+	When there is no control block defined, then this block is called simply at the end of the co-simulation step of the internal generic master.
+	
+	If the control block calls this block multiple times, and multiple rules are selected at each time, then the must recently selected rule will be applied.
+	Do you agree with this?
+	*/
+	
+	condition1 -> {
+		/*
+		This block is run when condition1 is evaluated to true.
+		*/
+	} --> {
+		/*
+		This block is run when getValues is called on the adapted FMU, and the block above was the most recently executed block.
+		saFMU.getValues(“port”)
+		saFMU.doStep(t, H) // this does not run control block, but this run the current block.
+		saFMU.getValues(“port”) 
+		*/
+	}; 
+	Condition2 -> {
+	
+	} → {
+		
+	}
+}
