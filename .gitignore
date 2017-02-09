@@ -6,3 +6,5 @@
 /SemanticAdaptationForFMI/FMIAbstraction/src/case_study/units/adaptations/*.pyc
 /SemanticAdaptationForFMI/FMIAbstraction/src/case_study/units/ct_based/*.pyc
 /SemanticAdaptationForFMI/FMIAbstraction/src/case_study/units/de_based/*.pyc
+/SemanticAdaptationForFMI/FMIAbstraction/src/master/*.pyc
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/fmu20/fmu/cs/log_statemachine.txt
