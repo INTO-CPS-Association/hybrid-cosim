@@ -1,4 +1,7 @@
 code AdaptedFMU:
+
+	var condition_executed;
+
 	function instantiate()
 		// We are abstracting away the instances. This needs to be changed to accomodate for that.
 		for each fmu in original_fmus do

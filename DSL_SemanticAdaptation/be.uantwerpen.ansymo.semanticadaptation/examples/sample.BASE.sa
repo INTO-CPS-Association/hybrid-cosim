@@ -15,9 +15,19 @@ For now, this is fine.
 */
 semantic adaptation controller_sa
 
-// How is the input/output feedthrough calculated?
-// canInterpolateInputs flag
-// I/O feedthrough
+/*
+How is the input/output feedthrough calculated?
+canInterpolateInputs flag
+I/O feedthrough
+
+I think these may have to be declared here in the model.
+Later they can be generated from some analysis, but for now, it is declared explicitly.
+A possible syntax is to replace the above instruction by
+	semantic adaptation reactive mealy controller_sa
+	semantic adaptation delayed mealy controller_sa
+	semantic adaptation reactive moore controller_sa
+	...
+*/
 
 /*
 Declares the set of original FMUs to be adapted.
@@ -66,6 +76,7 @@ The state of the SA FMU should contain:
 	the values of the computed variables (such as the elapsed time for each FMU)
 */
 in var stored_down := 10;
+control var some_control_var;
 out var some_var := some_expression;
 
 /*

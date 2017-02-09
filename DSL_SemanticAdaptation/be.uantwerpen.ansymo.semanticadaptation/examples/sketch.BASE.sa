@@ -23,6 +23,11 @@ in var 	iv1 := init_iv1,
 		...
 		;
 
+control var 	cv1 := init_cv1
+				cv2 := init_cv2
+				...
+				;
+
 out var ov1 := init_ov1,
 		ov2 := init_ov2,
 		...
@@ -30,9 +35,9 @@ out var ov1 := init_ov1,
 
 in rules {
 	in_condition_1 -> {
-		sa_in_1 //function with write access to invars with no read access to any vars except input.
+		sa_in_1
 	} --> { 
-		update_in_1 //read all (except out vars) and write access to all invars
+		update_in_1
 	}; 
 	in_condition_2 -> {
 		sa_in_2

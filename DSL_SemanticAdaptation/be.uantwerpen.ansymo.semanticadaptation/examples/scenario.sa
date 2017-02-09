@@ -1,5 +1,20 @@
 module PowerWindowModel
 
+/*
+Each of these fmu descriptions has to include more information about the FMU.
+Namely:
+	environment must refer to the name of the instance of the FMU. Therefore, the name of the FMU to be instantiated is missing.
+	The location of the .fmu file is also missing.
+	The "type discrete event" no longer serves any purpose, so should be removed.
+	The "full internal dependencies" is not needed once you have the file to parse.
+	The "output ports" can be specified here, for syntax completion purposes, but they can be retrieved from the *.fmu file.
+
+If you agree with these changes, you should have the following:
+	fmu Environent environment // declares the instance name environment of the FMU environment.
+	./path/to/Environment.fmu
+	output ports passenger_up, passenger_down, driver_up, driver_down
+*/
+
 fmu environment
 type discrete event
 output ports passenger_up, passenger_down, driver_up, driver_down
@@ -28,5 +43,10 @@ type continuous time
 input ports height (m)
 output ports reaction_force (N)
 full internal dependencies
+
+/*
+The dotted syntax will have to be supported.
+According the Casper and Kenneth, it is very common to have variables with the same name, but that should not be connected. So it is better to not assume implicit connections in this description.
+*/
 
 armature_current -> obj_detected // only ports that change names need to be connected
