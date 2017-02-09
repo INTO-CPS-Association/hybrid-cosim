@@ -10,13 +10,14 @@ Notice that we're importing the Window_SA module... that's where the window_sa F
 */
 for fmu window_sa, obstacle
 
-input ports displacement -> displacement,
+input ports displacement -> displacement, // I should not need to say this.
 			speed;
 
-output ports tau -> tau;
+output ports tau -> tau; 
 
 in var previous_speed := 0;
 in var future_speed := 0;
+in var current_speed := 0;
 param RATE := 10;
 
 in rules {
@@ -29,6 +30,8 @@ in rules {
 		Upon execution, this block must call setValues of the original FMUs (window_sa and obstacle).
 		The correct thing then is to execute the next block and then do the setValues of the original FMUs.
 		*/
+		current_speed := adapted.speed
+		
 	} --> {
 		/*
 		This block will be called whenever any of the input ports that are unconnected in the original FMUs is read, in the control rules block.
@@ -41,8 +44,9 @@ in rules {
 		So the declaration would be equivalent to having this intruction in this block.
 		displacement := displacement;
 		*/
-		speed := previous_speed + (future_speed - previous_speed)*dt;
+		window_sa.speed := previous_speed + (future_speed - previous_speed)*dt;
 	}
+	// Feedback: everything should be prefixed, and the prefixes should be short.
 }
 
 control rules {
@@ -52,10 +56,10 @@ control rules {
 	The two instructions below need to be made, because previously they were made in the sa_in block, but multiple calls to the sa_in block would make them fail.
 	*/
 	previous_speed := future_speed;
-	future_speed := speed;
+	future_speed := current_speed; // you cannot access input ports of the adapted FMU here.
 	
 	for (var iter in 0 .. RATE) { // multi-rate loop
-		var prev_height := height
+		var prev_height := window_sa.height
 		var inner_time := t
 		for (var iter in 0 .. MAXITER) {
 			transaction(obstacle) // Inspired by transactions in databases.

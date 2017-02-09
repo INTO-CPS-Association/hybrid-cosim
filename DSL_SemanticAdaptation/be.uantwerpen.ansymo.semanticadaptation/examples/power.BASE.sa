@@ -28,7 +28,7 @@ out rules {
 	true -> {
 		stored_speed := speed;
 	} --> {
-		speed := stored_speed;
+		speed := stored_speed;   && adaptedFMU.getValues()
 	}; 
 }
 

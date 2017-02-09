@@ -1,14 +1,14 @@
 import ExternalModule
 module LocalModule
 semantic adaptation Adapted_FMU_Name
-for fmu fmu1, fmu2, ... ;
+for fmu fmu1, fmu2, fmu3, fmu4, ... ; \\ Kenneth> how does it know where the FMU fils are_):?
 
 input ports in_port_1, 
 			in_port_2,
 				...
 			;
 
-input ports out_port_1, 
+output ports out_port_1, 
 			out_port_2,
 			...
 			;
@@ -30,11 +30,15 @@ out var ov1 := init_ov1,
 
 in rules {
 	in_condition_1 -> {
-		sa_in_1
-	} --> { update_in_1 }; 
+		sa_in_1 //function with write access to invars with no read access to any vars except input.
+	} --> { 
+		update_in_1 //read all (except out vars) and write access to all invars
+	}; 
 	in_condition_2 -> {
 		sa_in_2
-	} --> { update_in_2 }; 
+	} --> { 
+		update_in_2 
+	}; 
 	...
 }
 
@@ -44,11 +48,11 @@ control rules {
 }
 
 out rules {
-	in_condition_1 -> {
-		sa_in_1
-	} --> { update_in_1 }; 
+	out_condition_1 -> {
+		update_out_1
+	} --> { sa_out_1 }; 
 	in_condition_2 -> {
-		sa_in_2
-	} --> { update_in_2 }; 
+		update_out_1
+	} --> { sa_out_2 }; 
 	...
 }

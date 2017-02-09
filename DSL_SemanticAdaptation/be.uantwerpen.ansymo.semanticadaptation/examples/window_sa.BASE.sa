@@ -10,10 +10,12 @@ for fmu window
 No need to have input ports declared for this model.
 Every input port of the original FMU will be automatically assumed to be an input port of the adapted FMU.
 Having no input ports declaration is equivalent to having this:
-input ports reaction_force (N) --> reaction_force (N),
-			displacement (rad) --> displacement (rad),
-			speed (rad/s) --> speed (rad/s);
+input ports reaction_force (N) -> reaction_force (N),
+			displacement (rad) -> displacement (rad),
+			speed (rad/s) -> speed (rad/s);
 If the units are not declared, then they are assumed to be equal and brought from the scenario description.
+
+Remark: If there is an input port which is dangling, but is not declared here, then it will be assumed to be forwarded.
 */
 
 /*
@@ -26,9 +28,25 @@ output ports height (m) -> disp (cm), tau;
 There are alternatives ways that this can be interpreted:
 disp  := arbitrary_function(height) * 100 or arbitrary_function(height * 100) (they are not necessarily equal)
 We pick the first one, so what we have is this:
-disp := arbitrary_function(height);
-disp := disp*100; // This part never has to be coded.
+aux_var := arbitrary_function(height);
+disp := aux_var*100; // This part never has to be coded.
 */
+
+in rules {
+	true -> { } --> { 
+		/*
+			No declaration is equivalent to this:
+			window.reaction_force := window_sa.reaction_force; 
+			window.displacement := displacement; 
+			window.speed := speed; 		
+			
+			all input ports have to be prefix in this situation:
+				if (speed != speed) {
+					then world ends
+				}
+		*/
+	}; 
+}
 
 out rules {
 	true -> { } --> { 

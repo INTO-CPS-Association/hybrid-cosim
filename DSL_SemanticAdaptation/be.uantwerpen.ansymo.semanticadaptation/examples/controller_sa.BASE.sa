@@ -16,11 +16,12 @@ param init_up = 0;
 param init_down = 0;
 
 in var previous_arm_current := init_armature_current;
+in var stored_arm_current := init_armature_current;
 in var stored_displacement := init_displacement;
 in var stored_speed := init_speed;
 in var next_time_step := -1;
 in var step_size;
-in var aux_obj_detected;
+in var aux_obj_detected := 0;
 
 in rules {
 	next_time_step < 0 -> { 
@@ -35,34 +36,36 @@ in rules {
 	} --> { };
 	
 	true -> {
-		aux_obj_detected := false;
-		step_size := H;
-		if ((not is_close(stored_armature_current, CROSSING, REL_TOL, ABS_TOL) and stored_armature_current < CROSSING)
-					and (not is_close(armature_current, CROSSING, REL_TOL, ABS_TOL) and armature_current > CROSSING)) { // crossing, but not within tolerance
-			var negative_value := stored_armature_current - CROSSING;
-			var positive_value := armature_current - CROSSING;
-			step_size := (H * (- negative_value)) / (positive_value - negative_value);
-		} else {
-			if (not (not is_close(stored_armature_current, CROSSING, REL_TOL, ABS_TOL) and stored_armature_current > CROSSING)
-						and is_close(armature_current, CROSSING, REL_TOL, ABS_TOL)) { // crossing within tolerance found
-				aux_obj_detected := true;
-			}
-		}
+		stored_arm_current := armature_current
 	} --> {
 		obj_detected := aux_obj_detected; // Sets this input to the FMU 
 	};
 }
 
 control rules {
+	aux_obj_detected := false;
+	step_size := H;
+	if ((not is_close(previous_arm_current, CROSSING, REL_TOL, ABS_TOL) and previous_arm_current < CROSSING)
+				and (not is_close(stored_arm_current, CROSSING, REL_TOL, ABS_TOL) and stored_arm_current > CROSSING)) { // crossing, but not within tolerance
+		var negative_value := previous_arm_current - CROSSING;
+		var positive_value := stored_arm_current - CROSSING;
+		step_size := (H * (- negative_value)) / (positive_value - negative_value);
+	} else {
+		if ((not is_close(previous_arm_current, CROSSING, REL_TOL, ABS_TOL) and previous_arm_current < CROSSING)
+					and is_close(stored_arm_current, CROSSING, REL_TOL, ABS_TOL )) { // crossing within tolerance found
+			aux_obj_detected := true;
+		}
+	}
+	
 	if (obj_detected == true or t >= next_time_step) {
 		var aux_h = do_step(controller, t-e, e); // do a step, then decide next internal transition
 		assert aux_h == e; // this must always be the case, otherwise it is better not to use the timed transition adaptation.
-		internal_transition := -1; // next time the setValues is called, the internal transition will be set again.
+		next_time_step := -1; // next time the setValues is called, the internal transition will be set again.
 	}
 	if is_close(step_size, H, REL_TOL, ABS_TOL) {
 		// Step accepted, so store the known input.
 		// We cannot store the armature current at the in rules because we may not accept the step and because they may be called multiple times. If that happens, we want to still have the old value of armature current, to compare it with the new one.
-		stored_armature_current := armature_current;
+		previous_arm_current := stored_arm_current;
 	}
 	return step_size; // the step size is calculated in the in_rules.
 }
@@ -85,8 +88,8 @@ out rules {
 	Suppose I have the following rules:
 		var1 == true and var2 == false -> ...
 		otherwise var1 -> ...
-	*/
-	up == true -> { up := 1; } --> { };
+	
+	controller.up == true -> { stored_up := 1; } --> { };
 	otherwise up -> { } --> { }; 
 	down == true -> { down := 1; } --> { };
 	otherwise down -> { } --> { };
@@ -94,4 +97,13 @@ out rules {
 	otherwise stop -> { } --> { };
 	true -> { up := stored_up; stored_up := up; } --> { };
 	true -> { down := stored_down; stored_down := down; } --> { }; 
+	*/
+	controller.up -> {stored_up := 1} --> {u := stored_up};
+	not controller.up -> {stored_up := 0} --> {u := stored_up};
+	
+	controller.down -> {stored_down := 1} --> {d := stored_down};
+	not controller.down -> {stored_down := 0} --> {d := stored_down};
+	
+	controller.stop -> {stored_down := 0; stored_up :=0 } --> {u := stored_up ; d := stored_down};
+	
 }
