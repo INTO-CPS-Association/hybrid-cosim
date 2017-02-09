@@ -1,0 +1,16 @@
+semantic adaptation window_obstacle_sa_multirate
+for fmu window_obstacle_sa_loop
+input ports motor_speed
+output ports reaction_torque
+param init_motor_speed = 0;
+control rules { multiplied 10 times }
+in var stored_motor_speed := init_motor_speed;
+in var linear_increment;
+in rules {
+	true -> {
+		linear_increment := (motor_speed - stored_motor_speed) / 10;
+		stored_motor_speed := motor_speed;
+	} --> {
+		motor_speed := motor_speed + linear_increment;
+	};
+}

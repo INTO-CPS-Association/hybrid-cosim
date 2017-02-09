@@ -1,0 +1,1 @@
+Classes encountered: SemanticAdaptation, Definition, NumberLiteral, Evaluation, Multi, FunctionCall, NumberLiteral
