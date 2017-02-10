@@ -4,32 +4,26 @@ semantic adaptation Adapted_FMU_Name
 for fmu fmu1, fmu2, fmu3, fmu4, ... ; \\ Kenneth> how does it know where the FMU fils are_):?
 
 input ports in_port_1, 
-			in_port_2,
 				...
 			;
 
 output ports out_port_1, 
-			out_port_2,
 			...
 			;
 
 param 	p1 := c1,
-		p2 := c2,
 		...
 		;
 
 in var 	iv1 := init_iv1,
-		iv2 := init_iv2,
 		...
 		;
 
-control var 	cv1 := init_cv1
-				cv2 := init_cv2
-				...
-				;
+control var cv1 := init_cv1
+			...
+			;
 
 out var ov1 := init_ov1,
-		ov2 := init_ov2,
 		...
 		;
 
@@ -39,16 +33,11 @@ in rules {
 	} --> { 
 		update_in_1
 	}; 
-	in_condition_2 -> {
-		sa_in_2
-	} --> { 
-		update_in_2 
-	}; 
 	...
 }
 
 control rules {
-	...
+	control_block
 	return step_size;
 }
 
@@ -56,8 +45,5 @@ out rules {
 	out_condition_1 -> {
 		update_out_1
 	} --> { sa_out_1 }; 
-	in_condition_2 -> {
-		update_out_1
-	} --> { sa_out_2 }; 
 	...
 }
