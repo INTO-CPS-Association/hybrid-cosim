@@ -1,0 +1,111 @@
+code controller_sa:
+	
+	var in_condition_executed;
+	var out_condition_executed;
+	
+	var controller; //FMU power ref
+	
+	var time_last_controller;
+	
+	var REL_TOL = 0.0001,
+		ABS_TOL = 1e-8,
+		CROSSING = 5,
+		init_armature_current = CROSSING,
+		init_up = 0,
+		init_down = 0;
+	
+	var previous_arm_current := init_armature_current,
+		stored_arm_current := init_armature_current,
+		stored_displacement := init_displacement,
+		stored_speed := init_speed,
+		next_time_step := -1,
+		step_size,
+		aux_obj_detected;
+	
+	var init_armature_current = 0,
+		init_displacement = 0,
+		init_speed = 0;
+	
+	var stored_armature_current,
+		stored_displacement,
+		stored_speed;
+	
+	function instantiate()
+		power.instantiate()
+		return
+	end function
+	
+	function setup_experiment(t, ...) 
+		time_last_window := t;
+	end function
+	
+	function enter_init() 
+		power.enter_init()
+		return
+	end function
+	
+	function exit_init() 
+		power.exit_init()
+		return
+	end function
+	
+	function setValues(ports, values) 		
+		in_condition_executed = empty map
+		if (true) then
+			in_condition_executed[cond1] = true
+			
+			stored_windowsa_u = values["u"]
+			stored_windowsa_d = values["d"]
+			
+			// power_sa is moore, so nothing else to do.
+			
+		end if
+		
+		out_condition_executed := empty map // force output computation.
+	end function
+	
+	function doStep(t, H)
+		
+		var e := t - time_last_window;
+		{ // new scope
+			var t := t
+			var h := H
+			var dt := 0
+			power.setValues("u", stored_windowsa_u)
+			power.setValues("d", stored_windowsa_d)
+		}
+		power.doStep(t, H);
+		time_last_window := t;
+		out_condition_executed := empty map
+	end function
+	
+	function getValues(ports)
+		var values = empty map
+		
+		if out_condition_executed == empty map then
+			if true then
+				stored_armature_current = power.getValues("armature_current")
+				out_condition_executed[cond1] := true
+			end if
+			if true then
+				stored_displacement = power.getValues("displacement")
+				out_condition_executed[cond2] := true
+			end if
+			if true then
+				stored_speed = power.getValues("speed")
+				out_condition_executed[cond3] := true
+			end if
+		end if
+		
+		if out_condition_executed[cond1] then
+			values["armature_current"] := stored_armature_current
+		end if
+		if out_condition_executed[cond2] then
+			values["displacement"] := stored_displacement
+		end if
+		if out_condition_executed[cond3] then
+			values["speed"] := stored_speed
+		end if
+		
+		return values
+	end function

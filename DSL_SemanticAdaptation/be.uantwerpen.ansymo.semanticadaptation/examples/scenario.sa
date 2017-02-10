@@ -11,38 +11,40 @@ Namely:
 
 If you agree with these changes, you should have the following:
 	fmu Environent environment // declares the instance name environment of the FMU environment.
-	./path/to/Environment.fmu
+	at "./path/to/Environment.fmu"
 	output ports passenger_up, passenger_down, driver_up, driver_down
-*/
 
-fmu environment
-type discrete event
-output ports passenger_up, passenger_down, driver_up, driver_down
-full internal dependencies
-
-fmu controller
-type discrete event
-input ports obj_detected, passenger_up, passenger_down, driver_up, driver_down
-output ports up, down, stop
-full internal dependencies
-
+Before it was this:
 fmu power
 type continuous time
 input ports up, down, reaction_torque (N.m)
 output ports armature_current (mA), motor_speed (m/s)
 full internal dependencies
+*/
 
-fmu window
-type continuous time
+fmu Environent environment // declares the instance name environment of the FMU environment.
+at "./path/to/Environment.fmu"
+output ports passenger_up, passenger_down, driver_up, driver_down
+
+fmu Controller controller
+at "./path/to/Controller.fmu"
+input ports obj_detected, passenger_up, passenger_down, driver_up, driver_down
+output ports up, down, stop
+
+fmu Power power
+at "./path/to/Power.fmu"
+input ports up, down, reaction_torque (N.m)
+output ports armature_current (mA), motor_speed (m/s)
+
+fmu Window window
+at "./path/to/Window.fmu"
 input ports motor_speed (m/s), reaction_force (N)
 output ports height (cm), window_reaction_torque (N.m)
-full internal dependencies
 
-fmu obstacle
-type continuous time
+fmu Obstacle obstacle
+at "./path/to/Obstacle.fmu"
 input ports height (m)
 output ports reaction_force (N)
-full internal dependencies
 
 /*
 The dotted syntax will have to be supported.

@@ -6,6 +6,11 @@ semantic adaptation mealy reactive window_sa
 
 for fmu window
 
+/*
+In the originial version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.
+In the canonical version, the input and output ports are all declared explicitly, and their bindings are implemented in the in/out rules.
+*/
+
 input ports 	reaction_force,
 				displacement,
 				speed;
@@ -17,8 +22,15 @@ in var 	stored_windowsa_reaction_force,
 		stored_windowsa_displacement,
 		stored_windowsa_speed;
 
+out var stored_window_reaction_torque,
+		stored_window_height;
+
 in rules {
 	true -> {
+		/*
+		is_set checks whether the input value is given in the setValues call of the adapted FMU.
+		Notice that in the canonical version, all ports are prefixed.
+		*/
 		if (is_set(window_sa.reaction_force))
 			stored_windowsa_reaction_force := window_sa.reaction_force;
 	} --> {
@@ -34,51 +46,23 @@ in rules {
 		if (is_set(window_sa.speed))
 			stored_windowsa_speed := window_sa.speed;
 	} --> {
-		t, H, dt = t - ext_t. // Bart suggestion: i that counts the number of micro steps.
 		window.speed := stored_windowsa_speed;
 	};
 }
 
-    /*
-    In the paper, make a table with all the variables and scopes in the base language.
-    */
-    
 control rules {
 	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
 }
 
-/*
-Question to be addressed:
-	If original fmu has port a, and there is a declaration in the semantic adaptation like "out ports a", should this mean a -> a, or should it just mean that the adapted FMU has a port called a.
-	If the original fmu has no port called "a", then the declaration "out ports a" means that there will be a port called a. 
-	
-fmu window
-in ports reaction_force, displacement, speed
-out ports height, reaction_torque, a, b, c, d,...
-
-input ports reaction_force,	displacement, speed
-out ports height (m) -> disp (cm), reaction_torque -> tau, window.a, window.*
 out rules {
-	true -> { } --> { 
-	x := x*y;
-	windowsa.b := 6;
-	}; 
-}
-*/
-
-out var stored_window_reaction_torque,
-		stored_window_height;
-
-out rules {
-	true -> {
+	true => {
 		stored_window_reaction_torque := window.reaction_torque;
-		stored_window_height := window.height;
-		stored_x := window.x;
-		stored_y := window.y;
-	} --> {
+	} -> {
 		window_sa.tau := - stored_window_reaction_torque;
+	}
+	true => {
+		stored_window_height := window.height;
+	} -> {
 		window_sa.disp := stored_window_height * 100;
-		window_sa.y := stored_y;
-		window_sa.x := stored_y*stored_x;
-	};
+	}
 }
