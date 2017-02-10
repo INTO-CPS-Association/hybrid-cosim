@@ -183,7 +183,6 @@ code window_sa:
 		// Execute the sa_out blocks
 		if out_condition_executed[OUT_COND_1] then
 			values["tau"] = - stored_window_reaction_torque
-			values["disp"] = stored_window_height * 100
 		end if
 		if out_condition_executed[OUT_COND_2] then
 			values["disp"] = stored_window_height * 100
