@@ -1,3 +1,6 @@
+/*
+This file is deprecated
+*/
 code power_sa:
 	
 	var in_condition_executed;

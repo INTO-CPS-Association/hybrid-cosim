@@ -1,3 +1,6 @@
+/*
+OUTDATED
+*/
 code controller_sa:
 	
 	var in_condition_executed;
