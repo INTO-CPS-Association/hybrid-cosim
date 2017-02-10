@@ -2,6 +2,7 @@ code AdaptedFMU:
 	
 	var in_condition_executed;
 	var out_condition_executed;
+	in_condition_executed = empty map;
 	
 	function instantiate()
 		fmu1.instantiate()
@@ -22,7 +23,7 @@ code AdaptedFMU:
 	end function
 	
 	function setValues(ports, values) 
-		in_condition_executed = empty map
+		
 		if (in_condition_1) then
 			in_condition_executed[cond1] = true
 			sa_in_1
@@ -48,6 +49,7 @@ code AdaptedFMU:
 			...
 		*/
 		
+		in_condition_executed = empty map;
 		out_condition_executed := empty map // force output computation.
 		
 	end function

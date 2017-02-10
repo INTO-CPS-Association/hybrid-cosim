@@ -54,13 +54,14 @@ Question to be addressed:
 	
 fmu window
 in ports reaction_force, displacement, speed
-out ports height, reaction_torque, x, y
+out ports height, reaction_torque, a, b, c, d,...
 
 input ports reaction_force,	displacement, speed
-out ports height (m) -> disp (cm), reaction_torque -> tau, x->x
+out ports height (m) -> disp (cm), reaction_torque -> tau, window.a, window.*
 out rules {
 	true -> { } --> { 
 	x := x*y;
+	windowsa.b := 6;
 	}; 
 }
 */

@@ -1,7 +1,7 @@
 code window_sa:
 	
-	var in_condition_executed;
 	var out_condition_executed;
+	var in_condition_executed = empty map
 	
 	var window; //FMU window ref
 	
@@ -30,7 +30,6 @@ code window_sa:
 	end function
 	
 	function setValues(ports, values) 		
-		in_condition_executed = empty map
 		if (true) then
 			in_condition_executed[cond1] = true
 			
@@ -65,9 +64,11 @@ code window_sa:
 			window.setValues("speed", stored_speed)
 		}
 		window.doStep(t, H);
+		
 		time_last_window := t;
 		
 		out_condition_executed := empty map
+		in_condition_executed = empty map
 		
 	end function
 	
