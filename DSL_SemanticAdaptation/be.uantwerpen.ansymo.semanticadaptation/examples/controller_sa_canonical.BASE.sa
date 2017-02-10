@@ -60,9 +60,6 @@ control rules {
 	}
 	
 	if (obj_detected == true or t >= next_time_step) {
-		
-		invoke_update_in(t=t, h=H, dt=0);
-		
 		var aux_h = do_step(controller, t-e, e);
 		assert aux_h == e; 
 		next_time_step := -1; 

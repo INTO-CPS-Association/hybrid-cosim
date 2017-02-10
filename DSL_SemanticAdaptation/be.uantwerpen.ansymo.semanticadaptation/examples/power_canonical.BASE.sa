@@ -27,7 +27,6 @@ in rules {
 }
 
 control rules {
-	invoke_update_in(t=t, h=H, dt=0);
 	power.doStep(t, H);
 }
 
