@@ -4,24 +4,20 @@ code AdaptedFMU:
 	var out_condition_executed;
 	
 	function instantiate()
-		// We are abstracting away the instances. This needs to be changed to accomodate for that.
-		for each fmu in original_fmus do
-			fmu.instantiate()
-		end for
+		fmu1.instantiate()
+		...
 		return
 	end function
 	
 	function enter_init() 
-		for each fmu in original_fmus do
-			fmu.enter_init()
-		end for
+		fmu1.enter_init()
+		...
 		return
 	end function
 	
 	function exit_init() 
-		for each fmu in original_fmus do
-			fmu.exit_init()
-		end for
+		fmu1.exit_init()
+		...
 		return
 	end function
 	
@@ -30,51 +26,44 @@ code AdaptedFMU:
 		if (in_condition_1) then
 			in_condition_executed[cond1] = true
 			sa_in_1
-			update_in_1
-		end if
-		if (in_condition_2) then
-			in_condition_executed[cond2] = true
-			sa_in_2
-			update_in_2
+			<if AdaptedFMU is mealy then>	
+				update_sa_in_1
+			<end if>
 		end if
 		...
+		
+		out_condition_executed := empty map // force output computation.
 	end function
 	
 	function doStep(t, H)
 		
 		control_block // or generic algorithm cosim step
-		/* In the midst of the control block code,
+		/* 
+		In the midst of the control block code,
 		before any setValues is called on an inner FMU,
 		the following code will be injected:
 			if in_condition_executed[cond1] then
 				update_in_1
 			end if
-			if in_condition_executed[cond2] then
-				update_in_2
-			end if
 			...
 		*/
 		
-		out_condition_executed = empty map
-		if (out_condition_1) then
-			out_condition_executed[cond1] = true
-			update_out_1
-			sa_out_1
-		end if
-		if (out_condition_2) then
-			out_condition_executed[cond2] = true
-			update_out_2
-			sa_out_2
-		end if
-		...
+		out_condition_executed := empty map // force output computation.
+		
 	end function
 	
 	function getValues(ports)
+		
+		if out_condition_executed == empty map then
+			if (out_condition_1) then
+				out_condition_executed[cond1] = true
+				update_out_1
+			end if
+			...
+		end if
+		
 		if out_condition_executed[cond1] then
 			sa_out_1
-		end if
-		if out_condition_executed[cond2] then
-			sa_out_2
 		end if
 		...
 	end function

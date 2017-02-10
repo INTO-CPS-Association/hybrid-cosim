@@ -1,0 +1,91 @@
+code window_sa:
+	
+	var in_condition_executed;
+	var out_condition_executed;
+	
+	var window; //FMU window ref
+	
+	var time_last_window;
+	
+	var stored_windowsa_reaction_force,
+		stored_windowsa_displacement,
+		stored_windowsa_speed;
+	
+	var stored_window_reaction_torque,
+		stored_window_height;
+	
+	function instantiate()
+		window.instantiate()
+		return
+	end function
+	
+	function enter_init() 
+		window.enter_init()
+		return
+	end function
+	
+	function exit_init() 
+		window.exit_init()
+		return
+	end function
+	
+	function setValues(ports, values) 		
+		in_condition_executed = empty map
+		if (true) then
+			in_condition_executed[cond1] = true
+			
+			stored_windowsa_reaction_force = values["reaction_force"]
+			stored_windowsa_displacement = values["displacement"]
+			stored_windowsa_speed = values["speed"]
+			
+			// window_sa is mealy
+			{ // new scope
+				var t := 0
+				var h := 0
+				var dt := 0
+				window.setValues("reaction_force", stored_windowsa_reaction_force)
+				window.setValues("displacement", stored_windowsa_displacement)
+				window.setValues("speed", stored_windowsa_speed)
+			}
+			
+		end if
+		
+		out_condition_executed := empty map // force output computation.
+	end function
+	
+	function doStep(t, H)
+		
+		var e := t - time_last_window;
+		{ // new scope
+			var t := t
+			var h := H
+			var dt := 0
+			window.setValues("reaction_force", stored_reaction_force)
+			window.setValues("displacement", stored_displacement)
+			window.setValues("speed", stored_speed)
+		}
+		window.doStep(t, H);
+		time_last_window := t;
+		
+		out_condition_executed := empty map
+		
+	end function
+	
+	function getValues(ports)
+		var values = empty map
+		
+		if out_condition_executed == empty map then
+			if true then
+				stored_window_reaction_torque = window.getValues("reaction_torque")
+				stored_window_height = window.getValues("height")
+				out_condition_executed[cond1] := true
+			end if
+		end if
+		
+		if out_condition_executed[cond1] then
+			values["tau"] := - stored_window_reaction_torque
+			values["disp"] := stored_window_height * 100
+		end if
+		
+		return values
+	end function

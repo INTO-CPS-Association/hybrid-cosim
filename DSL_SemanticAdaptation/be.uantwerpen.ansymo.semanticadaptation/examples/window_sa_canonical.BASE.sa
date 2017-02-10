@@ -1,0 +1,53 @@
+import PowerWindowModel
+
+module Window_SA
+
+semantic adaptation mealy reactive window_sa
+
+for fmu window
+
+input ports 	reaction_force,
+				displacement,
+				speed;
+
+output ports	disp;
+				tau;
+				
+in var 	stored_windowsa_reaction_force,
+		stored_windowsa_displacement,
+		stored_windowsa_speed;
+		
+in rules {
+	true -> {
+		stored_windowsa_reaction_force := window_sa.reaction_force;
+		stored_windowsa_displacement := window_sa.displacement;
+		stored_windowsa_speed := window_sa.speed;
+	} --> {
+		window.reaction_force := stored_windowsa_reaction_force; 
+		window.displacement := stored_windowsa_displacement; 
+		window.speed := stored_windowsa_speed;
+	};
+}
+
+control var time_last_window := 0
+
+control rules {
+	var e := t - time_last_window;
+	invoke_update_in(t=t, h=H, dt=0);
+	window.doStep(t, H);
+	time_last_window := t;
+	invoke_update_out(t=t, h=H, dt=0);
+}
+
+out var stored_window_reaction_torque,
+		stored_window_height;
+
+out rules {
+	true -> {
+		stored_window_reaction_torque := window.reaction_torque;
+		stored_window_height := window.height;
+	} --> { 
+		window_sa.tau := - stored_window_reaction_torque;
+		window_sa.disp := stored_window_height * 100;
+	};
+}

@@ -2,7 +2,7 @@ import PowerWindowModel
 
 module Window_SA
 
-semantic adaptation window_sa
+semantic adaptation mealy reactive window_sa
 
 for fmu window
 
