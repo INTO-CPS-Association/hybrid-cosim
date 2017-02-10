@@ -2,7 +2,7 @@ import PowerWindowModel
 
 module Power_SA
 
-semantic adaptation power_sa
+semantic adaptation moore delayed power_sa
 
 for fmu power
 
@@ -10,9 +10,9 @@ param init_armature_current = 0;
 param init_displacement = 0;
 param init_speed = 0;
 
-var stored_armature_current := init_armature_current;
-var stored_displacement := init_displacement;
-var stored_speed := init_speed;
+out var stored_armature_current := init_armature_current;
+out var stored_displacement := init_displacement;
+out var stored_speed := init_speed;
 
 out rules {
 	true -> {
@@ -26,23 +26,8 @@ out rules {
 		displacement := stored_displacement;
 	}; 
 	true -> {
-		stored_speed := speed;
-	} --> {
-		speed := stored_speed;   && adaptedFMU.getValues()
-	}; 
-}
-
-/*
-Below is an alternative to the above out rules
-out rules {
-	true -> {
-		stored_armature_current := armature_current;
-		stored_displacement := displacement;
 		stored_speed := speed;
 	} --> {
 		speed := stored_speed;
-		displacement := stored_displacement;
-		armature_current := stored_armature_current;
 	}; 
 }
-*/
