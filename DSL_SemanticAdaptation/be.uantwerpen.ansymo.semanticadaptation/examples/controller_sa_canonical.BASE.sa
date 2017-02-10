@@ -2,7 +2,7 @@ import PowerWindowModel
 
 module Controller_SA
 
-semantic adaptation controller_sa
+semantic adaptation mealy reactive controller_sa
 
 for fmu controller
 
@@ -33,15 +33,8 @@ in var step_size;
 in var aux_obj_detected := 0;
 
 in rules {
-	next_time_step < 0 -> {
+	next_time_step < 0 -> { 
 		next_time_step := get_next_time_step(controller) + t; 
-		/*
-		The get_next_time_step(controller) function is equivalent to the following snippet:
-		transaction(controller);
-		internal_transition := do_step(controller, t, MAX);
-		next_time_step := t + internal_transition;
-		rollback(controller);
-		*/
 	} --> { };
 	
 	true -> {
@@ -67,13 +60,14 @@ control rules {
 	}
 	
 	if (obj_detected == true or t >= next_time_step) {
-		var aux_h = do_step(controller, t-e, e); // do a step, then decide next internal transition
-		assert aux_h == e; // this must always be the case, otherwise it is better not to use the timed transition adaptation.
-		next_time_step := -1; // next time the setValues is called, the internal transition will be set again.
+		
+		invoke_update_in(t=t, h=H, dt=0);
+		
+		var aux_h = do_step(controller, t-e, e);
+		assert aux_h == e; 
+		next_time_step := -1; 
 	}
 	if is_close(step_size, H, REL_TOL, ABS_TOL) {
-		// Step accepted, so store the known input.
-		// We cannot store the armature current at the in rules because we may not accept the step and because they may be called multiple times. If that happens, we want to still have the old value of armature current, to compare it with the new one.
 		previous_arm_current := stored_arm_current;
 	}
 	return step_size;
@@ -83,30 +77,6 @@ out var stored_up := init_up;
 out var stored_down := init_down;
 
 out rules {
-	true -> {
-		/*
-		Previously, there was this intruction here:
-		internal_transition := get_next_time_step(controller) + t
-		
-		However, it cannot be here, since there is no guarantee in the control rules block, that the doStep of the controller will be called.
-		*/
-	} --> {};
-	
-	/*
-	What does "otherwise var" mean?
-	Suppose I have the following rules:
-		var1 == true and var2 == false -> ...
-		otherwise var1 -> ...
-	
-	controller.up == true -> { stored_up := 1; } --> { };
-	otherwise up -> { } --> { }; 
-	down == true -> { down := 1; } --> { };
-	otherwise down -> { } --> { };
-	stop == true -> { up := 0; down := 0; } --> { };
-	otherwise stop -> { } --> { };
-	true -> { up := stored_up; stored_up := up; } --> { };
-	true -> { down := stored_down; stored_down := down; } --> { }; 
-	*/
 	controller.up -> {stored_up := 1} --> {u := stored_up};
 	not controller.up -> {stored_up := 0} --> {u := stored_up};
 	
