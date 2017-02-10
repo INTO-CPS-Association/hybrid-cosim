@@ -26,13 +26,9 @@ in rules {
 	};
 }
 
-control var time_last_window := 0
-
 control rules {
-	var e := t - time_last_window;
 	invoke_update_in(t=t, h=H, dt=0);
 	power.doStep(t, H);
-	time_last_window := t;
 }
 
 out var stored_armature_current := init_armature_current;
