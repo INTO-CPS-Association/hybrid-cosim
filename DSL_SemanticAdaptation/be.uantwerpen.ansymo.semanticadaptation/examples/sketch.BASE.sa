@@ -1,7 +1,7 @@
 import ExternalModule
 module LocalModule
 semantic adaptation Adapted_FMU_Name
-for fmu fmu1, fmu2, fmu3, fmu4, ... ; \\ Kenneth> how does it know where the FMU fils are_):?
+for fmu fmu1, fmu2, fmu3, fmu4, ... ;
 
 input ports in_port_1, 
 				...
@@ -37,7 +37,10 @@ in rules {
 }
 
 control rules {
-	control_block
+	control_block_part_1
+	do_step(fmu1, inner_t, h)
+	control_block_part_2
+	
 	return step_size;
 }
 

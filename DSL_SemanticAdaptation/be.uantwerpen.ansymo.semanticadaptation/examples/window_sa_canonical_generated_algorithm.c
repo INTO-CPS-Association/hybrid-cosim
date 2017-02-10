@@ -60,7 +60,6 @@ code window_sa:
 				/*
 				These 3 variables are available in the scope of the update_in block.
 				*/
-				var t = 0
 				var h = 0
 				var dt = 0
 				window.setValues("reaction_force", stored_windowsa_reaction_force)
