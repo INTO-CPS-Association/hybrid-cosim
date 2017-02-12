@@ -101,7 +101,7 @@ code AdaptedFMU:
 		if (in_condition_executed[IN_COND_1]) then
 			/*
 			These variables are available in the scope of the update_in block.
-				It's not a good idea to have t also in that scope, because it is not available when getValues is called.
+				It's not a good idea to have t also in that scope, because it is not available when getValues/setValues is called.
 			*/
 			var h = h
 			var dt = inner_t - t
