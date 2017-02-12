@@ -4,7 +4,10 @@ module Window_SA
 
 semantic adaptation mealy reactive window_sa
 
-for fmu window
+for fmu Window window
+at "./path/to/Window.fmu"
+input ports displacement (rad), speed (rad/s), reaction_force (N)
+
 
 /*
 In the originial version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.

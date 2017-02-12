@@ -1,25 +1,39 @@
-/*
-OUTDATED
-*/
-import PowerWindowModel
 import Window_SA
 
 module WindowObstacle_SA
 
-semantic adaptation window_obstacle_sa
+semantic adaptation reactive mealy window_obstacle_sa
 
 /*
 Notice that we're importing the Window_SA module... that's where the window_sa FMU is defined.
+However, it is not clear where is the information that describes how the window_sa is connected to the obstacle.
+It is not in the PowerWindowModel module, nor in the Window_SA module.
+As a result, I would suggest that we are able to describe these connections within this semantic adaptation.
 */
-for fmu window_sa, obstacle
+for fmu WindowSA window_sa
+at "./path/to/Window_sa.fmu"
+input ports displacement (rad), speed (rad/s), reaction_force (N)
+output ports disp (m), tau (N.m);
 
-input ports displacement -> displacement, // I should not need to say this.
-			speed;
+for fmu WindowSA obstacle
+at "./path/to/obstacle.fmu"
+input ports disp (m),
+output ports reaction_force (m);
 
-output ports tau -> tau; 
+/*
+This is the information that was missing before: how the semantic adaptation window_sa, which is an FMU, connects to the obstacle FMU.
+*/
+window_sa.disp -> obstacle.disp,
+obstacle.reaction_force -> window_sa.reaction_force;
 
-in var previous_speed := 0;
-in var future_speed := 0;
+/*
+Declares the external ports of the semantic adaptation
+*/
+input ports displacement, speed;
+output ports tau; 
+
+control var previous_speed := 0;
+control var future_speed := 0;
 in var current_speed := 0;
 param RATE := 10;
 
@@ -29,19 +43,16 @@ in rules {
 		These instructions would violate the principle that multiple calls to setValues can be made:
 		previous_speed := future_speed;
 		future_speed := speed;
-		
 		Upon execution, this block must call setValues of the original FMUs (window_sa and obstacle).
 		The correct thing then is to execute the next block and then do the setValues of the original FMUs.
 		*/
-		current_speed := adapted.speed
-		
+		current_speed := speed
 	} --> {
 		/*
 		This block will be called whenever any of the input ports that are unconnected in the original FMUs is read, in the control rules block.
 		The following variables are available in this block:
 			dt - In the control rules block, (t + dt) is the time that will be passed to the doStep function of the inner FMU. In the control rules block, this can be computed by doing dt := inner_time - t.
 			h - this is the communication step size that will be sent to the inner FMU.
-			t - This is the communication time also available at the control rules block.
 		
 		As previously described, the displacement input port is taken care of automatically by the declaration "displacement -> displacement" in the input ports.
 		So the declaration would be equivalent to having this intruction in this block.
@@ -49,7 +60,6 @@ in rules {
 		*/
 		window_sa.speed := previous_speed + (future_speed - previous_speed)*dt;
 	}
-	// Feedback: everything should be prefixed, and the prefixes should be short.
 }
 
 control rules {
@@ -104,9 +114,3 @@ control rules {
 		var inner_time := t + h;
 	}
 }
-
-out rules {
-	true -> { } --> { }; 
-}
-
-

@@ -1,3 +1,7 @@
+/*
+This file is no longer used.
+The descriptions of the relevant FMUs are best done inside each semantic adaptation.
+*/
 module PowerWindowModel
 
 /*

@@ -2,7 +2,7 @@ import PowerWindowModel
 
 module Window_SA
 
-semantic adaptation mealy reactive window_sa
+semantic adaptation mealy reactive Window_sa
 /*
 Reactive means that the unit expects the following treatment:
 Supose the external master is at time t, and that there is an FMU f providing inputs to windowsa.
@@ -41,15 +41,14 @@ It must be the case that o1 == o2
 In other words, the output at time t, only depends on the state at time t.
 */
 
-for fmu window
-
 /*
-The window FMU instance has the following definition:
-	fmu Window window
-	at "./path/to/Window.fmu"
-	input ports motor_speed (m/s), reaction_force (N)
-	output ports height (cm), window_reaction_torque (N.m)
+The definition for the wrappen FMU is now done here.
+This is because, for adaptations that wrap multiple FMUs as well as other adaptations, the connection information cannot be fully completed in the senario description (see the window_obstacle.sa example).
 */
+for fmu Window window
+at "./path/to/Window.fmu"
+input ports displacement (rad), speed (rad/s), reaction_force (N)
+output ports height (cm), reaction_torque (N.m)
 
 /*
 No need to have input ports declared for this model.

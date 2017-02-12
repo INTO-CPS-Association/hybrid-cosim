@@ -1,7 +1,14 @@
 import ExternalModule
 module LocalModule
-semantic adaptation Adapted_FMU_Name
-for fmu fmu1, fmu2, fmu3, fmu4, ... ;
+semantic adaptation (reactive/delayed) (mealy/moore) Adapted_FMU_Name
+
+for fmu FMU1 fmu1
+at "./path/to/FMU1.fmu"
+input ports fmu_in_port1, ...
+output ports fmu_out_port1,...;
+
+...
+
 
 input ports in_port_1, 
 				...
