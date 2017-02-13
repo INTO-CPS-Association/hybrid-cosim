@@ -1,20 +1,23 @@
 import PowerWindowModel
 
-semantic adaptation window_sa
+semantic adaptation WindowSA window_sa
+at "./path/to/WindowSA.fmu"
 for fmu window
 out rules {
 	true -> { } --> { reaction_torque := -reaction_torque; };
 }
 
-semantic adaptation window_obstacle_sa_loop
+semantic adaptation WindowObstacleSALoop window_obstacle_sa_loop
+at "./path/to/WindowObstacleSALoop.fmu"
 for fmu window_sa, obstacle
 // just for the sake of declaring this, look at algebraic loop iteration
 
-semantic adaptation window_obstacle_sa_multirate //with master // multi-rate for window and object
+semantic adaptation WindowObstacleSAMultirate window_obstacle_sa_multirate //with master // multi-rate for window and object
+at "./path/to/WindowObstacleSAMultirate.fmu"
 for fmu window_obstacle_sa_loop
 input ports motor_speed
 output ports reaction_torque
-param init_motor_speed = 0;
+param init_motor_speed := 0;
 control {
 	var h := H/10;
 	var proposed_h := H;

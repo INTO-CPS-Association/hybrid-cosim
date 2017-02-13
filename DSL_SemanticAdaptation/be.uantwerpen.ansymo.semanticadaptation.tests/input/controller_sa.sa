@@ -2,28 +2,34 @@ import PowerWindowModel
 
 module Controller_SA
 
-semantic adaptation ControllerSA controller_sa
-at "./path/to/ControllerSA.fmu"
+semantic adaptation controller_sa
 for fmu controller
 input ports armature_current -> obj_detected, passenger_up, passenger_down, driver_up, driver_down
 output ports up, down
-param REL_TOL := 0.0001;
-param ABS_TOL := 1e-8;
-param CROSSING := 5;
-param init_armature_current := CROSSING;
-param init_up := 0;
-param init_down := 0;
-control { // overwriting master! What to do in case of roll back? How to reuse generic algorithm
+param REL_TOL = 0.0001;
+param ABS_TOL = 1e-8;
+param CROSSING = 5;
+param init_armature_current = CROSSING;
+param init_up = 0;
+param init_down = 0;
+control var internal_transition;
+control rules { // overwriting master! What to do in case of roll back? How to reuse generic algorithm
+	if (not is_set(internal_transition)) { // only at start of simulation
+		var state := get_state(controller);
+		internal_transition := do_step(controller, MAX) + t; // may return internal transition time or MAX
+		set_state(controller, state);
+	}
 	var step_size; // may be used to determine roll-back
 	if (signal == true or t >= internal_transition) {
-		step_size := do_step(controller, e+H); // do a step, then decide next internal transition
+		step_size := do_step(controller, H); // do a step, then decide next internal transition
+		var state := get_state(controller);
+		internal_transition := do_step(controller, MAX) + t;
+		set_state(controller, state);
 	}
 	return step_size;
 }
 in var stored_armature_current := init_armature_current;
-in var internal_transition;
 in rules {
-	not is_set(internal_transition) -> { internal_transition := get_next_time_step(controller) + t; } --> { };
 	true -> {
 		obj_detected := false;
 		if (not (not is_close(stored_armature_current, CROSSING, REL_TOL, ABS_TOL) and stored_armature_current > CROSSING)
@@ -40,37 +46,16 @@ in rules {
 		}
 		stored_armature_current := armature_current;
 	} --> { };
-	
 }
 out var stored_up := init_up;
 out var stored_down := init_down;
 out rules {
-	true -> { internal_transition := get_next_time_step(controller) + t; } --> {};
 	up == true -> { up := 1; } --> { };
-	up == false -> { } --> { };
+	otherwise up -> { } --> { };
 	down == true -> { down := 1; } --> { };
-	down == false -> { } --> { };
+	otherwise down -> { } --> { };
 	stop == true -> { up := 0; down := 0; } --> { };
-	stop == false -> { } --> { };
+	otherwise stop -> { } --> { };
 	true -> { up := stored_up; stored_up := up; } --> { };
 	true -> { down := stored_down; stored_down := down; } --> { }; 
 }
-
-
-// other suggestion for implementing get_next_time_step, making it easier to generate baseDSL code
-/*control { // overwriting master! What to do in case of roll back? How to reuse generic algorithm
-       var step_size; // may be used to determine roll-back
-       if (signal == true or t >= internal_transition) {
-             step_size := do_step(controller, e+H); // do a step, then decide next internal transition
-       }
-       return step_size;
-}
-in var internal_transition;
-in rules {
-       not is_set(internal_transition) -> {
-             if (not is_set(internal_transition)) {
-                    internal_transition := get_next_step(controller) + t;
-              }
-       } --> { internal_transition := get_next_step(controller) + t; };
-}*/
-

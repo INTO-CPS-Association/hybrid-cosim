@@ -3,7 +3,8 @@ import Controller_SA
 import Algebraic_Loop_SA
 
 // multi-rate for window and object
-semantic adaptation window_obstacle_sa
+semantic adaptation WindowObstacleSA window_obstacle_sa
+at "./path/to/WindowObstacleSA.fmu"
 for fmu window_sa, obstacle
 multiply rate 10 times with first order interpolation
 successive substitution starts at height with absolute tolerance = 1e-8 and relative tolerance = 0.0001

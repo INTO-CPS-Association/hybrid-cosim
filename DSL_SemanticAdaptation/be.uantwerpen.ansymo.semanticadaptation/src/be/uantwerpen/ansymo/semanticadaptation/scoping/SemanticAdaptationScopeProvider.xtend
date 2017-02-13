@@ -105,9 +105,9 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 		return __getImportedScope(context, r)
 	}
 	
-	def scope_Step_fmu(Step context, EReference r) {
-		return Scopes.scopeFor(EcoreUtil2.getContainerOfType(context, Adaptation).instances, IScope.NULLSCOPE)
-	}
+	/*def scope_Step_fmu(Step context, EReference r) {
+		return Scopes.scopeFor(EcoreUtil2.getContainerOfType(context, Adaptation).inner.instances, IScope.NULLSCOPE)
+	}*/
 	
 	/*def EObject __getAncestorOfType(EObject object, Class<?> type) { // same as EcoreUtil2.getContainerOfType
 		val parent = object.eContainer

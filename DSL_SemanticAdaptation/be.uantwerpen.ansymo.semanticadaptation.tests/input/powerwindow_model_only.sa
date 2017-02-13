@@ -1,32 +1,27 @@
 module PowerWindowModel
 
-fmu environment
-type discrete event
+fmu Environment environment
+at "./path/to/Environment.fmu"
 output ports passenger_up, passenger_down, driver_up, driver_down
-full internal dependencies
 
-fmu controller
-type discrete event
+fmu Controller controller
+at "./path/to/Controller.fmu"
 input ports obj_detected, passenger_up, passenger_down, driver_up, driver_down
 output ports up, down, stop
-full internal dependencies
 
-fmu power
-type continuous time
+fmu Power power
+at "./path/to/Power.fmu"
 input ports up, down, reaction_torque (N.m)
 output ports armature_current (mA), motor_speed (m/s)
-full internal dependencies
 
-fmu window
-type continuous time
+fmu Window window
+at "./path/to/Window.fmu"
 input ports motor_speed (m/s), reaction_force (N)
-output ports height (cm), window_reaction_torque (N.m)
-full internal dependencies
+output ports height (cm), reaction_torque (N.m)
 
-fmu obstacle
-type continuous time
+fmu Obstacle obstacle
+at "./path/to/Obstacle.fmu"
 input ports height (m)
 output ports reaction_force (N)
-full internal dependencies
 
-armature_current -> obj_detected // only ports that change names need to be connected
+power.armature_current -> controller.obj_detected
