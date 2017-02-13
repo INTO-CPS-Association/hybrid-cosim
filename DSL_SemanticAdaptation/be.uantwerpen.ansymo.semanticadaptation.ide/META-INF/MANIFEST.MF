@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: be.uantwerpen.ansymo.semanticadaptation.ide
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: be.uantwerpen.ansymo.semanticadaptation.ide; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: be.uantwerpen.ansymo.semanticadaptation,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: be.uantwerpen.ansymo.semanticadaptation.ide.contentassist.antlr.internal,
+ be.uantwerpen.ansymo.semanticadaptation.ide.contentassist.antlr
+
