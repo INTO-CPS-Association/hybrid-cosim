@@ -1,21 +1,19 @@
-/*
-OUTDATED
-*/
-import PowerWindowModel
-
 module Controller_SA
 
-semantic adaptation controller_sa
+semantic adaptation reactive mealy controller_sa
 
-for fmu controller
+for fmu Controller controller
+at "./path/to/Controller.fmu"
+input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
+output ports up, down, stop
 
+/*
+Added support for simple wildcars in the input ports.
+According to Casper and Kenneth, some FMUs have thousands of ports...
+*/
 input ports armature_current, 
-			passenger_up, 
-			passenger_down, 
-			passenger_stop, 
-			driver_up, 
-			driver_down, 
-			driver_stop;
+			passenger_*, 
+			driver_*;
 
 output ports	u,
 				d;
@@ -27,16 +25,15 @@ param init_armature_current = CROSSING;
 param init_up = 0;
 param init_down = 0;
 
-in var previous_arm_current := init_armature_current;
-in var stored_arm_current := init_armature_current;
-in var stored_displacement := init_displacement;
-in var stored_speed := init_speed;
 in var next_time_step := -1;
-in var step_size;
-in var aux_obj_detected := 0;
+in var stored_arm_current := init_armature_current;
+control var step_size;
+control var aux_obj_detected := 0;
+control var get_next_step := true;
+control var previous_arm_current := init_armature_current;
 
 in rules {
-	next_time_step < 0 -> {
+	get_next_step -> {
 		next_time_step := get_next_time_step(controller) + t; 
 		/*
 		The get_next_time_step(controller) function is equivalent to the following snippet:
@@ -72,7 +69,9 @@ control rules {
 	if (obj_detected == true or t >= next_time_step) {
 		var aux_h = do_step(controller, t-e, e); // do a step, then decide next internal transition
 		assert aux_h == e; // this must always be the case, otherwise it is better not to use the timed transition adaptation.
-		next_time_step := -1; // next time the setValues is called, the internal transition will be set again.
+		get_next_step := true; // next time the setValues is called, the internal transition will be set again.
+	} else {
+		get_next_step := false;
 	}
 	if is_close(step_size, H, REL_TOL, ABS_TOL) {
 		// Step accepted, so store the known input.
