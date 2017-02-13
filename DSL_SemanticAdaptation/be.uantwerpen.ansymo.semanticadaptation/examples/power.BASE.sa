@@ -1,13 +1,11 @@
-/*
-OUTDATED
-*/
-import PowerWindowModel
-
 module Power_SA
 
 semantic adaptation moore delayed power_sa
 
-for fmu power
+for fmu Power power
+at "./path/to/Power.fmu"
+input ports up, down, reaction_torque (N.m)
+output ports armature_current (mA), motor_speed (m/s)
 
 param init_armature_current = 0;
 param init_displacement = 0;
@@ -20,17 +18,11 @@ out var stored_speed := init_speed;
 out rules {
 	true -> {
 		stored_armature_current := armature_current;
-	} --> {
-		armature_current := stored_armature_current;
-	}; 
-	true -> {
 		stored_displacement := displacement;
-	} --> {
-		displacement := stored_displacement;
-	}; 
-	true -> {
 		stored_speed := speed;
 	} --> {
+		armature_current := stored_armature_current;
+		displacement := stored_displacement;
 		speed := stored_speed;
 	}; 
 }
