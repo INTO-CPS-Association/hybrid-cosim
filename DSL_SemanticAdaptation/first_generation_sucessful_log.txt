@@ -1,0 +1,23 @@
+0    [main] INFO  text.xtext.generator.XtextGenerator  - Initializing Xtext generator
+15   [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Adding generated EPackage 'org.eclipse.xtext.common.types.TypesPackage'
+167  [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Registering project be.uantwerpen.ansymo.semanticadaptation at 'file:/C:/Users/clagms/Source%20Control/Git_HybridCosimulation/DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation/'
+168  [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Registering project be.uantwerpen.ansymo.semanticadaptation.tests at 'file:/C:/Users/clagms/Source%20Control/Git_HybridCosimulation/DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation.tests/'
+169  [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Registering project be.uantwerpen.ansymo.semanticadaptation.ide at 'file:/C:/Users/clagms/Source%20Control/Git_HybridCosimulation/DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation.ide/'
+170  [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Registering project be.uantwerpen.ansymo.semanticadaptation.ui at 'file:/C:/Users/clagms/Source%20Control/Git_HybridCosimulation/DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation.ui/'
+171  [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Registering project be.uantwerpen.ansymo.semanticadaptation.ui.tests at 'file:/C:/Users/clagms/Source%20Control/Git_HybridCosimulation/DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation.ui.tests/'
+185  [main] INFO  lipse.emf.mwe.utils.StandaloneSetup  - Using resourceSet registry. The registered Packages will not be registered in the global EPackage.Registry.INSTANCE!
+665  [main] INFO  clipse.emf.mwe.utils.GenModelHelper  - Registered GenModel 'http://www.eclipse.org/Xtext/Xbase/XAnnotations' from 'platform:/resource/org.eclipse.xtext.xbase/model/Xbase.genmodel'
+670  [main] INFO  clipse.emf.mwe.utils.GenModelHelper  - Registered GenModel 'http://www.eclipse.org/xtext/xbase/Xtype' from 'platform:/resource/org.eclipse.xtext.xbase/model/Xbase.genmodel'
+700  [main] INFO  clipse.emf.mwe.utils.GenModelHelper  - Registered GenModel 'http://www.eclipse.org/xtext/xbase/Xbase' from 'platform:/resource/org.eclipse.xtext.xbase/model/Xbase.genmodel'
+708  [main] INFO  clipse.emf.mwe.utils.GenModelHelper  - Registered GenModel 'http://www.eclipse.org/xtext/common/JavaVMTypes' from 'platform:/resource/org.eclipse.xtext.common.types/model/JavaVMTypes.genmodel'
+2566 [main] INFO  erator.parser.antlr.AntlrToolFacade  - downloading file from 'http://download.itemis.com/antlr-generator-3.2.0-patch.jar' ...
+3407 [main] INFO  erator.parser.antlr.AntlrToolFacade  - finished downloading.
+3419 [main] INFO  text.xtext.generator.XtextGenerator  - Generating be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation
+23401 [main] INFO  nerator.ecore.EMFGeneratorFragment2  - Generating EMF model code
+23499 [main] INFO  clipse.emf.mwe.utils.GenModelHelper  - Registered GenModel 'http://www.uantwerpen.be/ansymo/semanticadaptation/SemanticAdaptation' from 'platform:/resource/be.uantwerpen.ansymo.semanticadaptation/model/generated/SemanticAdaptation.genmodel'
+warning(200): ../be.uantwerpen.ansymo.semanticadaptation/src-gen/be/uantwerpen/ansymo/semanticadaptation/parser/antlr/internal/InternalSemanticAdaptation.g:1787:4: Decision can match input such as "RULE_ID '.' RULE_ID '->' RULE_ID" using multiple alternatives: 1, 2
+As a result, alternative(s) 2 were disabled for that input
+warning(200): ../be.uantwerpen.ansymo.semanticadaptation.ide/src-gen/be/uantwerpen/ansymo/semanticadaptation/ide/contentassist/antlr/internal/InternalSemanticAdaptation.g:7341:54: Decision can match input such as "RULE_ID '->' RULE_ID" using multiple alternatives: 1, 2
+As a result, alternative(s) 2 were disabled for that input
+52988 [main] INFO  text.xtext.generator.XtextGenerator  - Generating common infrastructure
+53046 [main] INFO  .emf.mwe2.runtime.workflow.Workflow  - Done.
