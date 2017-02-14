@@ -15,8 +15,8 @@ at "./path/to/Window_sa.fmu"
 input ports displacement (rad), speed (rad/s), reaction_force (N)
 output ports disp (m), tau (N.m);
 
-for fmu WindowSA obstacle
-at "./path/to/obstacle.fmu"
+for fmu Obstacle obstacle
+at "./path/to/Obstacle.fmu"
 input ports disp (m),
 output ports reaction_force (m);
 
