@@ -3,7 +3,7 @@ Installation Instructions:
 - Run it, and select "Eclipse DSL Tools" environment.
 - Import all projects in this folder.
 - Right click in be.uantwerpen.ansymo.semanticadaptation/src/be/uantwerpen/ansymo/semanticadaptation/SemanticAdaptation.xtext   and select "run as -> generate xtext artifacts"
-- Check that the log is similar to the one in File "first_generation_sucessful.log".
+- Check that the console log is similar to the one in File "first_generation_sucessful.log".
 
 
 Other tasks:
