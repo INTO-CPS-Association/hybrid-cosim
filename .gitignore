@@ -30,3 +30,6 @@
 /DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation.tests/xtend-gen/be
 /DSL_SemanticAdaptation/be.uantwerpen.ansymo.semanticadaptation.tests/bin/be
 Thumbs.db
+*.class
+*._trace
+*.xtendbin
