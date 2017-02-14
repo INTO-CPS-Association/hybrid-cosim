@@ -12,35 +12,48 @@ Import:
 	'import' module=[SemanticAdaptation];
 	
 Component:
-	FMU | Connection;
+	GlobalFMU | Connection;
 
 Connection:
-	src=[SpecifiedPort] '->' tgt=[SpecifiedPort];
+	src=SpecifiedPort '->' tgt=SpecifiedPort;
 
-FMU:
+GlobalFMU:
 	AtomicFMU | CompositeFMU | Adaptation;
 
+FMU:
+	AtomicFMU | InnerFMU | CompositeFMU | Adaptation;
+
 AtomicFMU:
-	'fmu' name=ID
-	('type' type=ModelType)?
-	('input' 'ports' inports+=Port ("," inports+=Port)*)?
+	'fmu' type=FMUType name=ID
+	//('type' type=ModelType)?
+	'at' path=STRING // to be found here
+	('input' 'ports' inports+=Port ("," inports+=Port)* )?
 	('output' 'ports' outports+=Port ("," outports+=Port)* )?
-	('full' 'internal' 'dependencies')?
+	//('full' 'internal' 'dependencies')? // not needed but extracted from the FMU (at-clause)
 	;
 
+InnerFMU: // slightly different syntax
+	'inner' 'fmu' type=FMUType name=ID
+	('at' path=STRING)? // optional in case of a semantic adaptation, where we still want to specify the ports
+	('with' 'input' 'ports' inports+=Port ("," inports+=Port)* )?
+	('with' 'output' 'ports' outports+=Port ("," outports+=Port)* )?
+	;
+	
 CompositeFMU:
-	'fmu' name=ID
+	'fmu' type=FMUType name=ID
+	'at' path=STRING // to be generated here
 	'composed' 'of' instances+=[FMU] (',' instances+=[FMU])*
 	('input' 'ports' inports+=Port ("," inports+=Port)*)?
 	('output' 'ports' outports+=Port ("," outports+=Port)* )?;
 
 Adaptation:
-	({Adaptation} 'semantic' 'adaptation' name=ID | 
-	{AdaptationWithSpecificMaster} 'semantic' 'adaptation' name=ID 'without' 'master')
-	/*'for' type=ModelType*/ ('for' ('fmu' instances+=[FMU] (',' instances+=[FMU])* /*| 'signal' ports+=[SpecifiedPort] (',' ports+=[SpecifiedPort])**/) )? // only multiple instances in case of CT because we only have CT master?
+	({Adaptation} 'semantic' 'adaptation' (reactiveness=ReactiveOrDelayed)? (machine=MooreOrMealy)? type=FMUType (name=ID)? | // this is a type or a name?
+	{AdaptationWithSpecificMaster} 'semantic' 'adaptation' (reactiveness=ReactiveOrDelayed)? (machine=MooreOrMealy)? type=FMUType (name=ID)? 'without' 'master')
+	'at' path=STRING // to be generated here
+	inner=InnerFMUDeclaration
 	('input' 'ports' inports+=Port ("," inports+=Port)*)? // only in case of instance-specific SA
 	('output' 'ports' outports+=Port ("," outports+=Port)* )? // only in case of instance-specific SA
-	('param' params+=ParamDeclaration)*
+	(params+=ParamDeclaration)*
 //	(globalvars+=Declaration)*
 	// algebraic loop generates an FMU encapsulating the loop
 	// note that the order of semantic adaptations is prefixed in case of a algebraic loop:
@@ -51,6 +64,15 @@ Adaptation:
 	(out=OutRulesBlock)?
 //	('contains' '{' adaptations+=Adaptation+ '}')? // I prefer no structural information here, this belongs to a graphical model
 	;
+
+enum ReactiveOrDelayed:
+	REACTIVE='reactive' | DELAYED='delayed';
+
+enum MooreOrMealy:
+	MOORE='moore' | MEALY='mealy';
+
+FMUType:
+	name=ID; // TODO: maybe better to declare types and 
 	
 ModelType: DE | UT | CT | DT;
 	
@@ -59,12 +81,17 @@ UT: 'UT' | 'ut' | 'Untimed' | 'untimed';
 CT: 'CT' | 'ct' | 'ContinuousTime' | 'Continuous' 'Time' | 'continuous' 'time';
 DT: 'DT' | 'dt' | 'DiscreteTime' | 'Discrete' 'Time' | 'discrete' 'time';
 
+InnerFMUDeclaration:
+	/*'for' type=ModelType*/ {InnerFMUDeclarationList} 'for' ('fmu' instances+=[FMU] (',' instances+=[FMU])* /*| 'signal' ports+=SpecifiedPort (',' ports+=SpecifiedPort)**/) | // only multiple instances in case of CT because we only have CT master?
+	{InnerFMUDeclarationFull} ( 'for' fmus+=InnerFMU )+ (connection+=Connection)*
+;
+
 GeneraleRule:
 	AlgebraicLoopSolution | MultiRate | Derivative;
 
 AlgebraicLoopSolution:
-	{AlgebraicLoopSolutionFixPointIteration} 'successive' 'substitution' 'starts' 'at' signals+=[SpecifiedPort] (('and'|',') signals+=[SpecifiedPort])? 'with' params+=SettingAssignment ('and' params+=SettingAssignment)* | 
-	{AlgebraicLoopSolutionDelayIntroduction} 'delay' 'at' signals+=[SpecifiedPort] (('and'|',') signals+=[SpecifiedPort])?; // TODO: must be in in or out rule
+	{AlgebraicLoopSolutionFixPointIteration} 'successive' 'substitution' 'starts' 'at' signals+=SpecifiedPort (('and'|',') signals+=SpecifiedPort)? 'with' params+=SettingAssignment ('and' params+=SettingAssignment)* | 
+	{AlgebraicLoopSolutionDelayIntroduction} 'delay' 'at' signals+=SpecifiedPort (('and'|',') signals+=SpecifiedPort)?; // TODO: must be in in or out rule
 	
 MultiRate:
 	'multiply' 'rate' rate=INT 'times' ('with' interpolation=Interpolation)?; // default first order interpolation
@@ -90,7 +117,7 @@ OutRulesBlock:
 	{OutRulesBlock} ('out' globalvars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
 
 ControlRuleBlock:
-	/*('control' globalvars+=Declaration)**/ ControlRule; // TODO: multiple rules or just one?
+	('control' globalvars+=Declaration)* rule=ControlRule; // TODO: multiple rules or just one?
 
 DataRule: // condition -> state transition --> output function
 	(((condition=RuleCondition "->" statetransitionfunction=StateTransitionFunction) | ConditionStateTransition | ConditionLessRule) ("-->" outputfunction=OutputFunction)? | AlgebraicLoopSolution) ';';
@@ -128,9 +155,9 @@ ConditionStateTransition:
 	quantization=Quantize;
 
 Quantize returns ConditionStoreStrategy:
-	{FiniteQuantize} 'quantize' '(' signal=[SpecifiedPort] ',' zones+=StringLiteral (',' boundaries+=ArithmeticExpression ',' zones+=StringLiteral)* ')' |
-	{FunctionQuantize} 'quantize' '(' signal=[SpecifiedPort] ',' '=' function=ArithmeticExpression ')' |
-	{LinearQuantize} 'quantize' signal=[SpecifiedPort] 'every' steps=ArithmeticExpression ('with'? 'offset' offset=ArithmeticExpression)?;
+	{FiniteQuantize} 'quantize' '(' signal=SpecifiedPort ',' zones+=StringLiteral (',' boundaries+=ArithmeticExpression ',' zones+=StringLiteral)* ')' |
+	{FunctionQuantize} 'quantize' '(' signal=SpecifiedPort ',' '=' function=ArithmeticExpression ')' |
+	{LinearQuantize} 'quantize' signal=SpecifiedPort 'every' steps=ArithmeticExpression ('with'? 'offset' offset=ArithmeticExpression)?;
 	
 OutputFunction:
 	{NoHold} 'no' 'hold' |
@@ -151,17 +178,14 @@ AnonymousFunction: // has access to ports
 	{FunctionBody} '{' statements+=Statement* returnstatement=ReturnStatement '}' |  // should return something
 	FunctionDeclaration; // TODO: should return something
 	
-/*[SpecifiedPort]: // if ports need owners
-	port=[Port] |
-	{Output[SpecifiedPort]} owner=[FMU] '.' port=[Port] | 
-	{Input[SpecifiedPort]} owner=[FMU] '<-' port=[Port];*/
-SpecifiedPort: Port;
+SpecifiedPort: // if ports need owners
+	(owner=[FMU] '.' )? port=[Port];
 
 Port:
 	// TODO: add initial values to ports (to do 1st, 2nd, ... order stuff)
 	// TODO: add internal destination/source of port
 	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
-	name=ID (':=' initval=LiteralOrArray)? ( multiplicity=Multiplicity )? ( '(' unity=Unity ')' )? ('->' target=[SpecifiedPort] | '-->' dependency+=[SpecifiedPort] (dependency+=[SpecifiedPort])*)?;
+	name=ID (':=' initval=LiteralOrArray)? ( multiplicity=Multiplicity )? ( '(' unity=Unity ')' )? ('->' target=SpecifiedPort | '-->' dependency+=SpecifiedPort (dependency+=SpecifiedPort)*)?;
 	// TODO: -> output port of wrapped FMU to output port of SA FMU (only used in SA!)
 
 Multiplicity:
@@ -202,7 +226,7 @@ Declaration:
 	'var' name=ID (':=' expr=Expression)? ';';
 
 ParamDeclaration:
-	name=ID '=' expr=Expression ';';
+	'param' name=ID ':=' expr=Expression ';';
 
 ReturnStatement:
 	'return' Expression ';';
@@ -260,8 +284,9 @@ CrossesFromAboveExpression returns Expression:
 	BooleanFunction ({CrossesFromAbove.left=current} '<!' right=BooleanFunction)?;
 	
 BooleanFunction returns Expression:
-	{Otherwise} 'otherwise' '(' ref=[SpecifiedPort] ')' |
-	{Otherwise} 'otherwise' ref=[SpecifiedPort] |
+	//{Otherwise} 'otherwise' '(' ref=SpecifiedPort ')' |
+	//{Otherwise} 'otherwise' ref=SpecifiedPort | // AMBIGUOUS!
+	{Otherwise} 'otherwise' |
 	ArithmeticExpression;
 
 ArithmeticExpression returns Expression:

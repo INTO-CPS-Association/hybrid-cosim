@@ -31,12 +31,12 @@ import logging
 
 from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
     STEP_ACCEPT
-«FOR fmu:a.instances.filter(AtomicFMU)»
+«/*FOR fmu:a.inner.instances.filter(AtomicFMU)»
 from case_study.units.ct_based.«fmu.name» import «fmu.name»
 «ENDFOR»
-«FOR i:a.instances.filter(Adaptation)»
+«FOR i:a.inner.instances.filter(Adaptation)»
 NOT YET IMPLEMENTED
-«ENDFOR»
+«ENDFOR*/»
 
 l = logging.getLogger()
 

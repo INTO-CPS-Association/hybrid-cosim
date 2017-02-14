@@ -1,13 +1,12 @@
 import PowerWindowModel
 
-semantic adaptation controller_sa
+semantic adaptation ArmatureCurrentSA armature_current_sa
+at "./path/to/ArmatureCurrentSA.fmu"
 for fmu controller
-input ports armature_current -> obj_detected, passenger_up, passenger_down, driver_up, driver_down, next
-output ports up, down
-triggered by signal == true or t >= get_next_time_step(controller)
+triggered by signal == true
 in rules with crossing absolute tolerance = 1e-8 and relative tolerance = 0.0001, no hold {
 	armature_current >! 5 -> obj_detected := true;
-	otherwise(armature_current) -> obj_detected := false;
+	otherwise -> obj_detected := false;
 }
 out rules with zero order hold {
 	"up" -> up := 1;
@@ -16,17 +15,20 @@ out rules with zero order hold {
 	delay at up and down;
 }
 
-semantic adaptation window_sa
+semantic adaptation WindowSA window_sa
+at "./path/to/WindowSA.fmu"
 for fmu window
 out rules {
 	reaction_torque := -reaction_torque;
 }
 
-semantic adaptation window_obstacle_sa
+semantic adaptation WindowObstacleSA window_obstacle_sa
+at "./path/to/WindowObstacleSA.fmu"
 for fmu window_sa, obstacle
 multiply rate 10 times with first order interpolation
 successive substitution starts at height with absolute tolerance = 1e-8 and relative tolerance = 0.0001
 
-semantic adaptation plant_sa
+semantic adaptation PlantSA plant_sa
+at "./path/to/PlantSA.fmu"
 for fmu power, window_obstacle_sa
 successive substitution starts at reaction_torque with absolute tolerance = 1e-6 and relative tolerance = 1e-6

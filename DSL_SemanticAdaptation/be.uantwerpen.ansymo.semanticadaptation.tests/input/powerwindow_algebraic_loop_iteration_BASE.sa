@@ -2,21 +2,23 @@ import PowerWindowModel
 import Controller_SA
 
 // this one could be joined with the one below, if we assume certain priorities in executing the rules
-semantic adaptation window_sa
+semantic adaptation WindowSA window_sa
+at "./path/to/WindowSA.fmu"
 for fmu window
 out rules {
-	true -> {reaction_torque := -reaction_torque; } --> { };
+	true -> { } --> { reaction_torque := -reaction_torque; };
 }
 
 // algebraic loop
-semantic adaptation power_window_obstacle_sa // without master -> not necessary: custom control rules override master
+semantic adaptation PowerWindowObstacleSA power_window_obstacle_sa // without master -> not necessary: custom control rules override master
+at "./path/to/PowerWindowObstacleSA.fmu"
 for fmu power, window_sa, obstacle
 input ports up, down
 output ports armature_current
 //algebraic loop fix point iteration at reaction_torque and height with absolute tolerance = 1e-8 and relative tolerance = 0.0001
-param MAXITER = 100;
-param REL_TOL = 1e-8;
-param ABS_TOL = 1e-8;
+param MAXITER := 100;
+param REL_TOL := 1e-8;
+param ABS_TOL := 1e-8;
 control {
 	// do_step will always use the last values, do_step does not advance time so will replace the last signal values! 
 	// therefore, we must set the signal at time t+h of reaction_torque and height
@@ -51,13 +53,14 @@ control {
 }
 
 // this is the one for the paper
-semantic adaptation window_obstacle_sa_loop// overrides master -> not necessary: custom control rules override master
+semantic adaptation WindowObstacleSALoop window_obstacle_sa_loop// overrides master -> not necessary: custom control rules override master
+at "./path/to/WindowObstacleSALoop.fmu"
 for fmu window_sa, obstacle
 input ports motor_speed
 output ports reaction_torque
-param MAXITER = 100;
-param REL_TOL = 1e-8;
-param ABS_TOL = 1e-8;
+param MAXITER := 100;
+param REL_TOL := 1e-8;
+param ABS_TOL := 1e-8;
 control {
 	var prev_height; // to compare new value with previous value
 	var window_state;
@@ -76,13 +79,14 @@ control {
 }
 
 // other version without local_step
-semantic adaptation window_obstacle_sa_loop2// overrides master -> not necessary: custom control rules override master
+semantic adaptation WindowObstacleSALoop2 window_obstacle_sa_loop2// overrides master -> not necessary: custom control rules override master
+at "./path/to/WindowObstacleSALoop2.fmu"
 for fmu window_sa, obstacle
 input ports motor_speed
 output ports reaction_torque
-param MAXITER = 100;
-param REL_TOL = 1e-8;
-param ABS_TOL = 1e-8;
+param MAXITER := 100;
+param REL_TOL := 1e-8;
+param ABS_TOL := 1e-8;
 control {
 	var prev_height; // to compare new value with previous value
 	var window_state;

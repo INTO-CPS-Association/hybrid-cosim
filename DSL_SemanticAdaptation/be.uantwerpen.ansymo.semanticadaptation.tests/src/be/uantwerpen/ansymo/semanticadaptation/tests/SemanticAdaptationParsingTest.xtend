@@ -45,6 +45,7 @@ class SemanticAdaptationParsingTest extends AbstractSemanticAdaptationTest{
 	@Test def powerwindow_multi_rate() { __parseNoErrors('input/powerwindow_multi_rate.sa') }
 	@Test def powerwindow_multi_rate_BASE() { __parseNoErrors('input/powerwindow_multi_rate_BASE.sa') }
 	@Test def powerwindow() { __parseNoErrors('input/powerwindow.sa') }
+	@Test def powerwindow_inline() { __parseNoErrors('input/powerwindow_inline.sa') }
 	
 	def __parseNoErrors(String filename) {
 		val root = __parse(filename)
