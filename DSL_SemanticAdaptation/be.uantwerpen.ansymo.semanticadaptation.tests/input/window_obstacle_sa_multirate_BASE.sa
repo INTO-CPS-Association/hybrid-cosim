@@ -1,3 +1,5 @@
+// outdated
+
 semantic adaptation window_obstacle_sa_multirate
 for fmu window_obstacle_sa_loop
 input ports motor_speed
