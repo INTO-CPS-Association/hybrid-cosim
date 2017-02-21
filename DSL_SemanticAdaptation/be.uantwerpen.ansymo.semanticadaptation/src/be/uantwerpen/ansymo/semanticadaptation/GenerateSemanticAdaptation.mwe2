@@ -3,7 +3,7 @@ module be.uantwerpen.ansymo.semanticadaptation.GenerateSemanticAdaptation
 import org.eclipse.xtext.xtext.generator.*
 import org.eclipse.xtext.xtext.generator.model.project.*
 
-var rootPath = ".."
+var rootPath = "."
 
 Workflow {
 	

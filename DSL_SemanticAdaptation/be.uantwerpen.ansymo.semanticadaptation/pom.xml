@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<relativePath>../pom.xml</relativePath>
+		<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>be.uantwerpen.ansymo.semanticadaptation</artifactId>
+	<packaging>eclipse-plugin</packaging>
+
+	<name>be.uantwerpen.ansymo.semanticadaptation Language Core</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>gen-clean</id>
+						<phase>clean</phase>
+						<!-- Clean up generated files in all projects -->
+						<configuration>
+							<filesets combine.children="append">
+								<fileset>
+									<directory>${project.basedir}/src-gen/</directory>
+								</fileset>
+								<fileset>
+									<directory>${project.basedir}/model/generated/</directory>
+								</fileset>
+								<fileset>
+									<directory>${project.basedir}/../${project.artifactId}.ui/src-gen/</directory>
+								</fileset>
+								<fileset>
+									<directory>${project.basedir}/../${project.artifactId}.tests/src-gen/</directory>
+								</fileset>
+							</filesets>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<includeProjectDependencies>false</includeProjectDependencies>
+					<includePluginDependencies>true</includePluginDependencies>
+					<mainClass>org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher</mainClass>
+					<arguments>
+						<argument>file://${project.basedir}/src/be/uantwerpen/ansymo/semanticadaptation/GenerateSemanticAdaptation.mwe2</argument>
+						<argument>
+							-p
+						</argument>
+						<argument>
+							runtimeProject=/${project.basedir}
+						</argument>
+					</arguments>
+				</configuration>
+				<dependencies>
+					<!--dependency>
+						<groupId>org.eclipse.xtext</groupId>
+						<artifactId>org.eclipse.xtext.xtext</artifactId>
+						<version>${xtext.version}</version>
+					</dependency-->
+
+
+
+<dependency>
+<groupId>org.eclipse.xtext</groupId>
+<artifactId>org.eclipse.xtext.generator</artifactId>
+<version>${xtext.version}</version>
+</dependency>
+<dependency>
+<groupId>org.eclipse.xtext</groupId>
+<artifactId>org.eclipse.xtext.ecore</artifactId>
+<version>${xtext.version}</version>
+</dependency>
+<dependency>
+<groupId>org.eclipse.xtext</groupId>
+<artifactId>org.eclipse.xtext.util</artifactId>
+<version>${xtext.version}</version>
+</dependency>
+<dependency>
+<groupId>org.eclipse.xtext</groupId>
+<artifactId>org.eclipse.xtext</artifactId>
+<version>${xtext.version}</version>
+</dependency>
+<dependency>
+<groupId>org.eclipse.xtext</groupId>
+<artifactId>org.eclipse.xtext.common.types</artifactId>
+<version>${xtext.version}</version>
+</dependency>
+
+<!-- https://mvnrepository.com/artifact/org.eclipse.emf/org.eclipse.emf.mwe2.launch -->
+<dependency>
+    <groupId>org.eclipse.emf</groupId>
+    <artifactId>org.eclipse.emf.mwe2.launch</artifactId>
+    <version>2.9.0.201605261059</version>
+</dependency>
+
+
+
+					<dependency>
+						<groupId>org.eclipse.xtext</groupId>
+						<artifactId>org.eclipse.xtext.xbase</artifactId>
+						<version>${xtext.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.eclipse.equinox</groupId>
+						<artifactId>common</artifactId>
+						<version>3.6.200-v20130402-1505</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.xtend</groupId>
+				<artifactId>xtend-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											exec-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.2.1,)
+										</versionRange>
+										<goals>
+											<goal>java</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
