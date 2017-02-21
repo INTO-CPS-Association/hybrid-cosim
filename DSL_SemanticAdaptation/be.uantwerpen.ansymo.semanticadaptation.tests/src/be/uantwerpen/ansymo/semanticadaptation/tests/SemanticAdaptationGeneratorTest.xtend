@@ -12,7 +12,7 @@ import org.eclipse.xtext.junit4.XtextRunner
 import java.io.File
 
 @RunWith(XtextRunner)
-@InjectWith(SemanticAdaptationInjectorProvider)
+@org.eclipse.xtext.testing.InjectWith(SemanticAdaptationInjectorProvider)
 class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	
 	@Inject extension CompilationTestHelper

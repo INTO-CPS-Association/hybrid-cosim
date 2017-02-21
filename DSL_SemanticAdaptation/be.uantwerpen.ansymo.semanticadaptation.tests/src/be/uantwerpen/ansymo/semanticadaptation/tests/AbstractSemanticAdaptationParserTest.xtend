@@ -11,7 +11,7 @@ import org.eclipse.xtext.junit4.util.ParseHelper
 import org.junit.runner.RunWith
 
 @RunWith(XtextRunner)
-@InjectWith(SemanticAdaptationInjectorProvider)
+@org.eclipse.xtext.testing.InjectWith(SemanticAdaptationInjectorProvider)
 abstract class AbstractSemanticAdaptationParserTest extends AbstractSemanticAdaptationTest {
 
 	@Inject extension ParseHelper<SemanticAdaptation>
