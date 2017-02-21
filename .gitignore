@@ -21,7 +21,9 @@ Thumbs.db
 *.jar
 
 .classpath
+.project
 .metadata
+.settings
 
 ##
 bin/
