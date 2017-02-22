@@ -18,6 +18,7 @@ import org.junit.runner.RunWith
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.CppGenerator
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.emf.ecore.resource.ResourceSet
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -37,10 +38,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val IGeneratorContext ctxt = null;
 		new CppGenerator().doGenerate(model.eResource, fsa, ctxt)
 
-		// println(fsa.textFiles)
-///println('Hello World!')
 		System.out.println(fsa.allFiles)
-	// cppGen.doGenerate(root,null,null);
 	}
 
 	def __parseNoErrorsPrint(String filename) {
@@ -50,11 +48,15 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	}
 
 	def __parse(String filename) {
-		val model = readFile('input/powerwindow_controller_delay.sa').parse
-		val controller = readFile('input/powerwindow_model_only.sa').parse(model.eResource.resourceSet)
-		val algebraicloop = readFile('input/powerwindow_algebraic_loop_delay.sa').parse(
-			controller.eResource.resourceSet)
-		return readFile(filename).parse(algebraicloop.eResource.resourceSet)
+		val model = readFile(filename).parse
+
+		return __parse('input/powerwindow_algebraic_loop_delay.sa',
+			__parse('input/powerwindow_controller_delay.sa', model.eResource.resourceSet).eResource.resourceSet)
+	}
+
+	def __parse(String filename, ResourceSet resourceSetToUse) {
+
+		return readFile(filename).parse(resourceSetToUse)
 	}
 
 	def __assertNoParseErrors(EObject root, String filename) {
