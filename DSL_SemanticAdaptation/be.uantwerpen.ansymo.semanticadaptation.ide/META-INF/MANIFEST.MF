@@ -7,7 +7,8 @@ Bundle-SymbolicName: be.uantwerpen.ansymo.semanticadaptation.ide; singleton:=tru
 Bundle-ActivationPolicy: lazy
 Require-Bundle: be.uantwerpen.ansymo.semanticadaptation,
  org.eclipse.xtext.ide,
- org.eclipse.xtext.xbase.ide
+ org.eclipse.xtext.xbase.ide,
+ org.antlr.runtime
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: be.uantwerpen.ansymo.semanticadaptation.ide.contentassist.antlr.internal,
  be.uantwerpen.ansymo.semanticadaptation.ide.contentassist.antlr
