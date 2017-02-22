@@ -15,6 +15,8 @@
 		<module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp</module>
+	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests</module>
 		<!--module>../my.mavenized.herolanguage.ui</module>
 				<module>../my.mavenized.herolanguage.tests</module>
 				<module>../my.mavenized.herolanguage.sdk</module>
@@ -26,7 +28,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<xtext.version>2.11.0</xtext.version>
 
- <main.basedir>${project.basedir}</main.basedir>
+		<main.basedir>${project.basedir}</main.basedir>
 	</properties>
 
 	<repositories>
@@ -44,73 +46,89 @@
 
 
 		<!--repository>
-      <id>mvn</id>
-      <url>http://mvnrepository.com/artifact</url>
-    </repository-->
+				<id>mvn</id>
+				<url>http://mvnrepository.com/artifact</url>
+			</repository-->
 
-	</repositories>
-	<build>
-		<pluginManagement>
+		</repositories>
+		<build>
+			<pluginManagement>
+				<plugins>
+
+					<!-- Configure the compiler for all Overture Projects -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>3.5.1</version>
+						<configuration>
+							<source>1.8</source>
+							<target>1.8</target>
+						</configuration>
+					</plugin>
+
+
+
+
+
+					<!-- xtend-maven-plugin is in pluginManagement instead of in plugins 
+							 so that it doesn't run before the exec-maven-plugin's *.mwe2 gen; this way 
+							 we can list it after. -->
+
+					<plugin>
+						<groupId>org.eclipse.xtend</groupId>
+						<artifactId>xtend-maven-plugin</artifactId>
+						<version>${xtext.version}</version>
+						<executions>
+							<execution>
+								<goals>
+									<goal>compile</goal>
+									<goal>xtend-install-debug-info</goal>
+									<goal>testCompile</goal>
+									<goal>xtend-test-install-debug-info</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+
+							<xtendAsPrimaryDebugSource>true</xtendAsPrimaryDebugSource>
+							<!--outputDirectory>${project.build.directory}/xtend-gen/main</outputDirectory-->
+							<testOutputDirectory>${project.build.directory}/xtend-gen/test</testOutputDirectory>
+							<writeTraceFiles>true</writeTraceFiles>
+
+
+							<outputDirectory>xtend-gen</outputDirectory>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-clean-plugin</artifactId>
+						<version>2.5</version>
+						<executions>
+							<execution>
+								<id>gen-clean</id>
+								<goals>
+									<goal>clean</goal>
+								</goals>
+								<configuration>
+									<filesets>
+										<fileset>
+											<directory>${basedir}/xtend-gen</directory>
+										</fileset>
+									</filesets>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</pluginManagement>
+
 			<plugins>
-				<!-- xtend-maven-plugin is in pluginManagement instead of in plugins 
-						 so that it doesn't run before the exec-maven-plugin's *.mwe2 gen; this way 
-						 we can list it after. -->
-
 				<plugin>
-					<groupId>org.eclipse.xtend</groupId>
-					<artifactId>xtend-maven-plugin</artifactId>
-					<version>${xtext.version}</version>
-					<executions>
-						<execution>
-							<goals>
-								<goal>compile</goal>
-								<goal>xtend-install-debug-info</goal>
-								<goal>testCompile</goal>
-								<goal>xtend-test-install-debug-info</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-
-						<xtendAsPrimaryDebugSource>true</xtendAsPrimaryDebugSource>
-            <!--outputDirectory>${project.build.directory}/xtend-gen/main</outputDirectory-->
-            <testOutputDirectory>${project.build.directory}/xtend-gen/test</testOutputDirectory>
-            <writeTraceFiles>true</writeTraceFiles>
-
-
-						<outputDirectory>xtend-gen</outputDirectory>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-clean-plugin</artifactId>
-					<version>2.5</version>
-					<executions>
-						<execution>
-							<id>gen-clean</id>
-							<goals>
-								<goal>clean</goal>
-							</goals>
-							<configuration>
-								<filesets>
-									<fileset>
-										<directory>${basedir}/xtend-gen</directory>
-									</fileset>
-								</filesets>
-							</configuration>
-						</execution>
-					</executions>
+					<groupId>org.eclipse.tycho</groupId>
+					<artifactId>tycho-maven-plugin</artifactId>
+					<version>${tycho-version}</version>
+					<extensions>true</extensions>
 				</plugin>
 			</plugins>
-		</pluginManagement>
-
-		<plugins>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-maven-plugin</artifactId>
-				<version>${tycho-version}</version>
-				<extensions>true</extensions>
-			</plugin>
-		</plugins>
-	</build>
-</project>
+		</build>
+	</project>
