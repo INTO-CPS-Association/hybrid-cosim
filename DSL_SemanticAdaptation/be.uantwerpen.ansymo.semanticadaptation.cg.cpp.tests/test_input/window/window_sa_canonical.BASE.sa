@@ -1,0 +1,69 @@
+module Window_SA
+
+semantic adaptation reactive mealy window_sa
+
+at "./path/to/Window.fmu"
+for fmu Window window
+input ports displacement (rad), speed (rad/s), reaction_force (N)
+
+
+/*
+In the originial version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.
+In the canonical version, the input and output ports are all declared explicitly, and their bindings are implemented in the in/out rules.
+*/
+
+input ports 	reaction_force,
+				displacement,
+				speed;
+
+output ports	disp;
+				tau;
+
+in var 	stored_windowsa_reaction_force,
+		stored_windowsa_displacement,
+		stored_windowsa_speed;
+
+out var stored_window_reaction_torque,
+		stored_window_height;
+
+in rules {
+	true -> {
+		/*
+		is_set checks whether the input value is given in the setValues call of the adapted FMU.
+		Notice that in the canonical version, all ports are prefixed.
+		*/
+		if (is_set(window_sa.reaction_force))
+			stored_windowsa_reaction_force := window_sa.reaction_force;
+	} --> {
+		window.reaction_force := stored_windowsa_reaction_force;
+	};
+    true -> {
+		if (is_set(window_sa.displacement))
+			stored_windowsa_displacement := window_sa.displacement;
+	} --> {
+		window.displacement := stored_windowsa_displacement; 
+	};
+    true -> {
+		if (is_set(window_sa.speed))
+			stored_windowsa_speed := window_sa.speed;
+	} --> {
+		window.speed := stored_windowsa_speed;
+	};
+}
+
+control rules {
+	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
+}
+
+out rules {
+	true => {
+		stored_window_reaction_torque := window.reaction_torque;
+	} -> {
+		window_sa.tau := - stored_window_reaction_torque;
+	}
+	true => {
+		stored_window_height := window.height;
+	} -> {
+		window_sa.disp := stored_window_height * 100;
+	}
+}
