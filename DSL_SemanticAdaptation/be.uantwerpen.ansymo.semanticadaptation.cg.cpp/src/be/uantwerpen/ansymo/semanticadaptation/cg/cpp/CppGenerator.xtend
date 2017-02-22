@@ -10,7 +10,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AtomicFMU
 class CppGenerator extends SemanticAdaptationGenerator {
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 
-		for (type : resource.allContents.filter(typeof(SemanticAdaptation)).toIterable)
+		for (type : resource.resourceSet.allContents.filter(typeof(SemanticAdaptation)).toIterable)
 			fsa.generateFile(type.name + ".cpp", '''
 				«FOR state : type.elements.filter(AtomicFMU)»
 					«state.name» = «state.path»
