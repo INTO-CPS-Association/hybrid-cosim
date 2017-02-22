@@ -20,7 +20,7 @@ node {
         sh "mvn package -f DSL_SemanticAdaptation/pom.xml"
         step([$class: 'ArtifactArchiver', artifacts: '**/target/*.jar', fingerprint: true])
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-        step([$class: 'JacocoPublisher')
+        step([$class: 'JacocoPublisher'])
 
         step([$class: 'TasksPublisher', canComputeNew: false, defaultEncoding: '', excludePattern: '', healthy: '', high: 'FIXME', ignoreCase: true, low: '', normal: 'TODO', pattern: '', unHealthy: ''])
       }}
