@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
@@ -8,19 +8,21 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+
+	<!-- the mavenization is based on this approach https://github.com/xtext/maven-xtext-example -->
 	<modules>
 		<module>be.uantwerpen.ansymo.semanticadaptation</module>
- <module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
-<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
-<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
 		<!--module>../my.mavenized.herolanguage.ui</module>
-		<module>../my.mavenized.herolanguage.tests</module>
-		<module>../my.mavenized.herolanguage.sdk</module>
-		<module>../my.mavenized.herolanguage.updatesite</module-->
+				<module>../my.mavenized.herolanguage.tests</module>
+				<module>../my.mavenized.herolanguage.sdk</module>
+				<module>../my.mavenized.herolanguage.updatesite</module-->
 	</modules>
 
 	<properties>
-		<tycho-version>0.24.0</tycho-version>
+		<tycho-version>1.0.0</tycho-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<xtext.version>2.11.0</xtext.version>
 	</properties>
@@ -35,22 +37,22 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 			<id>Xtext Update Site</id>
 			<layout>p2</layout>
 			<!--url>http://download.eclipse.org/modeling/tmf/xtext/updates/composite/releases/</url-->
-<url>http://download.eclipse.org/modeling/tmf/xtext/updates/releases/${xtext.version}/</url>
+			<url>http://download.eclipse.org/modeling/tmf/xtext/updates/releases/${xtext.version}/</url>
 		</repository>
 
 
- <repository>
+		<!--repository>
       <id>mvn</id>
       <url>http://mvnrepository.com/artifact</url>
-    </repository>
+    </repository-->
 
 	</repositories>
 	<build>
 		<pluginManagement>
 			<plugins>
 				<!-- xtend-maven-plugin is in pluginManagement instead of in plugins 
-					so that it doesn't run before the exec-maven-plugin's *.mwe2 gen; this way 
-					we can list it after. -->
+						 so that it doesn't run before the exec-maven-plugin's *.mwe2 gen; this way 
+						 we can list it after. -->
 
 				<plugin>
 					<groupId>org.eclipse.xtend</groupId>
@@ -67,6 +69,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xs
 						</execution>
 					</executions>
 					<configuration>
+
+						<xtendAsPrimaryDebugSource>true</xtendAsPrimaryDebugSource>
+            <!--outputDirectory>${project.build.directory}/xtend-gen/main</outputDirectory-->
+            <testOutputDirectory>${project.build.directory}/xtend-gen/test</testOutputDirectory>
+            <writeTraceFiles>true</writeTraceFiles>
+
+
 						<outputDirectory>xtend-gen</outputDirectory>
 					</configuration>
 				</plugin>

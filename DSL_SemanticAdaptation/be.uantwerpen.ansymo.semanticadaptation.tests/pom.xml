@@ -14,6 +14,8 @@
 
 	<name>be.uantwerpen.ansymo.semanticadaptation Language Tests</name>
 
+
+
 	<build>
 		<plugins>
 			<plugin>
@@ -30,13 +32,19 @@
 				<groupId>org.eclipse.xtend</groupId>
 				<artifactId>xtend-maven-plugin</artifactId>
 			</plugin>
+
+
 			<plugin>
+				<!-- Remember that these tests only run in integration so between package and install http://www.vogella.com/tutorials/EclipseTycho/article.html -->
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-surefire-plugin</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
 					<useUIHarness>false</useUIHarness>
 					<useUIThread>false</useUIThread>
+					<includes>
+            <include>**/SemanticAdaptationParsingTest.class</include>
+          </includes>
 				</configuration>
 			</plugin>
 		</plugins>
