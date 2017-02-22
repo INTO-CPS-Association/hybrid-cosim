@@ -10,7 +10,7 @@ node {
       withMaven(mavenLocalRepo: '.repository', mavenSettingsFilePath: "${env.MVN_SETTINGS_PATH}") {
 
         // Run the maven build
-        sh "mvn clean -PWith-IDE -Dtycho.mode=maven -fn -f DSL_SemanticAdaptation/pom.xml"
+        sh "mvn clean -Dtycho.mode=maven -fn -f DSL_SemanticAdaptation/pom.xml"
       }}
 
     stage ('Package install'){
@@ -34,11 +34,11 @@ node {
 
 
       // Notify on build failure using the Email-ext plugin
-      //      emailext(body: '${DEFAULT_CONTENT}', mimeType: 'text/html',
-      //               replyTo: '$DEFAULT_REPLYTO', subject: '${DEFAULT_SUBJECT}',
-      //               to: emailextrecipients([[$class: 'CulpritsRecipientProvider'],
-      //                                       [$class: 'RequesterRecipientProvider']]))
-      //    }}
+            emailext(body: '${DEFAULT_CONTENT}', mimeType: 'text/html',
+                     replyTo: '$DEFAULT_REPLYTO', subject: '${DEFAULT_SUBJECT}',
+                     to: emailextrecipients([[$class: 'CulpritsRecipientProvider'],
+                                             [$class: 'RequesterRecipientProvider']]))
+          }}
     }
   }
 }
