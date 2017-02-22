@@ -1,5 +1,3 @@
-import PowerWindowModel
-
 module Window_SA
 
 semantic adaptation mealy reactive Window_sa
