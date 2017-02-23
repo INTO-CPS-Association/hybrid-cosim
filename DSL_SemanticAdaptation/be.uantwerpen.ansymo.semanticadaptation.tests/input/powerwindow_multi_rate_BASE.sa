@@ -19,12 +19,12 @@ input ports motor_speed
 output ports reaction_torque
 param init_motor_speed := 0;
 control {
-	var h := H/10;
+	var h_ := H/10;
 	var proposed_h := H;
 	for (var iter in 0 .. 10) {
-		var returned_h := do_step(window_obstacle_sa_loop, h);
-		if (returned_h != h) { // for backtracking
-			 proposed_h := iter*h + returned_h;
+		var returned_h := do_step(window_obstacle_sa_loop, t, h_);
+		if (returned_h != h_) { // for backtracking
+			 proposed_h := iter*h_ + returned_h;
 		}
 	}
 	return proposed_h;

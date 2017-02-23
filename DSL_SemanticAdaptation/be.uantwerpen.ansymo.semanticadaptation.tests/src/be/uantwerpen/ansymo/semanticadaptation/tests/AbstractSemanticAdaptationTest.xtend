@@ -20,7 +20,7 @@ import java.io.File
 import org.eclipse.emf.ecore.resource.ResourceSet
 
 @RunWith(XtextRunner)
-@org.eclipse.xtext.testing.InjectWith(SemanticAdaptationInjectorProvider)
+@InjectWith(SemanticAdaptationInjectorProvider)
 abstract class AbstractSemanticAdaptationTest {
 	
 	ArrayList<Integer> visited = new ArrayList<Integer>

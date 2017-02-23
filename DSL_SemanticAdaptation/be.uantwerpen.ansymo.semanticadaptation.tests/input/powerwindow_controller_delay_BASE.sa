@@ -16,7 +16,7 @@ param init_down := 0;
 control { // overwriting master! What to do in case of roll back? How to reuse generic algorithm
 	var step_size; // may be used to determine roll-back
 	if (signal == true or t >= internal_transition) {
-		step_size := do_step(controller, e+H); // do a step, then decide next internal transition
+		step_size := do_step(controller, t, e+H); // do a step, then decide next internal transition
 	}
 	return step_size;
 }

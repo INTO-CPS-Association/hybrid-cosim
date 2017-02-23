@@ -83,7 +83,7 @@ DT: 'DT' | 'dt' | 'DiscreteTime' | 'Discrete' 'Time' | 'discrete' 'time';
 
 InnerFMUDeclaration:
 	/*'for' type=ModelType*/ {InnerFMUDeclarationList} 'for' ('fmu' instances+=[FMU] (',' instances+=[FMU])* /*| 'signal' ports+=SpecifiedPort (',' ports+=SpecifiedPort)**/) | // only multiple instances in case of CT because we only have CT master?
-	{InnerFMUDeclarationFull} ( 'for' fmus+=InnerFMU )+ (connection+=Connection)*
+	{InnerFMUDeclarationFull} ( 'for' fmus+=InnerFMU )+ ('with' connection+=Connection)*
 ;
 
 GeneraleRule:
@@ -185,7 +185,13 @@ Port:
 	// TODO: add initial values to ports (to do 1st, 2nd, ... order stuff)
 	// TODO: add internal destination/source of port
 	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
-	name=ID (':=' initval=LiteralOrArray)? ( multiplicity=Multiplicity )? ( '(' unity=Unity ')' )? ('->' target=SpecifiedPort | '-->' dependency+=SpecifiedPort (dependency+=SpecifiedPort)*)?;
+	name=ID 
+	(':=' initval=LiteralOrArray)? 
+	( multiplicity=Multiplicity )? 
+	( '(' unity=Unity ')' )? 
+	(('->' targetdependency+=SpecifiedPort)
+		| ('<-' sourcedependency+=SpecifiedPort)
+	)?;
 	// TODO: -> output port of wrapped FMU to output port of SA FMU (only used in SA!)
 
 Multiplicity:
@@ -237,11 +243,11 @@ BreakStatement:
 DeclaredParameter:
 	name=ID;
 	
-AbstractDeclaration: // can contain overlapping elements as long as it is only used as reference
-	Port | ParamDeclaration | Declaration | DeclaredParameter | FunctionDeclaration;
+//AbstractDeclaration: // can contain overlapping elements as long as it is only used as reference
+//	Port | ParamDeclaration | Declaration | DeclaredParameter | FunctionDeclaration;
 
 LValueDeclaration: // can contain overlapping elements as long as it is only used as reference
-	Port | ParamDeclaration | Declaration | DeclaredParameter; // TODO: fmu.port
+	Port | ParamDeclaration | Declaration | DeclaredParameter;
 
 Assignment:
 	lvalue=Variable ':=' expr=Expression; // TODO: to what can be assigned? only local vars?
@@ -343,23 +349,24 @@ BuiltinFunction:
 	{Min} name='min' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
 	{Abs} name='abs' '(' args=ArithmeticExpression ')' |
 	{Close} name='is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |  // a, b, relative tolerance, absolute tolerance 
-	{IsSet} name='is_set' '(' args=Variable ')' | 
-	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' H=ArithmeticExpression ')' |
-	{GetState} name='get_state' '(' fmu=[FMU] ')' |
+	{IsSet} name='is_set' '(' args=Var ')' | 
+//	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ',' h=ArithmeticExpression ')' |
 	{GetNextInternalTimeStep} name='get_next_time_step' '(' fmu=[FMU] ')' | // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
-	{Elapsed} name='elapsed' '(' fmu=[FMU] ')';
+	{Elapsed} name='elapsed' '(' fmu=[FMU] ')' |
+	{LastExecutionTime} name='last_execution_time' '(' fmu=[FMU] ')';
 	
 Procedure:
-	{Reject} name='reject' |
-	{Step} name='local_step' '(' fmu=[FMU] ')' |
-	{Discard} name='discard' '(' args=Variable ')' |
-	{DoStep} name='do_step' '(' fmu=[FMU] ',' H=ArithmeticExpression ')' |
-	{SetState} name='set_state' '(' fmu=[FMU] ',' state=Var ')'; // arg: new proposed step size
+	{Rollback} name='rollback' '(' fmu=[FMU] ')' |
+	{DoStep} name='do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ','  h=ArithmeticExpression ')' |
+	{Discard} name='discard' '(' args=Var ')' |
+	{SaveState} name='save_state' '(' fmu=[FMU] ')';
 	
 Var:
-	{StepSize} name='H' | 
-	{CurrentTime} name='t' |
-	{ElapsedTime} name='e' | // min (elapsed(fmu1), elapsed(fmu2), ...)
+	{StepSize} name='H' | // available in ctrl
+	{StepSize} name='h' | // available in mapin/mapout
+	{CurrentTime} name='t' | // available in ctrl
+	{PassedTime} name='dt' | // available in mapin/mapout
+	{ElapsedTime} name='e' | // available in ctrl
 	{Max} name='MAX' |
 	{GenericSignal} name='signal' ('[' (
 		index=NOW | 
@@ -371,7 +378,7 @@ Var:
 	FunctionCall; // add "directionalderivative"
 	
 Variable:
-	ref=[LValueDeclaration] ('[' (
+	(owner=[FMU] '.' ref=[Port]) | (ref=[LValueDeclaration]) ('[' (
 		index=NOW | 
 		index=PREV | 
 		index=INTTYPE |
