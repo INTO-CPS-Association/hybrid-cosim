@@ -36,19 +36,13 @@ in rules {
 		*/
 		if (is_set(window_sa.reaction_force))
 			stored_windowsa_reaction_force := window_sa.reaction_force;
-	} --> {
-		window.reaction_force := stored_windowsa_reaction_force;
-	};
-    true -> {
 		if (is_set(window_sa.displacement))
 			stored_windowsa_displacement := window_sa.displacement;
-	} --> {
-		window.displacement := stored_windowsa_displacement; 
-	};
-    true -> {
 		if (is_set(window_sa.speed))
 			stored_windowsa_speed := window_sa.speed;
 	} --> {
+		window.reaction_force := stored_windowsa_reaction_force;
+		window.displacement := stored_windowsa_displacement; 
 		window.speed := stored_windowsa_speed;
 	};
 }
@@ -60,12 +54,9 @@ control rules {
 out rules {
 	true => {
 		stored_window_reaction_torque := window.reaction_torque;
-	} -> {
-		window_sa.tau := - stored_window_reaction_torque;
-	}
-	true => {
 		stored_window_height := window.height;
 	} -> {
+		window_sa.tau := - stored_window_reaction_torque;
 		window_sa.disp := stored_window_height * 100;
 	}
 }
