@@ -11,8 +11,7 @@ output ports up, down, stop
 Added support for simple wildcars in the input ports.
 According to Casper and Kenneth, some FMUs have thousands of ports...
 */
-input ports obj_detected,
-			armature_current, 
+input ports armature_current -> obj_detected, 
 			passenger_*, // These are not supported for now.
 			driver_*; // These are not supported for now.
 
