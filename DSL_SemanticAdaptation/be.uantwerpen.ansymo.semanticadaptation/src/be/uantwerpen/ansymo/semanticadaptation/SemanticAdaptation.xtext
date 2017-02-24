@@ -229,10 +229,21 @@ FunctionDeclaration:
 	'{' statements+=Statement* returnstatement=ReturnStatement '}';
 
 Declaration:
-	'var' name=ID (':=' expr=Expression)? ';';
+//	'var' name=ID (':=' expr=Expression)? ';';
+	'var' declarations+=SingleVarDeclaration ("," declarations+=SingleVarDeclaration)* ';'
+;
+SingleVarDeclaration:
+	name=ID (':=' expr=Expression)?
+;
 
 ParamDeclaration:
-	'param' name=ID ':=' expr=Expression ';';
+	//'param' name=ID ':=' expr=Expression ';';
+	'param' declarations+=SingleParamDeclaration ("," declarations+=SingleParamDeclaration)* ';'
+;
+
+SingleParamDeclaration:
+	name=ID ':=' expr=Expression ';'
+;
 
 ReturnStatement:
 	'return' Expression ';';
@@ -247,7 +258,7 @@ DeclaredParameter:
 //	Port | ParamDeclaration | Declaration | DeclaredParameter | FunctionDeclaration;
 
 LValueDeclaration: // can contain overlapping elements as long as it is only used as reference
-	Port | ParamDeclaration | Declaration | DeclaredParameter;
+	Port | SingleParamDeclaration | SingleVarDeclaration | DeclaredParameter;
 
 Assignment:
 	lvalue=Variable ':=' expr=Expression; // TODO: to what can be assigned? only local vars?

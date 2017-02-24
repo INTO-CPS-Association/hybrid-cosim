@@ -4,7 +4,7 @@ import Controller_SA
 // this one could be joined with the one below, if we assume certain priorities in executing the rules
 semantic adaptation WindowSA window_sa
 at "./path/to/WindowSA.fmu"
-for fmu window
+for fmu Window window
 out rules {
 	true -> { } --> { reaction_torque := -reaction_torque; };
 }
