@@ -111,13 +111,13 @@ InOutRules:
 	InRulesBlock | OutRulesBlock;
 
 InRulesBlock:
-	{InRulesBlock} ('in' globalvars+=Declaration)* 'in' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
+	{InRulesBlock} ('in' globalInVars+=Declaration)* 'in' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
 
 OutRulesBlock:
-	{OutRulesBlock} ('out' globalvars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
+	{OutRulesBlock} ('out' globalOutVars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
 
 ControlRuleBlock:
-	('control' globalvars+=Declaration)* rule=ControlRule; // TODO: multiple rules or just one?
+	('ctrl' globalCtrlVars+=Declaration)* rule=ControlRule; // TODO: multiple rules or just one?
 
 DataRule: // condition -> state transition --> output function
 	(((condition=RuleCondition "->" statetransitionfunction=StateTransitionFunction) | ConditionStateTransition | ConditionLessRule) ("-->" outputfunction=OutputFunction)? | AlgebraicLoopSolution) ';';
@@ -242,7 +242,7 @@ ParamDeclaration:
 ;
 
 SingleParamDeclaration:
-	name=ID ':=' expr=Expression ';'
+	name=ID ':=' expr=Expression
 ;
 
 ReturnStatement:

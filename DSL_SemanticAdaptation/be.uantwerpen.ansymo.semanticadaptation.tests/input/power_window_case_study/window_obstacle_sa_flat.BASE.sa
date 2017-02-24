@@ -1,0 +1,108 @@
+module WindowObstacleLoop_SA
+
+semantic adaptation reactive mealy WindowObstableLoopSA adaptedFMU
+at "./path/to/WindowObstableLoopSA.fmu"
+
+	for inner fmu WindowSA window_sa
+		at "./path/to/WindowSA.fmu"
+		with input ports displacement (rad), speed (rad/s), reaction_force (N)
+		with output ports disp (m), tau (N.m)
+	
+	for inner fmu Obstacle obstacle
+		at "./path/to/Obstacle.fmu"
+		with input ports disp (m)
+		with output ports reaction_force (m)
+	
+	/*
+	This is the information that was missing before: how the semantic adaptation window_sa, which is an FMU, connects to the obstacle FMU.
+	*/
+	with window_sa.disp -> obstacle.disp
+	with obstacle.reaction_force -> window_sa.reaction_force
+
+/*
+Declares the external ports of the semantic adaptation
+Notice that window_sa.displacement is a dangling input port, so an extra input port will exist in the adapted FMU.
+*/
+input ports speed
+output ports tau 
+
+param 	RATE := 10, 
+		MAXITER := 10, 
+		REL_TOL := 1e-05, 
+		ABS_TOL := 1e-05;
+
+ctrl var previous_speed := 0, future_speed := 0;
+control {
+	var inner_dt := H/RATE;
+	/*
+	The two instructions below need to be made, because previously they were made in the sa_in block, but multiple calls to the sa_in block would make them fail.
+	*/
+	previous_speed := future_speed;
+	future_speed := current_speed; // you cannot access input ports of the adapted FMU here.
+	
+	for (var iter in 0 .. RATE) { // multi-rate loop
+		var prev_disp := window_sa.disp;
+		var inner_time := t;
+		for (var iter in 0 .. MAXITER) {
+			save_state(obstacle);
+			save_state(window_sa);
+			do_step(obstacle,inner_time,inner_dt);
+			do_step(window_sa,inner_time,inner_dt);
+			
+			if (is_close(prev_disp, disp, REL_TOL, ABS_TOL)) {
+				break;
+			} else {
+				prev_disp := disp;
+				rollback(obstacle);
+				rollback(window_sa);
+			}
+			
+			/*
+			The above block of statements is equivalent to the following:
+			var obstacle_state := getState(obstacle)
+			var window_sa_state := getState(window_sa)
+			
+			obstacle.set("height", height)
+			obstacle.doStep(inner_time,h)
+			reaction_force := obstacle.get("reaction_force")
+			window_sa.set("reaction_force", reaction_force)
+			window_sa.doStep(inner_time,h)
+			height := window_sa.get("height")
+			if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
+				// The commits don't do anything, as far as I see. But they serve an analysis which ensures that states are correctly obtained and restored.
+				break;
+			} else {
+				prev_height := height;
+				obstacle.setState(obstacle_state);
+				window_sa.setState(window_sa_state);
+			}
+			*/
+		}
+		inner_time := t + inner_dt;	
+	}
+	return H;
+}
+
+in var current_speed := 0;
+in rules {
+	true -> {
+		/*
+		These instructions would violate the principle that multiple calls to setValues can be made:
+		previous_speed := future_speed;
+		future_speed := speed;
+		Upon execution, this block must call setValues of the original FMUs (window_sa and obstacle).
+		The correct thing then is to execute the next block and then do the setValues of the original FMUs.
+		*/
+		current_speed := speed;
+	} --> {
+		/*
+		This block will be called whenever any of the input ports that are unconnected in the original FMUs is read, in the control rules block.
+		The following variables are available in this block:
+			dt - In the control rules block, (t + dt) is the time that will be passed to the doStep function of the inner FMU. In the control rules block, this can be computed by doing dt := inner_time - t.
+			h - this is the communication step size that will be sent to the inner FMU.
+		
+		*/
+		window_sa.speed := previous_speed + (future_speed - previous_speed)*dt;
+	};
+}
+

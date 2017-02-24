@@ -35,6 +35,7 @@ class SemanticAdaptationParsingTest extends AbstractSemanticAdaptationTest{
 //		print_ast(root)
 //	}
 
+	@Test def power_window__window_obstacle_sa_flat() { __parseNoErrors('input/power_window_case_study/window_obstacle_sa_flat.BASE.sa') }
 	@Test def power_window__window_sa() { __parseNoErrors('input/power_window_case_study/window_sa.BASE.sa') }
 	@Test def power_window__window_sa_canonical() { __parseNoErrors('input/power_window_case_study/window_sa_canonical.BASE.sa') }
 	@Ignore @Test def powerwindow_model_only() { __parseNoErrors('input/powerwindow_model_only.sa') }

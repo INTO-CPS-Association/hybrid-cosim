@@ -61,7 +61,7 @@ out rules {
 		stored_window_height := window.height;
 	} --> {
 		windowSA.tau := - stored_window_reaction_torque;
-		windowSA.disp := stored_window_height * 100;
+		windowSA.disp := stored_window_height / 100;
 	};
 }
 
