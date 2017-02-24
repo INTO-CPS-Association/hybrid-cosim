@@ -3,17 +3,16 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.tests
 
-import org.eclipse.xtext.junit4.InjectWith
-import org.eclipse.xtext.junit4.XtextRunner
-import org.junit.Assert
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import com.google.inject.Inject
+import java.util.regex.Pattern
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.xtext.testing.InjectWith
+import org.eclipse.xtext.testing.XtextRunner
+import org.eclipse.xtext.testing.util.ParseHelper
+import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.eclipse.xtext.junit4.util.ParseHelper
-import com.google.inject.Inject
-import org.eclipse.xtext.junit4.validation.ValidationTestHelper
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.*
-import org.eclipse.emf.ecore.EObject
-import java.util.regex.Pattern
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)

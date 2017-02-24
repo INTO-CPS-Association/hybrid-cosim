@@ -3,21 +3,19 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.tests
 
-import org.eclipse.xtext.junit4.InjectWith
-import org.eclipse.xtext.junit4.XtextRunner
-import org.junit.runner.RunWith
+import java.io.File
 import java.io.FileReader
-import static extension com.google.common.io.CharStreams.*
 import java.util.ArrayList
-import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.common.util.BasicEList
+import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.util.EDataTypeEList
 import org.eclipse.emf.ecore.util.EObjectEList
-import org.eclipse.emf.common.util.EList
-import org.eclipse.xtext.generator.InMemoryFileSystemAccess
-import javax.inject.Inject
-import java.io.File
-import org.eclipse.emf.ecore.resource.ResourceSet
+import org.eclipse.xtext.testing.InjectWith
+import org.eclipse.xtext.testing.XtextRunner
+import org.junit.runner.RunWith
+
+import static extension com.google.common.io.CharStreams.*
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
