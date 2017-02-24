@@ -41,6 +41,10 @@ abstract class AbstractSemanticAdaptationTest {
 	/**
 	 * reads a file from the permanent file system
 	 */
+	 def String readFile(File file){
+	 	return new FileReader(file).readLines.join("\n");
+	 }
+	 
 	def String readFile(String basefilename) {
 		val f = new File(basefilename)
 		//println("testing " + f.name)

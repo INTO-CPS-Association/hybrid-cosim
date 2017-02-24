@@ -20,15 +20,15 @@ import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.emf.ecore.resource.ResourceSet
 
-@RunWith(ParameterizedXtextRunner)
+@RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
-class CgCppBasicTest extends AbstractSemanticAdaptationTest {
+class CgCppBasicTest2 extends AbstractSemanticAdaptationTest {
 
 	// @Inject CppGenerator underTest
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
-	@Test def powerwindow_model_only() { __parseNoErrors('input/powerwindow_model_only.sa') }
+	@Test def powerwindow_model_only() { __parseNoErrors('test_input/window/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
 		val model = __parse(filename)
@@ -49,9 +49,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 	def __parse(String filename) {
 		val model = readFile(filename).parse
-
-		return __parse('input/powerwindow_algebraic_loop_delay.sa',
-			__parse('input/powerwindow_controller_delay.sa', model.eResource.resourceSet).eResource.resourceSet)
+		return model;
 	}
 
 	def __parse(String filename, ResourceSet resourceSetToUse) {
