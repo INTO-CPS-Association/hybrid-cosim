@@ -21,12 +21,12 @@ input ports 	reaction_force,
 output ports	disp;
 				tau;
 
-in var 	stored_windowsa_reaction_force,
-		stored_windowsa_displacement,
-		stored_windowsa_speed;
+in var 	stored_windowsa_reaction_force := 0,
+		stored_windowsa_displacement := 0,
+		stored_windowsa_speed := 0;
 
-out var stored_window_reaction_torque,
-		stored_window_height;
+out var stored_window_reaction_torque := 0,
+		stored_window_height := 0;
 
 in rules {
 	true -> {

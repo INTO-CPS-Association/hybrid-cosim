@@ -12,13 +12,13 @@ As a result, I would suggest that we are able to describe these connections with
 */
 for fmu WindowSA window_sa
 at "./path/to/Window_sa.fmu"
-input ports displacement (rad), speed (rad/s), reaction_force (N)
-output ports disp (m), tau (N.m);
+with input ports displacement (rad), speed (rad/s), reaction_force (N)
+with output ports disp (m), tau (N.m);
 
 for fmu Obstacle obstacle
 at "./path/to/Obstacle.fmu"
-input ports disp (m),
-output ports reaction_force (m);
+with input ports disp (m),
+with output ports reaction_force (m);
 
 /*
 This is the information that was missing before: how the semantic adaptation window_sa, which is an FMU, connects to the obstacle FMU.
@@ -30,12 +30,12 @@ obstacle.reaction_force -> window_sa.reaction_force;
 Declares the external ports of the semantic adaptation
 Notice that window_sa.displacement is a dangling input port, so an extra input port will exist in the adapted FMU.
 */
-input ports speed -> window_sa.speed;
-output ports tau <- obstacle.tau; 
+input ports speed;
+output ports tau; 
 
+in var current_speed := 0;
 control var previous_speed := 0;
 control var future_speed := 0;
-in var current_speed := 0;
 param RATE := 10;
 
 in rules {
@@ -73,14 +73,12 @@ control rules {
 		var prev_height := window_sa.height
 		var inner_time := t
 		for (var iter in 0 .. MAXITER) {
-			transaction(obstacle) // Inspired by transactions in databases.
-			transaction(window_sa)
-			obstacle.doStep(inner_time,h)
-			window_sa.doStep(inner_time,h)
+			save_state(obstacle);
+			save_state(window_sa);
+			do_step(obstacle,inner_time,h);
+			do_step(window_sa,inner_time,h);
 			
 			if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
-				commit(obstacle);
-				commit(window_sa);
 				break;
 			} else {
 				prev_height := height;
@@ -109,6 +107,6 @@ control rules {
 			}
 			*/
 		}
-		var inner_time := t + h;
+		inner_time := t + h;
 	}
 }

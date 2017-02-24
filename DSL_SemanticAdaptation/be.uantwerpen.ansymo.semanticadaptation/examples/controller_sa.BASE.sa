@@ -35,12 +35,12 @@ control var previous_arm_current := init_armature_current;
 
 in rules {
 	get_next_step -> {
-		next_time_step := get_next_time_step(controller) + t; 
+		next_time_step := get_next_time_step(controller) + last_execution_time(controller); 
 		/*
 		The get_next_time_step(controller) function is equivalent to the following snippet:
 		transaction(controller);
-		internal_transition := do_step(controller, t, MAX);
-		next_time_step := t + internal_transition;
+		internal_transition := do_step(controller, last_execution_time(controller), MAX);
+		next_time_step := last_execution_time(controller) + internal_transition;
 		rollback(controller);
 		*/
 	} --> { };
