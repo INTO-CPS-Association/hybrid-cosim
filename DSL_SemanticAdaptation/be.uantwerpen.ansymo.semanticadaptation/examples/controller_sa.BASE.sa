@@ -66,7 +66,7 @@ control rules {
 		}
 	}
 	
-	if (obj_detected == true or t >= next_time_step) {
+	if (aux_obj_detected == true or t >= next_time_step) {
 		var aux_h = do_step(controller, t-e, e); // do a step, then decide next internal transition
 		assert aux_h == e; // this must always be the case, otherwise it is better not to use the timed transition adaptation.
 		get_next_step := true; // next time the setValues is called, the internal transition will be set again.
