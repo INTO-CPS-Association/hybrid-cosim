@@ -22,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 import static org.junit.Assert.assertTrue
+import org.junit.Ignore
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -31,7 +32,8 @@ class CgCppModuleTest extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
-	@Test def powerwindow_model_only() { __parseNoErrors('test_input/window/') }
+	@Ignore
+	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
 
