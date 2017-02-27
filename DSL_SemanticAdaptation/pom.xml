@@ -11,6 +11,7 @@
 
 	<!-- the mavenization is based on this approach https://github.com/xtext/maven-xtext-example -->
 	<modules>
+		<module>be.uantwerpen.ansymo.semanticadaptation.testframework</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>

@@ -20,7 +20,7 @@ import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.emf.ecore.resource.ResourceSet
 
-@RunWith(ParameterizedXtextRunner)
+@RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
 class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 

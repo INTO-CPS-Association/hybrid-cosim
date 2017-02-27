@@ -5,11 +5,14 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests
 
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.CppGenerator
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.testframework.XtextParametersRunnerFactory
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
 import be.uantwerpen.ansymo.semanticadaptation.tests.SemanticAdaptationInjectorProvider
 import com.google.inject.Inject
 import java.io.File
 import java.util.ArrayList
+import java.util.Arrays
+import java.util.Collection
 import java.util.List
 import java.util.regex.Pattern
 import org.eclipse.emf.ecore.EObject
@@ -22,12 +25,7 @@ import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-
-import java.util.Arrays
-import java.util.Collection
 import org.junit.runners.Parameterized.Parameters
-
-import static org.junit.Assert.assertTrue
 
 @RunWith(typeof(Parameterized))
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -45,10 +43,12 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 	@Parameters(name = "{index}")
 	def static Collection<Object[]> data() {
 		val files = new ArrayList<List<File>>();
-		listf("test_input", files);
+		listf("test_input/single_folder_spec", files);
 		val test = new ArrayList();
 		test.add(files.get(0));
-		return Arrays.asList(test.toArray(), test.toArray());
+		val test2 = new ArrayList();
+		test2.add(files.get(1));
+		return Arrays.asList(test.toArray(), test2.toArray());
 	}
 
 	def static void listf(String directoryName, List<List<File>> files) {
@@ -78,9 +78,8 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 	var List<File> f;
 
 	@Test def allSemanticAdaptations() {
-		System.out.println("fail");
-		assertTrue(false);
-		//__parseNoErrors(f);
+		//assertTrue(false);
+		__parseNoErrors(f);
 	}
 
 	def __parseNoErrors(List<File> files) {
