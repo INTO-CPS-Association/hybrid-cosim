@@ -1,6 +1,5 @@
 package be.uantwerpen.ansymo.semanticadaptation.tests
 
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.testframework.XtextParametersRunnerFactory
 import java.io.File
 import org.apache.commons.io.FileUtils
@@ -9,33 +8,80 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.BufferedReader
+import java.io.FileReader
+import java.util.List
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import java.util.HashMap
 
 @RunWith(typeof(Parameterized))
 @InjectWith(SemanticAdaptationInjectorProvider)
 @Parameterized.UseParametersRunnerFactory(XtextParametersRunnerFactory)
-abstract class ParserFolderTest extends BasicParserTest{
-	
+abstract class ParserFolderTest extends BasicParserTest {
+
 	val File directory;
-	new (File directory){
-		this.directory = directory; 
+
+	new(File directory) {
+		this.directory = directory;
 	}
-	
+
 	@Test
 	def test() {
 		val File[] files = FileUtils.listFiles(this.directory, #["sa"], true);
 		Assert.assertFalse("The folder " + this.directory + " does not contain any .sa files", files.isEmpty);
+		var dependencies = new HashMap<File, String[]>();
+		var List<String> loadedModules = newArrayList;
+
+		// Get all dependencies
+		for (File file : files) {
+			dependencies.put(file, getDependencies(file));
+		}
 
 		var SemanticAdaptation model = null;
-		for (File file : files) {
-			System.out.println("Processing file: "+file)
-			if (model === null) {
-				model = __parse(file);
-			} else {
-				model = __parse(file, model.eResource.resourceSet);
+
+		// Load the modules in the correct order
+		while (!dependencies.isEmpty) {
+			var List<File> entriesToRemove = newArrayList;
+			for (entry : dependencies.entrySet) {
+				if (loadedModules.containsAll(entry.value)) {
+					if (model === null) {
+						model = __parse(entry.key);
+					} else {
+						model = __parse(entry.key, model.eResource.resourceSet);
+					}
+					__assertNoParseIssues(model, entry.key)
+					loadedModules.add(model.name);
+					entriesToRemove.add(entry.key);
+				}
 			}
-			
-			__assertNoParseIssues(model,file)
+			for (entry : entriesToRemove) {
+				dependencies.remove(entry);
+			}
 		}
-			__assertNoParseErrors(model, null)
+
+		__assertNoParseErrors(model, null)
+	}
+
+	def getModuleName(File file) {
+	}
+
+	def getDependencies(File file) {
+		var List<String> dependencies = newArrayList;
+		val BufferedReader in = new BufferedReader(new FileReader(file));
+		var continue = true;
+		while (continue) {
+			val line = in.readLine();
+			if (line.contains("module")) {
+				continue = false;
+			} else if (line.contains("import")) {
+				val module = line.substring(line.indexOf("import") + 7, line.length());
+				dependencies.add(module);
+			}
+			continue = in.ready && continue;
+		}
+
+		in.close();
+
+		return dependencies;
 	}
 }
