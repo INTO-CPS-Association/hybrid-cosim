@@ -42,9 +42,6 @@
 				<configuration>
 					<useUIHarness>false</useUIHarness>
 					<useUIThread>false</useUIThread>
-					<includes>
-            <include>**/SemanticAdaptationParsingTest.class</include>
-          </includes>
 				</configuration>
 			</plugin>
 		</plugins>
