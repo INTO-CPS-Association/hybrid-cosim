@@ -19,6 +19,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.CppGenerator
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.emf.ecore.resource.ResourceSet
+import org.junit.Ignore
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
