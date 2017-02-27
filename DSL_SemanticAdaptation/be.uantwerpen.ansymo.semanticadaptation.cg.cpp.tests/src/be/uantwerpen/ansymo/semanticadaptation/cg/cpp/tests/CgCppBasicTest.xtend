@@ -28,6 +28,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
+	@Ignore
 	@Test def powerwindow_model_only() { __parseNoErrors('input/powerwindow_model_only.sa') }
 
 	def __parseNoErrors(String filename) {
