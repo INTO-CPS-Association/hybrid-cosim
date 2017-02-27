@@ -3,20 +3,20 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.tests
 
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import com.google.inject.Inject
+import java.util.regex.Pattern
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
-import org.junit.Assert
+import org.eclipse.xtext.testing.util.ParseHelper
+import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.eclipse.xtext.testing.util.ParseHelper
-import com.google.inject.Inject
-import org.eclipse.xtext.testing.validation.ValidationTestHelper
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.*
-import org.eclipse.emf.ecore.EObject
-import java.util.regex.Pattern
+import org.junit.Ignore
 
 @RunWith(XtextRunner)
-@org.eclipse.xtext.testing.InjectWith(SemanticAdaptationInjectorProvider)
+@InjectWith(SemanticAdaptationInjectorProvider)
 class SemanticAdaptationParsingTest extends AbstractSemanticAdaptationTest{
 	
 	@Inject extension ParseHelper<SemanticAdaptation>
@@ -35,17 +35,18 @@ class SemanticAdaptationParsingTest extends AbstractSemanticAdaptationTest{
 //		print_ast(root)
 //	}
 
-	@Test def powerwindow_model_only() { __parseNoErrors('input/powerwindow_model_only.sa') }
-	@Test def powerwindow_algebraic_loop_delay_BASE() { __parseNoErrors('input/powerwindow_algebraic_loop_delay_BASE.sa') }
-	@Test def powerwindow_algebraic_loop_delay() { __parseNoErrors('input/powerwindow_algebraic_loop_delay.sa') }
-	@Test def powerwindow_algebraic_loop_iteration_BASE() { __parseNoErrors('input/powerwindow_algebraic_loop_iteration_BASE.sa') }
-	@Test def powerwindow_algebraic_loop_iteration() { __parseNoErrors('input/powerwindow_algebraic_loop_iteration.sa') }
-	@Test def powerwindow_controller_delay() { __parseNoErrors('input/powerwindow_controller_delay.sa') }
-	@Test def powerwindow_controller_delay_BASE() { __parseNoErrors('input/powerwindow_controller_delay_BASE.sa') }
-	@Test def powerwindow_multi_rate() { __parseNoErrors('input/powerwindow_multi_rate.sa') }
-	@Test def powerwindow_multi_rate_BASE() { __parseNoErrors('input/powerwindow_multi_rate_BASE.sa') }
-	@Test def powerwindow() { __parseNoErrors('input/powerwindow.sa') }
-	@Test def powerwindow_inline() { __parseNoErrors('input/powerwindow_inline.sa') }
+	@Test def power_window__window_obstacle_sa_flat() { __parseNoErrors('input/power_window_case_study/window_obstacle_sa_flat.BASE.sa') }
+	@Test def power_window__window_sa() { __parseNoErrors('input/power_window_case_study/window_sa.BASE.sa') }
+	@Test def power_window__window_sa_canonical() { __parseNoErrors('input/power_window_case_study/window_sa_canonical.BASE.sa') }
+	@Ignore @Test def powerwindow_model_only() { __parseNoErrors('input/powerwindow_model_only.sa') }
+	@Ignore @Test def powerwindow_algebraic_loop_delay_BASE() { __parseNoErrors('input/powerwindow_algebraic_loop_delay_BASE.sa') }
+	@Ignore @Test def powerwindow_algebraic_loop_delay() { __parseNoErrors('input/powerwindow_algebraic_loop_delay.sa') }
+	@Ignore @Test def powerwindow_algebraic_loop_iteration_BASE() { __parseNoErrors('input/powerwindow_algebraic_loop_iteration_BASE.sa') }
+	@Ignore @Test def powerwindow_algebraic_loop_iteration() { __parseNoErrors('input/powerwindow_algebraic_loop_iteration.sa') }
+	@Ignore @Test def powerwindow_controller_delay() { __parseNoErrors('input/powerwindow_controller_delay.sa') }
+	@Ignore @Test def powerwindow_multi_rate() { __parseNoErrors('input/powerwindow_multi_rate.sa') }
+	@Ignore @Test def powerwindow() { __parseNoErrors('input/powerwindow.sa') }
+	@Ignore @Test def powerwindow_inline() { __parseNoErrors('input/powerwindow_inline.sa') }
 	
 	def __parseNoErrors(String filename) {
 		val root = __parse(filename)

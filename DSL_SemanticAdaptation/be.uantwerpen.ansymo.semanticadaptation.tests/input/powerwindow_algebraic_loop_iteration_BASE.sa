@@ -4,7 +4,7 @@ import Controller_SA
 // this one could be joined with the one below, if we assume certain priorities in executing the rules
 semantic adaptation WindowSA window_sa
 at "./path/to/WindowSA.fmu"
-for fmu window
+for fmu Window window
 out rules {
 	true -> { } --> { reaction_torque := -reaction_torque; };
 }
@@ -33,26 +33,27 @@ control {
 	var converged := false;
 	var temp_height; // to compare new value with previous value
 	var temp_reaction_torque; // to compare new value with previous value
+	// from here on: taken from Claudio's example
+	var prev_height := window_sa.height;
+	var inner_time := t;
 	for (var iter in 0 .. MAXITER) {
-		if (converged) {
+		save_state(obstacle); // Inspired by transactions in databases.
+		save_state(window_sa);
+		do_step(obstacle, inner_time,h);
+		do_step(window_sa,inner_time,h);
+		
+		if (is_close(prev_height, height, REL_TOL, ABS_TOL)) {
 			break;
-		}
-		temp_height := height;
-		temp_reaction_torque := reaction_torque;
-		//local_step(power); // with delayed input for reaction_torque
-		//local_step(obstacle); // with delayed input for height
-		local_step(power);
-		local_step(obstacle);
-		local_step(window_sa);
-		//local_step(H, power, obstacle, window_sa); // acts like the Local master but cannot not advance time, so will always roll-back for safety (must be in one statements because a full step is done here), but how do we get the inner
-		if (is_close(temp_height, height, REL_TOL, ABS_TOL) and is_close(temp_reaction_torque, reaction_torque, REL_TOL, ABS_TOL)) { // todo: set tolerance
-			converged := true;
+		} else {
+			prev_height := height;
+			rollback(obstacle);
+			rollback(window_sa);
 		}
 	}
 	return H;
 }
 
-// this is the one for the paper
+/*// this is the one for the paper
 semantic adaptation WindowObstacleSALoop window_obstacle_sa_loop// overrides master -> not necessary: custom control rules override master
 at "./path/to/WindowObstacleSALoop.fmu"
 for fmu window_sa, obstacle
@@ -106,5 +107,5 @@ control {
 	}
 	return H;
 }
-
+*/
 

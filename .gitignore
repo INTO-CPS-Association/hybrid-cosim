@@ -35,3 +35,5 @@ generated-sources/
 src-gen/
 xtend-gen/
 .DS_Store
+/DSL_SemanticAdaptation/copy.bat
+/DSL_SemanticAdaptation/copyfiles.bat
