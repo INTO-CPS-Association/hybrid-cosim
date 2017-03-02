@@ -26,9 +26,9 @@ control {
 	return H;
 }
 
-in var 	stored_windowsa_reaction_force := 0.0, 
-		stored_windowsa_displacement := 0.0, 
-		stored_windowsa_speed := 0.0;
+in var 	stored_windowsa_reaction_force := 0, 
+		stored_windowsa_displacement := 0, 
+		stored_windowsa_speed := 0;
 
 in rules {
 	true -> {
