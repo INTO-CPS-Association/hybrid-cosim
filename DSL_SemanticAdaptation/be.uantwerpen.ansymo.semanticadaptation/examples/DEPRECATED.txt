@@ -1,0 +1,2 @@
+This folder is deprecated.
+It will be cleaned out after the syntactic examples have been all implemented and tested in the tests directory of this project.
