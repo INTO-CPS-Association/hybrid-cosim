@@ -16,11 +16,33 @@ import static org.junit.Assert.fail
 import static com.google.common.collect.Iterables.isEmpty
 import static com.google.common.collect.Iterables.filter
 import org.eclipse.xtext.diagnostics.Severity
+import java.io.BufferedReader
+import java.io.FileReader
 
 abstract class BasicParserTest extends AbstractSemanticAdaptationTest {
 
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
+
+	def getDependencies(File file) {
+		var List<String> dependencies = newArrayList;
+		val BufferedReader in = new BufferedReader(new FileReader(file));
+		var continue = true;
+		while (continue) {
+			val line = in.readLine();
+			if (line.contains("module")) {
+				continue = false;
+			} else if (line.contains("import")) {
+				val module = line.substring(line.indexOf("import") + 7, line.length());
+				dependencies.add(module);
+			}
+			continue = in.ready && continue;
+		}
+
+		in.close();
+
+		return dependencies;
+	}
 
 	def __parseNoErrors(File filename) {
 		val model = __parse(filename)

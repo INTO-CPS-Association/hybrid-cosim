@@ -61,27 +61,4 @@ abstract class ParserFolderTest extends BasicParserTest {
 
 		__assertNoParseErrors(model, null)
 	}
-
-	def getModuleName(File file) {
-	}
-
-	def getDependencies(File file) {
-		var List<String> dependencies = newArrayList;
-		val BufferedReader in = new BufferedReader(new FileReader(file));
-		var continue = true;
-		while (continue) {
-			val line = in.readLine();
-			if (line.contains("module")) {
-				continue = false;
-			} else if (line.contains("import")) {
-				val module = line.substring(line.indexOf("import") + 7, line.length());
-				dependencies.add(module);
-			}
-			continue = in.ready && continue;
-		}
-
-		in.close();
-
-		return dependencies;
-	}
 }

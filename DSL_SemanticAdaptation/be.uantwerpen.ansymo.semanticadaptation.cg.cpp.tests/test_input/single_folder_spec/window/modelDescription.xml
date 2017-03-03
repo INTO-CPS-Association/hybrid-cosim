@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<fmiModelDescription fmiVersion="2.0" modelName="SingleWatertank" guid="{cfc65592-9ece-4563-9705-1581b6e7071c}" generationTool="20-sim" numberOfEventIndicators="0" copyright="Controllab Products B.V." license="-">
+<CoSimulation modelIdentifier="SingleWatertank" needsExecutionTool="false" canHandleVariableCommunicationStepSize="true" canInterpolateInputs="false" maxOutputDerivativeOrder="0" canRunAsynchronuously="false" canBeInstantiatedOnlyOncePerProcess="true" canNotUseMemoryManagementFunctions="true" canGetAndSetFMUstate="false" canSerializeFMUstate="false" providesDirectionalDerivative="false" />
+
+<ModelVariables>
+<ScalarVariable name="reaction_force" valueReference="1" variability="continuous" causality="input">
+<Real start="0.0" />
+</ScalarVariable>
+<ScalarVariable name="displacement" valueReference="2" variability="continuous" causality="input">
+<Real start="0.0" />
+</ScalarVariable>
+<ScalarVariable name="speed" valueReference="3" variability="continuous" causality="input">
+<Real start="0.0" />
+</ScalarVariable>
+
+<ScalarVariable name="disp" valueReference="4" variability="continuous" causality="output">
+<Real />
+</ScalarVariable>
+<ScalarVariable name="tau" valueReference="5" variability="continuous" causality="output">
+<Real />
+</ScalarVariable>
+
+</ModelVariables>
+<ModelStructure>
+<Outputs>
+<Unknown index="4" />
+<Unknown index="5" />
+</Outputs>
+</ModelStructure>
+</fmiModelDescription>

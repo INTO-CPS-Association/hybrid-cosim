@@ -1,30 +1,34 @@
 module Window_SA
 
-semantic adaptation reactive mealy window_sa
+semantic adaptation reactive mealy WindowSA windowSA
+at "./path/to/WindowSA.fmu"
 
-at "./path/to/Window.fmu"
-for fmu Window window
-input ports displacement (rad), speed (rad/s), reaction_force (N)
-
+	for inner fmu Window window
+		at "test_input/single_folder_spec/window/Window.fmu"
+		with input ports displacement (rad), speed (rad/s), reaction_force (N)
+		with output ports height (m), reaction_torque (N.m)
 
 /*
-In the originial version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.
+In the original version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.
 In the canonical version, the input and output ports are all declared explicitly, and their bindings are implemented in the in/out rules.
 */
 
 input ports 	reaction_force,
 				displacement,
-				speed;
+				speed
 
-output ports	disp;
-				tau;
+output ports	disp,
+				tau
 
-in var 	stored_windowsa_reaction_force,
-		stored_windowsa_displacement,
-		stored_windowsa_speed;
 
-out var stored_window_reaction_torque,
-		stored_window_height;
+control {
+	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
+	return H;
+}
+
+in var 	stored_windowsa_reaction_force := 0., 
+		stored_windowsa_displacement := 0., 
+		stored_windowsa_speed := 0.;
 
 in rules {
 	true -> {
@@ -32,38 +36,32 @@ in rules {
 		is_set checks whether the input value is given in the setValues call of the adapted FMU.
 		Notice that in the canonical version, all ports are prefixed.
 		*/
-		if (is_set(window_sa.reaction_force))
-			stored_windowsa_reaction_force := window_sa.reaction_force;
+		if (is_set(windowSA.reaction_force)){
+			stored_windowsa_reaction_force := windowSA.reaction_force;
+		}
+		if (is_set(windowSA.displacement)){
+			stored_windowsa_displacement := windowSA.displacement;			
+		}
+		if (is_set(windowSA.speed)){
+			stored_windowsa_speed := windowSA.speed;
+		}
 	} --> {
 		window.reaction_force := stored_windowsa_reaction_force;
-	};
-    true -> {
-		if (is_set(window_sa.displacement))
-			stored_windowsa_displacement := window_sa.displacement;
-	} --> {
 		window.displacement := stored_windowsa_displacement; 
-	};
-    true -> {
-		if (is_set(window_sa.speed))
-			stored_windowsa_speed := window_sa.speed;
-	} --> {
 		window.speed := stored_windowsa_speed;
 	};
 }
 
-control rules {
-	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
+out var stored_window_reaction_torque := 0,
+		stored_window_height := 0;
+		
+out rules {
+	true -> {
+		stored_window_reaction_torque := window.reaction_torque;
+		stored_window_height := window.height;
+	} --> {
+		windowSA.tau := - stored_window_reaction_torque;
+		windowSA.disp := stored_window_height / 100;
+	};
 }
 
-out rules {
-	true => {
-		stored_window_reaction_torque := window.reaction_torque;
-	} -> {
-		window_sa.tau := - stored_window_reaction_torque;
-	}
-	true => {
-		stored_window_height := window.height;
-	} -> {
-		window_sa.disp := stored_window_height * 100;
-	}
-}

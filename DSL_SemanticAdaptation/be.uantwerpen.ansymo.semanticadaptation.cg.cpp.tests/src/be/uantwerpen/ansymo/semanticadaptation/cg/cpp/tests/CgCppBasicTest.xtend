@@ -29,8 +29,8 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
-	@Ignore
-	@Test def powerwindow_model_only() { __parseNoErrors('input/powerwindow_model_only.sa') }
+	
+	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
 		val model = __parse(filename)
@@ -38,9 +38,10 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 		val fsa = new InMemoryFileSystemAccess()
 		val IGeneratorContext ctxt = null;
-		new CppGenerator().doGenerate(model.eResource, fsa, ctxt)
-
-		System.out.println(fsa.allFiles)
+		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
+		
+		
+		System.out.println(fsa.allFiles)		
 	}
 
 	def __parseNoErrorsPrint(String filename) {
@@ -50,10 +51,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	}
 
 	def __parse(String filename) {
-		val model = readFile(filename).parse
-
-		return __parse('input/powerwindow_algebraic_loop_delay.sa',
-			__parse('input/powerwindow_controller_delay.sa', model.eResource.resourceSet).eResource.resourceSet)
+		return readFile(filename).parse
 	}
 
 	def __parse(String filename, ResourceSet resourceSetToUse) {

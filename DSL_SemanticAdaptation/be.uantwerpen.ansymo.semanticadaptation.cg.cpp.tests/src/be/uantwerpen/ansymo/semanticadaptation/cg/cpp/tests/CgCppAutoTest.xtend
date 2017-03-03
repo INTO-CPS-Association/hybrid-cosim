@@ -47,9 +47,9 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 		listf("test_input/single_folder_spec", files);
 		val test = new ArrayList();
 		test.add(files.get(0));
-		val test2 = new ArrayList();
-		test2.add(files.get(1));
-		return Arrays.asList(test.toArray(), test2.toArray());
+		//val test2 = new ArrayList();
+		//test2.add(files.get(1));
+		return Arrays.asList(test.toArray());
 	}
 
 	def static void listf(String directoryName, List<List<File>> files) {
