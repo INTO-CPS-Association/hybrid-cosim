@@ -8,6 +8,11 @@ at "./path/to/WindowSA.fmu"
 		with input ports displacement (rad), speed (rad/s), reaction_force (N)
 		with output ports height (m), reaction_torque (N.m)
 
+/*
+In the original version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.
+In the canonical version, the input and output ports are all declared explicitly, and their bindings are implemented in the in/out rules.
+*/
+
 input ports 	reaction_force,
 				displacement,
 				speed
@@ -15,8 +20,9 @@ input ports 	reaction_force,
 output ports	disp,
 				tau
 
+
 control {
-	do_step(window, t, H);
+	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
 	return H;
 }
 
@@ -26,9 +32,19 @@ in var 	stored_windowsa_reaction_force := 0.0,
 
 in rules {
 	true -> {
-		stored_windowsa_reaction_force := windowSA.reaction_force;
-		stored_windowsa_displacement := windowSA.displacement;			
-		stored_windowsa_speed := windowSA.speed;
+		/*
+		is_set checks whether the input value is given in the setValues call of the adapted FMU.
+		Notice that in the canonical version, all ports are prefixed.
+		*/
+		if (is_set(windowSA.reaction_force)){
+			stored_windowsa_reaction_force := windowSA.reaction_force;
+		}
+		if (is_set(windowSA.displacement)){
+			stored_windowsa_displacement := windowSA.displacement;			
+		}
+		if (is_set(windowSA.speed)){
+			stored_windowsa_speed := windowSA.speed;
+		}
 	} --> {
 		window.reaction_force := stored_windowsa_reaction_force;
 		window.displacement := stored_windowsa_displacement; 
@@ -48,3 +64,4 @@ out rules {
 		windowSA.disp := stored_window_height / 100;
 	};
 }
+
