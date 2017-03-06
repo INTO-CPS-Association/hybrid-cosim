@@ -20,7 +20,7 @@ class PowerWindowCaseStudyFolderTest extends ParserFolderTest {
 		
 		val List<Object[]> tests = new Vector
 		
-		tests.add(#[new File("testInputs/single_folder_spec".replace('/',File.separatorChar))]);
+		tests.add(#[new File("input/power_window_case_study".replace('/',File.separatorChar))]);
 		
 		return tests;
 	}
