@@ -1,6 +1,6 @@
 module Loop_SA
 
-semantic adaptation reactive mealy LoopSA adaptedFMU
+semantic adaptation reactive moore LoopSA loop_sa
 at "./path/to/LoopSA.fmu"
 
 	for inner fmu WindowSA window_sa
@@ -16,14 +16,15 @@ at "./path/to/LoopSA.fmu"
 	with window_sa.disp -> obstacle.disp
 	with obstacle.reaction_force -> window_sa.reaction_force
 
-output ports tau
+output ports tau (N.m) <- window_sa.tau
 
 param 	MAXITER := 10, 
 		REL_TOL := 1e-05, 
 		ABS_TOL := 1e-05;
 
-ctrl var prev_disp := 0.0;
-control {
+control var prev_disp := 0.0;
+control rules {
+	var repeat := false;
 	for (var iter in 0 .. MAXITER) {
 		save_state(obstacle);
 		save_state(window_sa);
@@ -31,10 +32,11 @@ control {
 		do_step(obstacle,t,H);
 		do_step(window_sa,t,H);
 		
-		if (is_close(prev_disp, window_sa.disp, REL_TOL, ABS_TOL)) {
+		repeat := is_close(prev_disp, window_sa.disp, REL_TOL, ABS_TOL);
+		prev_disp := window_sa.disp;
+		if (repeat) {
 			break;
 		} else {
-			prev_disp := window_sa.disp;
 			rollback(obstacle);
 			rollback(window_sa);
 		}

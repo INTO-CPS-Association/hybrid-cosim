@@ -30,7 +30,7 @@ class CgCppBasicTest2 extends AbstractSemanticAdaptationTest {
 	@Inject extension  ValidationTestHelper
 
 	@Ignore
-	@Test def powerwindow_model_only() { __parseNoErrors('test_input/window/window_sa_canonical.BASE.sa') }
+	@Test def powerwindow_model_only() { __parseNoErrors('input/window/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
 		val model = __parse(filename)

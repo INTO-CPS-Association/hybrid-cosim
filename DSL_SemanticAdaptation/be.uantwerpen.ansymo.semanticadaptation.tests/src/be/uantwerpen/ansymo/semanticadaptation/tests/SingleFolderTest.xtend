@@ -20,7 +20,7 @@ class SingleFolderTest extends ParserFolderTest {
 		
 		val List<Object[]> tests = new Vector
 		
-		for (file : new File("testInputs/single_folder_spec".replace('/',File.separatorChar)).listFiles) {
+		for (file : new File("input/single_folder_spec".replace('/',File.separatorChar)).listFiles) {
 			tests.add(#[file]);
 		}
 		

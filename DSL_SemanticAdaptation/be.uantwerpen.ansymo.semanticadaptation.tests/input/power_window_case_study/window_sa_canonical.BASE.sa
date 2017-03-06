@@ -15,14 +15,20 @@ input ports 	reaction_force,
 output ports	disp,
 				tau
 
-control {
+param 	INIT_WINDOWSA_REACTION_FORCE := 0.0,
+		INIT_WINDOWSA_DISPLACEMENT := 0.0,
+		INIT_WINDOWSA_SPEED := 0.0,
+		INIT_WINDOW_REACTION_TORQUE := 0.0,
+		INIT_WINDOW_REACTION_HEIGHT := 0.0;
+
+control rules {
 	do_step(window, t, H);
 	return H;
 }
 
-in var 	stored_windowsa_reaction_force := 0.0, 
-		stored_windowsa_displacement := 0.0, 
-		stored_windowsa_speed := 0.0;
+in var 	stored_windowsa_reaction_force := INIT_WINDOWSA_REACTION_FORCE, 
+		stored_windowsa_displacement := INIT_WINDOWSA_DISPLACEMENT, 
+		stored_windowsa_speed := INIT_WINDOWSA_SPEED;
 
 in rules {
 	true -> {
@@ -36,9 +42,9 @@ in rules {
 	};
 }
 
-out var stored_window_reaction_torque := 0,
-		stored_window_height := 0;
-		
+out var stored_window_reaction_torque := INIT_WINDOW_REACTION_TORQUE,
+		stored_window_height := INIT_WINDOW_REACTION_HEIGHT;
+
 out rules {
 	true -> {
 		stored_window_reaction_torque := window.reaction_torque;

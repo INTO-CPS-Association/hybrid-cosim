@@ -31,8 +31,8 @@ param 	RATE := 10,
 		REL_TOL := 1e-05, 
 		ABS_TOL := 1e-05;
 
-ctrl var previous_speed := 0, future_speed := 0;
-control {
+control var previous_speed := 0, future_speed := 0;
+control rules {
 	var inner_dt := H/RATE;
 	/*
 	The two instructions below need to be made, because previously they were made in the sa_in block, but multiple calls to the sa_in block would make them fail.

@@ -117,7 +117,7 @@ OutRulesBlock:
 	{OutRulesBlock} ('out' globalOutVars+=Declaration)* 'out' 'rules' ('with' setting+=GeneralSetting (',' setting+=GeneralSetting)*)? '{' iterationvars+=Declaration* rules+=DataRule* '}';
 
 ControlRuleBlock:
-	('ctrl' globalCtrlVars+=Declaration)* rule=ControlRule; // TODO: multiple rules or just one?
+	('control' globalCtrlVars+=Declaration)* rule=ControlRule; // TODO: multiple rules or just one?
 
 DataRule: // condition -> state transition --> output function
 	(((condition=RuleCondition "->" statetransitionfunction=StateTransitionFunction) | ConditionStateTransition | ConditionLessRule) ("-->" outputfunction=OutputFunction)? | AlgebraicLoopSolution) ';';
@@ -165,19 +165,19 @@ OutputFunction:
 	{FirstOrderHold} (('first' 'order' 'hold') | 'FOH') |
 	{CustomOutputFunction} expr=Expression |
 	{CompositeOutputFunction} '{' statements+=Statement* (returnstatement=ReturnStatement)? '}';
-	
+
 ControlRule:
 	{ImpliedControlRule} 'implied' | // the default
 	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
 	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
 	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
-	{CustomControlRule} 'control' '{' ControlRulestatements+=Statement* returnstatement=ReturnStatement '}'; // TODO: how do we know if control is given?
+	{CustomControlRule} 'control' 'rules' '{' ControlRulestatements+=Statement* returnstatement=ReturnStatement '}'; // TODO: how do we know if control is given?
 
 AnonymousFunction: // has access to ports
 	{FunctionExpression} '{=' code=Expression '}'| 
 	{FunctionBody} '{' statements+=Statement* returnstatement=ReturnStatement '}' |  // should return something
 	FunctionDeclaration; // TODO: should return something
-	
+
 SpecifiedPort: // if ports need owners
 	(owner=[FMU] '.' )? port=[Port];
 
@@ -361,7 +361,7 @@ BuiltinFunction:
 	{Abs} name='abs' '(' args=ArithmeticExpression ')' |
 	{Close} name='is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |  // a, b, relative tolerance, absolute tolerance 
 	{IsSet} name='is_set' '(' args=Var ')' | 
-//	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ',' h=ArithmeticExpression ')' |
+	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ',' h=ArithmeticExpression ')' |
 	{GetNextInternalTimeStep} name='get_next_time_step' '(' fmu=[FMU] ')' | // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
 	{Elapsed} name='elapsed' '(' fmu=[FMU] ')' |
 	{LastExecutionTime} name='last_execution_time' '(' fmu=[FMU] ')';

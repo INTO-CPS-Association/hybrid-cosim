@@ -8,11 +8,11 @@ at "./path/to/WindowSA.fmu"
 		with input ports displacement (rad), speed (rad/s), reaction_force (N)
 		with output ports height (cm), reaction_torque (N.m)
 
-output ports disp (m)  <- height, tau
+output ports disp (m)  <- window.height, tau
 
 out rules {
 	true -> {} --> {
-		tau := -reaction_force;
+		tau := -window.reaction_force;
 	};
 }
 
