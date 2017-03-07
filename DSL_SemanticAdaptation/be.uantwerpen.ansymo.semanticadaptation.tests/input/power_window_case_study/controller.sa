@@ -1,0 +1,73 @@
+module Controller_SA
+
+semantic adaptation reactive moore ControllerSA controller_sa
+at "./path/to/ControllerSA.fmu"
+
+	for inner fmu LazySA lazy
+	at "./path/to/LazySA.fmu"
+	with input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
+	with output ports up, down, stop
+
+input ports armature_current -> lazy.obj_detected, 
+			passenger_up -> lazy.passenger_up, 
+			passenger_down -> lazy.passenger_down,
+			passenger_stop -> lazy.passenger_stop,
+			driver_up -> lazy.driver_up, 
+			driver_down -> lazy.driver_down,
+			driver_stop -> lazy.driver_stop
+
+output ports	u,
+				d
+
+param	RTOL := 0.0001,
+		ATOL := 1e-8,
+		T := 5.0,
+		INIT_V := 0.0;
+
+control var	c := false,
+			p_v := INIT_V;
+control rules {
+	var step_size := H;
+	var aux_obj_detected := false;
+	var crossedTooFar := false;
+	if ((not is_close(p_v, T, RTOL, ATOL) and p_v < T)
+				and (not is_close(f_v, T, RTOL, ATOL) and f_v > T)) {
+		crossedTooFar := true;
+		var negative_value := p_v - T;
+		var positive_value := f_v - T;
+		step_size := (H * (- negative_value)) / (positive_value - negative_value);
+	} else {
+		if ((not is_close(p_v, T, RTOL, ATOL) and p_v < T)
+					and is_close(f_v, T, RTOL, ATOL )) { 
+			c := true;
+		}
+	}
+	
+	if (not crossedTooFar){
+		step_size := do_step(lazy, t, H);
+	}
+	
+	if (is_close(step_size, H, RTOL, ATOL)) {
+		p_v := f_v;
+	}
+	return step_size;
+}
+
+in var	f_v := INIT_V;
+in rules {
+	true -> {
+		f_v := controller_sa.armature_current;
+	} --> {
+		lazy.obj_detected := c;
+	};
+}
+
+out rules {
+	lazy.up -> { } --> {controller_sa.u := 1.0; };
+	not lazy.up -> { } --> {controller_sa.u := 0.0; };
+	
+	lazy.down -> { } --> {controller_sa.d := 1.0; };
+	not lazy.down -> { } --> {controller_sa.d := 0.0; };
+	
+	lazy.stop -> { } --> {controller_sa.u := 0.0 ; controller_sa.d := 0.0; };
+}

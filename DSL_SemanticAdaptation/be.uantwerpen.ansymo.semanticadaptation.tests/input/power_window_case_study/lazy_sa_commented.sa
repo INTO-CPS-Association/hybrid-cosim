@@ -11,11 +11,19 @@ at "./path/to/LazySA.fmu"
 /*
  * We only need to declare one input port: the one we are interested in.
  * The others (both input and output ports) are bound by assumption.
+ * In addition, we do not need to do anything about the outputs of the inner FMU, because they are zero order holded by default.
  */
 input ports obj_detected -> controller.obj_detected
 
+output ports up, down, stop
+
+param 	INIT_UP := 0.0,
+		INIT_DOWN := 0.0,
+		INIT_STOP := 0.0;
+
 control var	tn := -1.0,
-			tl := -1.0;
+			tl := -1.0,
+			refresh_outputs := true;
 
 control rules {
 	// This initialisation covers simulations that start at a non-zero time.
@@ -23,13 +31,23 @@ control rules {
 		tl := t;
 	}
 	
+	refresh_outputs := false;
+	
 	var step_size := min(H, tn - t); // In case tn < t, this ensures that the controller will be run at the right time.
 	// Note that the expression lazy_sa.obj_detected gets replaced by the corresponding storage var in the canonical version.
 	if (lazy_sa.obj_detected or (t+H) >= tn){
+		refresh_outputs := true; // This is used in the mapOut rules, to refresh the outputs.
 		var step_to_be_done := (t+H-tl);
 		var step_done := do_step(controller, t, step_to_be_done); // calls the mapIn function that will take care of forwarding the values of the input ports to the internal FMU.
 		// We calculate these as if step_done == step_to_be_done. If that is not the case, a rollback will be done anyway.
 		tn := tl + step_done + get_next_time_step(controller); // calculates the next time step that is tolerated by the controller.
+		/*
+			The get_next_time_step(controller) function is equivalent to the following snippet:
+			save_state(controller);
+			internal_transition := do_step(controller, last_execution_time(controller), MAX);
+			next_time_step := last_execution_time(controller) + internal_transition;
+			rollback(controller);
+		 */
 		// This is the actual step size taken, from the outside world:
 		step_size := tl + step_done - t; // assert step_size <= H
 		tl := tl + step_done; // assert tl == t+H
@@ -38,3 +56,19 @@ control rules {
 	return step_size;
 }
 
+out var	stored_up := INIT_UP,
+		stored_down := INIT_DOWN,
+		stored_stop := INIT_STOP;
+out rules{
+	 true -> {
+		if (refresh_outputs){
+			stored_up := controller.up;
+			stored_down := controller.down;
+			stored_stop := controller.stop;
+		}
+	} --> {
+		lazy_sa.up := stored_up;
+		lazy_sa.down := stored_down;
+		lazy_sa.stop := stored_stop;
+	};
+}
