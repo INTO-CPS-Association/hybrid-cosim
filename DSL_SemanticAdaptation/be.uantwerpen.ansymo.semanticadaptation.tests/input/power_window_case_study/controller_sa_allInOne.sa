@@ -1,5 +1,10 @@
 module Controller_SA
 
+/*
+ * This file is not used in the case study.
+ * The adaptations it does have been split.
+ */
+
 semantic adaptation reactive moore ControllerSA controller_sa
 at "./path/to/ControllerSA.fmu"
 

@@ -10,7 +10,7 @@ for inner fmu Controller controller
 	at "./path/to/Controller.fmu"
 	with input ports obj_detected, passenger_up, passenger_down, driver_up, driver_down
 	with output ports up, down, stop
-input ports armature_current -> obj_detected, passenger_up, passenger_down, driver_up, driver_down
+input ports obj_detected -> obj_detected, passenger_up, passenger_down, driver_up, driver_down
 triggered by signal == true
 in rules with crossing absolute tolerance = 1e-8 and relative tolerance = 0.0001, no hold {
 	armature_current >! 5 -> obj_detected := true;
@@ -20,7 +20,6 @@ out rules with zero order hold {
 	"up" -> up := 1;
 	"stop" -> { up := 0; down := 0; };
 	"down" -> down := 1;
-	delay at up and down;
 }
 
 semantic adaptation WindowSA window_sa
