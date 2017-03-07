@@ -1,0 +1,32 @@
+module Lazy_SA
+
+semantic adaptation reactive moore LazySA lazy_sa
+at "./path/to/LazySA.fmu"
+
+	for inner fmu Controller controller
+	at "./path/to/Controller.fmu"
+	with input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
+	with output ports up, down, stop
+
+input ports obj_detected -> controller.obj_detected
+
+control var	tn := -1.0,
+			tl := -1.0;
+
+control rules {
+	if (tl < 0.0){
+		tl := t;
+	}
+	
+	var step_size := min(H, tn - t); 
+	if (lazy_sa.obj_detected or (t+H) >= tn){
+		var step_to_be_done := (t+H-tl);
+		var step_done := do_step(controller, t, step_to_be_done); 
+		tn := tl + step_done + get_next_time_step(controller); 
+		step_size := tl + step_done - t; 
+		tl := tl + step_done; 
+	}
+	
+	return step_size;
+}
+
