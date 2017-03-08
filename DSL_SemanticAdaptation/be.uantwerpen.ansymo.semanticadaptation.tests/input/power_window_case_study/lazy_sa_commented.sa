@@ -22,8 +22,7 @@ param 	INIT_UP := 0.0,
 		INIT_STOP := 0.0;
 
 control var	tn := -1.0,
-			tl := -1.0,
-			refresh_outputs := true;
+			tl := -1.0;
 
 control rules {
 	// This initialisation covers simulations that start at a non-zero time.
@@ -31,12 +30,9 @@ control rules {
 		tl := t;
 	}
 	
-	refresh_outputs := false;
-	
 	var step_size := min(H, tn - t); // In case tn < t, this ensures that the controller will be run at the right time.
 	// Note that the expression lazy_sa.obj_detected gets replaced by the corresponding storage var in the canonical version.
 	if (lazy_sa.obj_detected or (t+H) >= tn){
-		refresh_outputs := true; // This is used in the mapOut rules, to refresh the outputs.
 		var step_to_be_done := (t+H-tl);
 		var step_done := do_step(controller, t, step_to_be_done); // calls the mapIn function that will take care of forwarding the values of the input ports to the internal FMU.
 		// We calculate these as if step_done == step_to_be_done. If that is not the case, a rollback will be done anyway.
@@ -61,11 +57,9 @@ out var	stored_up := INIT_UP,
 		stored_stop := INIT_STOP;
 out rules{
 	 true -> {
-		if (refresh_outputs){
-			stored_up := controller.up;
-			stored_down := controller.down;
-			stored_stop := controller.stop;
-		}
+		stored_up := controller.up;
+		stored_down := controller.down;
+		stored_stop := controller.stop;
 	} --> {
 		lazy_sa.up := stored_up;
 		lazy_sa.down := stored_down;

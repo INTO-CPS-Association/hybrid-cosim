@@ -17,19 +17,15 @@ param 	INIT_UP := 0.0,
 		INIT_STOP := 0.0;
 
 control var	tn := -1.0,
-			tl := -1.0,
-			refresh_outputs := true;
+			tl := -1.0;
 
 control rules {
 	if (tl < 0.0){
 		tl := t;
 	}
 	
-	refresh_outputs := false;
-	
 	var step_size := min(H, tn - t); 
 	if (lazy_sa.obj_detected or (t+H) >= tn){
-		refresh_outputs := true; 
 		var step_to_be_done := (t+H-tl);
 		var step_done := do_step(controller, t, step_to_be_done); 
 		tn := tl + step_done + get_next_time_step(controller); 
@@ -45,11 +41,9 @@ out var	stored_up := INIT_UP,
 		stored_stop := INIT_STOP;
 out rules{
 	 true -> {
-		if (refresh_outputs){
-			stored_up := controller.up;
-			stored_down := controller.down;
-			stored_stop := controller.stop;
-		}
+		stored_up := controller.up;
+		stored_down := controller.down;
+		stored_stop := controller.stop;
 	} --> {
 		lazy_sa.up := stored_up;
 		lazy_sa.down := stored_down;
