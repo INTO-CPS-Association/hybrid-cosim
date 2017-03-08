@@ -53,7 +53,7 @@ Adaptation:
 	inner=InnerFMUDeclaration
 	('input' 'ports' inports+=Port ("," inports+=Port)*)? // only in case of instance-specific SA
 	('output' 'ports' outports+=Port ("," outports+=Port)* )? // only in case of instance-specific SA
-	(params+=ParamDeclaration)*
+	(params+=ParamDeclarations)*
 //	(globalvars+=Declaration)*
 	// algebraic loop generates an FMU encapsulating the loop
 	// note that the order of semantic adaptations is prefixed in case of a algebraic loop:
@@ -171,7 +171,7 @@ ControlRule:
 	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
 	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
 	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
-	{CustomControlRule} 'control' 'rules' '{' ControlRulestatements+=Statement* returnstatement=ReturnStatement '}'; // TODO: how do we know if control is given?
+	{CustomControlRule} 'control' 'rules' '{' ControlRulestatements+=Statement* returnstatement=ReturnStatement '}';
 
 AnonymousFunction: // has access to ports
 	{FunctionExpression} '{=' code=Expression '}'| 
@@ -236,7 +236,7 @@ SingleVarDeclaration:
 	name=ID (':=' expr=Expression)?
 ;
 
-ParamDeclaration:
+ParamDeclarations:
 	//'param' name=ID ':=' expr=Expression ';';
 	'param' declarations+=SingleParamDeclaration ("," declarations+=SingleParamDeclaration)* ';'
 ;
