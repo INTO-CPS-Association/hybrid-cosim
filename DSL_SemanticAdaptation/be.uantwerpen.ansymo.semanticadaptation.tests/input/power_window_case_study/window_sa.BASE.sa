@@ -1,5 +1,3 @@
-module Window_SA
-
 semantic adaptation reactive mealy WindowSA windowSA
 at "./path/to/WindowSA.fmu"
 

@@ -1,5 +1,3 @@
-module Lazy_SA
-
 semantic adaptation reactive moore LazySA lazy_sa
 at "./path/to/LazySA.fmu"
 

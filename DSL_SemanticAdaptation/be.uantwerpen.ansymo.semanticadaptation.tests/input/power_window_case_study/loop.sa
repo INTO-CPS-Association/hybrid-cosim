@@ -1,5 +1,3 @@
-module Loop_SA
-
 semantic adaptation reactive moore LoopSA loop_sa
 at "./path/to/LoopSA.fmu"
 

@@ -1,5 +1,3 @@
-module Power_SA
-
 semantic adaptation delayed moore PowerSA power_sa
 at "./path/to/PowerSA.fmu"
 

@@ -1,5 +1,3 @@
-module Controller_SA
-
 semantic adaptation reactive moore ControllerSA controller_sa
 at "./path/to/ControllerSA.fmu"
 

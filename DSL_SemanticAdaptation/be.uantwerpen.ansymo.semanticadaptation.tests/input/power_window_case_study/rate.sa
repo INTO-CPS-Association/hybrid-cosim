@@ -1,5 +1,3 @@
-module Rate_SA
-
 semantic adaptation reactive moore RateSA rate_sa
 at "./path/to/RateSA.fmu"
 
