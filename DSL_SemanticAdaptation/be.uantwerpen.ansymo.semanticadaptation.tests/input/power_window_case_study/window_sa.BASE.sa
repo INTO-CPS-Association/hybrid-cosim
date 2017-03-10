@@ -10,7 +10,7 @@ output ports disp (m)  <- window.height, tau
 
 out rules {
 	true -> {} --> {
-		tau := -window.reaction_force;
+		windowSA.tau := -window.reaction_force;
 	};
 }
 
