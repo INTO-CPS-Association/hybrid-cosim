@@ -48,7 +48,7 @@ typedef struct{
 	int period;
 	int isPeriodic;
 	int active;
-	void (*callback) (Powerwindow*, sc_eventid evid);
+	void (*callback) (const Powerwindow*, sc_eventid evid);
 }fmi_timer;
 
 fmi_timer *thePWTimer;

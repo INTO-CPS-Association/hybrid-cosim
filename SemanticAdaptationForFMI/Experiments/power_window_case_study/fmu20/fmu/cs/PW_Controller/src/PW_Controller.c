@@ -12,6 +12,7 @@ Template for a sc FMU
 
 
 #include <stdio.h>
+#include <math.h>
 #include "string.h"
 #include "fmi2Functions.h"
 #include <float.h>
@@ -19,7 +20,7 @@ Template for a sc FMU
 #include "PowerwindowRequired.h"
 
 
-#define NUMBER_OF_REALS 1
+#define NUMBER_OF_REALS 0
 #define NUMBER_OF_STRINGS 0
 #define NUMBER_OF_BOOLEANS 11
 #define NUMBER_OF_INTEGERS 0
@@ -42,7 +43,6 @@ Template for a sc FMU
 #define _motor_up 9
 #define _motor_down 10
 
-#define _out_next_timer_event 0
 
 fmi2Status fmi2SetDebugLogging(fmi2Component fc, fmi2Boolean loggingOn, size_t nCategories, const fmi2String categories[])
 {
@@ -171,6 +171,7 @@ fmi2Status fmi2SetupExperiment(fmi2Component fc, fmi2Boolean toleranceDefined, f
 	//TODO
 	//fi->stepSize = getStepSize();
 	fi->state = fmuExperimentSettedUp;
+	fi->next_timer_event = -1;
     return fmi2OK;
 }
 
@@ -211,10 +212,28 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 {
 	FMUInstance* fi = (FMUInstance *)fc;
 	fmi2Status simStatus = fmi2OK;
-    printf("%s in fmiDoStep()\n",fi->instanceName);
+    printf("%s in fmiDoStep(), ct: %f, h:%f\n",fi->instanceName, currentCommPoint, commStepSize);
+
     /*
-     * */
-    powerwindow_timeradvance(fi->thePWTimer, (currentCommPoint+commStepSize)*1000);
+     */
+    int isfin = fi->next_timer_event > 0;
+    if(fi->next_timer_event > 0){
+    	if (is_close(fi->next_timer_event, currentCommPoint+commStepSize, 1e-3, 1e-7)){
+    		powerwindow_timeradvance(fi->thePWTimer, (currentCommPoint+commStepSize)*1000); // yakindu in ms not in s
+    	}else{
+    		if (fi->next_timer_event < currentCommPoint + commStepSize){
+    			simStatus = fmi2Discard;
+    			fi->currentTime = fi->next_timer_event;
+    			return simStatus;
+    		}else{
+    			powerwindow_timeradvance(fi->thePWTimer, (currentCommPoint+commStepSize)*1000);
+    		}
+
+    	}
+    }else{powerwindow_timeradvance(fi->thePWTimer, (currentCommPoint+commStepSize)*1000);}
+
+
+
 
     if (fi->b[_in_driver_up]){
     	powerwindowIfaceInput_raise_driver_up(fi->Handle);}
@@ -254,9 +273,9 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	 * Check timers and set
 	 */
 	if(fi->thePWTimer->active){
-		fi->r[_out_next_timer_event] = fi->thePWTimer->nextTime/1000;
+		fi->next_timer_event = fi->thePWTimer->nextTime/1000; // yakindu in ms not in s
 	}else{
-		fi->r[_out_next_timer_event] = 0;
+		fi->next_timer_event = -1;
 	}
 
 
@@ -289,7 +308,6 @@ void fmi2FreeInstance(fmi2Component fc)
         fi->functions->freeMemory(fi->b);
         fi->functions->freeMemory(fi->Handle);
         fi->functions->freeMemory(fi->s);// TODO has to be done with loop
-        fi->functions->freeMemory(fi->Handle);
 		fi->functions->freeMemory((void*)fi->instanceName);
 		fi->functions->freeMemory((void*)fi->GUID);
 		fi->functions->freeMemory((void*)fi);
@@ -315,8 +333,6 @@ fmi2Status fmi2Reset(fmi2Component fc)
 	printf("Function fmiReset not supported\n");
     return fmi2Error;
 }
-
-
 
 
 fmi2Status fmi2SetInteger(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, const fmi2Integer value[])
@@ -360,6 +376,7 @@ fmi2Status fmi2GetFMUstate (fmi2Component c, fmi2FMUstate* FMUstate) {
     fi->startTime = orig->startTime;
     fi->stopTime = orig->stopTime;
 	fi->currentTime = orig->currentTime;
+	fi->next_timer_event = orig->next_timer_event;
 	powerwindow_copy(orig->Handle, fi->Handle);
 	//copy r
 	int i=0;
@@ -397,6 +414,7 @@ fmi2Status fmi2SetFMUstate (fmi2Component c, fmi2FMUstate FMUstate) {
     fi->startTime = orig->startTime;
     fi->stopTime = orig->stopTime;
 	fi->currentTime = orig->currentTime;
+	fi->next_timer_event = orig->next_timer_event;
 	printf("setting real values\n");
 	//copy r
 	int i=0;

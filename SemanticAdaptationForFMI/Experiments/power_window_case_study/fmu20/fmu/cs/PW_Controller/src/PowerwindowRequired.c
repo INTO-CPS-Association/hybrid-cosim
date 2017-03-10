@@ -7,6 +7,7 @@
 
 
 #include "PowerwindowRequired.h"
+#include <math.h>
 
 /*
  * I only check on the bigger than compare with the double
@@ -14,21 +15,25 @@
  */
 
  double relativeError(double a, double b){
-	return fabs((a - b) / a);
+	double rv = fabs((a - b) / a);
+	return rv;
 }
 
 /*
  * Helper function for absolute error
  */
  double absoluteError(double a, double b){
-	return fabs(a - b);
+	double rv=fabs(a - b);
+	return rv;
 }
 
 /*
  * is_close function for double comparison
  */
  int is_close(double a, double b, double REL_TOL, double ABS_TOL){
-	return ((absoluteError(a,b)<ABS_TOL) && (relativeError(a,b)<REL_TOL));
+	 int ae = absoluteError(a,b)<ABS_TOL;
+	 int re = relativeError(a,b)<REL_TOL;
+	return (ae && re);
 }
 
 void powerwindow_timeradvance(fmi_timer *theTimer, double currentTime){
@@ -53,6 +58,7 @@ void powerwindow_setTimer(Powerwindow* handle, const sc_eventid evid, const sc_i
 	thePWTimer->handle = handle;
 	thePWTimer->evid = evid;
 	thePWTimer->period = time_ms;
+	thePWTimer->nextTime = thePWTimer->currentTime + time_ms;
 	thePWTimer->isPeriodic = periodic;
 }
 

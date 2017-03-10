@@ -24,6 +24,7 @@
 #include "sim_support.h"
 
 #define FMI_COSIMULATION
+extern FMU fmu;
 
 
 //int unzip(const char *zipPath, const char *outPath) {
@@ -125,7 +126,7 @@ static void *getAdr(int *success, void *dllHandle, const char *functionName, con
 // Load the given dll and set function pointers in fmu
 // Return 0 to indicate failure
 int loadDll(const char* dllPath, FMU *fmu, const char* preamble) {
-    int s = 1;
+    int x = 1, s = 1;
     //HMODULE h = LoadLibrary(dllPath);
     void *h = dlopen(dllPath, RTLD_LAZY);
     printf("%s", dlerror());
@@ -481,7 +482,7 @@ static void replaceRefsInMessage(const char* msg, char* buffer, int nBuffer, FMU
                 c = msg[i];
 
             } else {
-                //char type = msg[i + 1]; // one of ribs
+                char type = msg[i + 1]; // one of ribs
                 fmi2ValueReference vr;
                 int nvr = sscanf(msg + i + 2, "%u", &vr);
                 if (nvr == 1) {

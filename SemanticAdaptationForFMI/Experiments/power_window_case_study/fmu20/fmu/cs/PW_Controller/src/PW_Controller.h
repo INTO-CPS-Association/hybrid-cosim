@@ -37,6 +37,7 @@ typedef struct {
     fmi2Real startTime;
     fmi2Real stopTime;
 	fmi2Real currentTime;
+	fmi2Real next_timer_event;
     fmi2Boolean stopTimeDefined;
     fmi2Real tolerance;
     fmi2Boolean toleranceDefined;

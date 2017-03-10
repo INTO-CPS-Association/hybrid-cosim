@@ -19,7 +19,9 @@ typedef enum {
     fmuExperimentSettedUp = 5
 } FMUState;
 
-
+#define _NR_OF_FMUS 1
+#define _NR_OF_IN_CONDITIONS 1
+#define _NR_OF_OUT_CONDITIONS 1
 
 typedef struct {
 	fmi2Real    *r;
@@ -32,16 +34,25 @@ typedef struct {
     const fmi2CallbackFunctions* functions;
     fmi2Boolean loggingOn;
     FMUState state;
-	fmi2Real stepSize;
     fmi2Real startTime;
     fmi2Real stopTime;
 	fmi2Real currentTime;
     fmi2Boolean stopTimeDefined;
-    fmi2Real tolerance;
     fmi2Boolean toleranceDefined;
-    FMU inner;
-    char *fmuResourceLocation_inner;
-    fmi2Component c_inner;
+    /* for generic algo*/
+    FMU fmu[_NR_OF_FMUS];
+    char *fmuResourceLocation[_NR_OF_FMUS];
+    fmi2Component c_fmu[_NR_OF_FMUS];
+    fmi2Boolean in_condition_executed[_NR_OF_IN_CONDITIONS];
+    fmi2Boolean out_conditions_executed[_NR_OF_OUT_CONDITIONS];
+    fmi2Real time_last_fmu[_NR_OF_FMUS];
+    /* Generated */
+    fmi2Real stored_windowsa_reaction_force;
+    fmi2Real stored_windowsa_displacement;
+    fmi2Real stored_windowsa_speed;
+    fmi2Real stored_window_reaction_torque;
+    fmi2Real stored_window_height;
+
 } FMUInstance; // At the moment, most of the variables not really used since multiple instances of an FMU are not supported at the moment (performance issues)
 
 

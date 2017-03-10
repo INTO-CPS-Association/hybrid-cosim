@@ -305,60 +305,70 @@ static sc_boolean powerwindow_check_main_region_Emergency_operation_tr0_tr0(cons
 static void powerwindow_effect_main_region_Normal_operation_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation(handle);
 	handle->ifaceOutput.down = bool_true;
+	handle->ifaceOutput.up = bool_false;
 	powerwindow_enseq_main_region_Emergency_operation_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_neutral_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_neutral(handle);
 	handle->ifaceOutput.down = bool_true;
+	handle->ifaceOutput.up = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_down_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_neutral_tr1(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_neutral(handle);
 	handle->ifaceOutput.up = bool_true;
+	handle->ifaceOutput.down = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_up_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_operation_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_operation(handle);
 	handle->ifaceOutput.down = bool_true;
+	handle->ifaceOutput.up = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_down_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_operation_tr1(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_neutral(handle);
 	handle->ifaceOutput.up = bool_true;
+	handle->ifaceOutput.down = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Passenger_up_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_down_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_down(handle);
 	handle->ifaceOutput.down = bool_true;
+	handle->ifaceOutput.up = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_operation_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_down_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_down(handle);
 	handle->ifaceOutput.down = bool_false;
+	handle->ifaceOutput.up = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_neutral_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Driver_up_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Driver_up(handle);
 	handle->ifaceOutput.up = bool_false;
+	handle->ifaceOutput.down = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_neutral_default(handle);
 }
 
 static void powerwindow_effect_main_region_Normal_operation_r1_Passenger_up_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Normal_operation_r1_Passenger_up(handle);
 	handle->ifaceOutput.up = bool_false;
+	handle->ifaceOutput.down = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_r1_Driver_neutral_r1_Passenger_operation_default(handle);
 }
 
 static void powerwindow_effect_main_region_Emergency_operation_tr0(Powerwindow* handle) {
 	powerwindow_exseq_main_region_Emergency_operation(handle);
 	handle->ifaceOutput.down = bool_false;
+	handle->ifaceOutput.up = bool_false;
 	powerwindow_enseq_main_region_Normal_operation_default(handle);
 }
 
