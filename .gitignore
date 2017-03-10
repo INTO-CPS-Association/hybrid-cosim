@@ -40,3 +40,6 @@ xtend-gen/
 /SemanticAdaptationForFMI/Experiments/power_window_case_study/case/result_Control_sa.html
 /SemanticAdaptationForFMI/Experiments/power_window_case_study/case/result_ENV.html
 /SemanticAdaptationForFMI/Experiments/power_window_case_study/case/result_power_sa.html
+*.o
+*.o
+*.o
