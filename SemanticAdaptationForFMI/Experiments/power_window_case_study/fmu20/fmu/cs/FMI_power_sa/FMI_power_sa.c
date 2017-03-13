@@ -125,12 +125,8 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 fmi2Status fmi2SetBoolean(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, const fmi2Boolean value[])
 {
 	FMUInstance* comp = (FMUInstance *)fc;
-	int i;
-	for (i = 0; i < nvr; i++)
-	{
-		comp->b[vr[i]] = value[i];
-	}
-	/*Generated: */
+
+	/*Generated: delayed */
 		fmi2Boolean in_condition[_NR_OF_IN_CONDITIONS];
 		/*Condition checking:*/
 		// true
@@ -141,8 +137,11 @@ fmi2Status fmi2SetBoolean(fmi2Component fc, const fmi2ValueReference vr[], size_
 			comp->stored_windowsa_d = comp->b[_in_d];
 			/* If mealy do update_in and recursive call */
 		}
-		return fmi2OK;
-
+	for (int i = 0; i < nvr; i++)
+	{
+		comp->b[vr[i]] = value[i];
+	}
+	/* Generated Non -delayed*/
 	//out_condition_executed := empty map
 	memset(comp->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);
 	return fmi2OK;
