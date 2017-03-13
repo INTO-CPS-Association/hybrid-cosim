@@ -17,7 +17,7 @@
 #define STOP_TIME 10.0
 #define STEP_SIZE 0.01
 
-FMU fmu_env, fmu_control_sa, fmu_power_sa, fmu_window_sa;
+FMU fmu_env, fmu_control_sa, fmu_power_sa, fmu_loop_sa;
 
 int main(void) {
 
@@ -33,25 +33,25 @@ int main(void) {
     loadDll("libFMI_Environment.dll", &fmu_env, "PW_ENV");
     loadDll("libFMI_controller_sa.dll", &fmu_control_sa, "PW_CONTROLLER_SA");
     loadDll("libFMI_power_sa.dll", &fmu_power_sa, "POWER_SA");
-    loadDll("libFMI_Window_sa.dll", &fmu_window_sa, "WINDOW_SA");
+    loadDll("libFMI_loop_sa.dll", &fmu_loop_sa, "LOOP_SA");
 
     puts("instantiating fmus\n");
-    fmi2Component c_env, c_control_sa, c_power_sa, c_window_sa;
+    fmi2Component c_env, c_control_sa, c_power_sa, c_loop_sa;
 
     char *fmuResourceLocation_env = "libFMI_Environment.dll";
     char *fmuResourceLocation_control_sa = "libFMI_controller_sa.dll";
     char *fmuResourceLocation_power_sa = "libFMI_power_sa.dll";
-    char *fmuResourceLocation_window_sa = "libFMI_Wower_sa.dll";
+    char *fmuResourceLocation_window_sa = "libFMI_loop_sa.dll";
 
     fmi2CallbackFunctions callbacks_env= {fmuLogger, calloc, free, NULL, &fmu_env};
     fmi2CallbackFunctions callbacks_control_sa = {fmuLogger, calloc, free, NULL, &fmu_control_sa};
     fmi2CallbackFunctions callbacks_power_sa = {fmuLogger, calloc, free, NULL, &fmu_power_sa};
-    fmi2CallbackFunctions callbacks_window_sa = {fmuLogger, calloc, free, NULL, &fmu_window_sa};
+    fmi2CallbackFunctions callbacks_loop_sa = {fmuLogger, calloc, free, NULL, &fmu_loop_sa};
 
     c_env = fmu_env.instantiate("env", fmi2CoSimulation, "1", fmuResourceLocation_env, &callbacks_env, fmi2False, fmi2False);
     c_control_sa = fmu_control_sa.instantiate("control_sa", fmi2CoSimulation, "1", fmuResourceLocation_control_sa, &callbacks_control_sa, fmi2False, fmi2False);
     c_power_sa = fmu_power_sa.instantiate("power_sa", fmi2CoSimulation, "1", fmuResourceLocation_power_sa, &callbacks_power_sa, fmi2False, fmi2False);
-    c_window_sa = fmu_window_sa.instantiate("window_sa",fmi2CoSimulation, "1", fmuResourceLocation_window_sa, &callbacks_window_sa, fmi2False, fmi2False );
+    c_loop_sa = fmu_loop_sa.instantiate("loop_sa",fmi2CoSimulation, "1", fmuResourceLocation_window_sa, &callbacks_loop_sa, fmi2False, fmi2False );
 
     fmi2Boolean toleranceDefined = fmi2False;  // true if model description define tolerance
     fmi2Real tolerance = 0;                    // used in setting up the experiment
@@ -70,7 +70,7 @@ int main(void) {
     if (fmi2Flag[2] == fmi2Error){
     	return -1;
     }
-    fmi2Flag[3] = fmu_window_sa.setupExperiment(c_window_sa, toleranceDefined, tolerance, START_TIME, fmi2True, STOP_TIME);
+    fmi2Flag[3] = fmu_loop_sa.setupExperiment(c_loop_sa, toleranceDefined, tolerance, START_TIME, fmi2True, STOP_TIME);
     if (fmi2Flag[3] == fmi2Error){
     	return -1;
     }
@@ -88,7 +88,7 @@ int main(void) {
     if (fmi2Flag[2] == fmi2Error){
     	return -1;
     }
-    fmi2Flag[3] = fmu_window_sa.enterInitializationMode(c_window_sa);
+    fmi2Flag[3] = fmu_loop_sa.enterInitializationMode(c_loop_sa);
     if (fmi2Flag[3] == fmi2Error){
     	return -1;
     }
@@ -106,19 +106,16 @@ int main(void) {
     if (fmi2Flag[2] == fmi2Error){
     	return -1;
     }
-    fmi2Flag[3] = fmu_window_sa.exitInitializationMode(c_window_sa);
+    fmi2Flag[3] = fmu_loop_sa.exitInitializationMode(c_loop_sa);
     if (fmi2Flag[3] == fmi2Error){
     	return -1;
     }
 
     fmi2ValueReference vr_out_env[9]={0,1,2,3,4,5,6,7,8};
     fmi2Boolean b_out_env[9];
-    fmi2ValueReference vr_out_window[1]={0};
-    fmi2Real r_out_window[1]={0};
     fmi2ValueReference vr_in_control_sa_from_env[8]={0,1,2,3,4,5,6,7};
     fmi2ValueReference vr_in_control_sa_from_window[1] = {0};
     fmi2ValueReference vr_out_control_sa[2]={9,10};
-    fmi2ValueReference vr_out_power_i[1] = {0};
     fmi2ValueReference vr_in_power_sa_u_d_tau[3] = {3,4,5};
     fmi2Real r_in_power[3];
     fmi2ValueReference vr_out_power_sa[3] = {0,1,2};
@@ -140,7 +137,7 @@ int main(void) {
     	if (fmu_env.getBoolean(c_env, vr_out_env, 9, &b_out_env[0]) != fmi2OK){
     	            return 1;
     	}
-    	if (fmu_power_sa.getBoolean(c_power_sa, vr_out_power_i, 1, &r_out_window[0]) != fmi2OK){
+    	if (fmu_power_sa.getReal(c_power_sa, vr_out_power_sa, 3, &r_out_power[0]) != fmi2OK){
     	    	            return 1;
     	    	}
 
@@ -155,16 +152,12 @@ int main(void) {
 				b_out_env[6],
 				b_out_env[7],
 				b_out_env[8]);
-    	if (b_out_env[8]){
-    		r_out_window[0] = 5;
-    	}else{
-    		r_out_window[0]= 0;
-    	}
+
     	fmi2Flag[1] = fmu_control_sa.setBoolean(c_control_sa,vr_in_control_sa_from_env,8,&b_out_env[0]);
     	if(fmi2Flag[1] != fmi2OK){
     		return 1;
     	}
-    	fmi2Flag[1] = fmu_control_sa.setReal(c_control_sa,vr_in_control_sa_from_window,1, &r_out_window[0]);
+    	fmi2Flag[1] = fmu_control_sa.setReal(c_control_sa,vr_in_control_sa_from_window,1, &r_out_power[0]);
     	if(fmi2Flag[1] != fmi2OK){
     	    		return 1;
     	}
@@ -190,15 +183,26 @@ int main(void) {
 
     	fmi2Flag[2] = fmu_power_sa.doStep(c_power_sa, currentTime, STEP_SIZE, fmi2True);
 
-    	if (fmu_env.setReal(c_power_sa, vr_out_power_sa, 3, &r_out_power[0]) != fmi2OK){
+    	if (fmu_power_sa.setReal(c_power_sa, vr_out_power_sa, 3, &r_out_power[0]) != fmi2OK){
     	    	            return 1;
     	    	}
 
     	fprintf(fp_fmu_power_sa,"%f,%f,%f,%f\n",
     	    			currentTime,
-    					r_out_window[0],
-    					r_out_window[1],
-						r_out_window[2]);
+    					r_out_power[0],
+    					r_out_power[1],
+						r_out_power[2]);
+
+
+    	fmi2ValueReference vr_toLoop[2] = {1,2};
+    	fmi2Real toLoop[2];
+    	toLoop[0] = r_out_power[1];
+    	toLoop[1] = r_out_power[2];
+
+    	if (fmu_loop_sa.setReal(c_loop_sa, vr_toLoop, 2, &toLoop[0]) != fmi2OK){
+    	    	    	            return 1;
+    	    	    	}
+    	fmi2Flag[3] = fmu_loop_sa.doStep(c_loop_sa, currentTime, STEP_SIZE, fmi2True);
 
     	int redoStep  = 0;
     	for(int i=0; i<2; i++)
