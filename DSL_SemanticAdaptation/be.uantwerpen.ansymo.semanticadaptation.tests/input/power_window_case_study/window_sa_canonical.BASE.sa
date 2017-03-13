@@ -20,8 +20,8 @@ param 	INIT_WINDOWSA_REACTION_FORCE := 0.0,
 		INIT_WINDOW_REACTION_HEIGHT := 0.0;
 
 control rules {
-	do_step(window, t, H);
-	return H;
+	var H_window := do_step(window, t, H);
+	return H_window;
 }
 
 in var 	stored_windowsa_reaction_force := INIT_WINDOWSA_REACTION_FORCE, 
@@ -48,7 +48,9 @@ out rules {
 		stored_window_reaction_torque := window.reaction_torque;
 		stored_window_height := window.height;
 	} --> {
-		windowSA.tau := - stored_window_reaction_torque;
 		windowSA.disp := stored_window_height / 100;
+	};
+	true -> { } --> {
+		windowSA.tau := -stored_window_reaction_torque;
 	};
 }
