@@ -14,7 +14,7 @@ at "./path/to/LoopSA.fmu"
 	with window_sa.disp -> obstacle.disp
 	with obstacle.reaction_force -> window_sa.reaction_force
 
-output ports tau (N.m) <- window_sa.tau
+output ports tau <- window_sa.tau
 
 param 	MAXITER := 10, 
 		REL_TOL := 1e-05, 
