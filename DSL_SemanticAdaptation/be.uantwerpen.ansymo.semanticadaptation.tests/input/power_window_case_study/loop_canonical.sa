@@ -14,14 +14,11 @@ at "./path/to/LoopSA.fmu"
 	with window_sa.disp -> obstacle.disp
 	with obstacle.reaction_force -> window_sa.reaction_force
 
-input ports displacement,
-			speed
+input ports displacement, speed
 
 output ports tau
 
-param 	MAXITER := 10, 
-		REL_TOL := 1e-05, 
-		ABS_TOL := 1e-05,
+param 	MAXITER := 10, REL_TOL := 1e-05, ABS_TOL := 1e-05,
 		INIT_LOOP_SA_DISPLACEMENT := 0.0,
 		INIT_LOOP_SA_SPEED := 0.0,
 		INIT_WINDOW_SA_DISP := 0.0,
