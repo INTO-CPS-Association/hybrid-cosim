@@ -214,7 +214,7 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 	fi->fmuResourceLocation[_obstacle] = "Obstacle.dll";
 
 	fi->fmu_guid[_window_sa]= functions->allocateMemory(1 + strlen("1"), sizeof(char));
-	fi->fmu_guid[_obstacle] = functions->allocateMemory(1 + strlen("{c6327117-e5f2-4e48-abcd-318439d1e7c4}"), sizeof(char));
+	fi->fmu_guid[_obstacle] = functions->allocateMemory(1 + strlen("{547938fa-ae1c-44b9-971b-64c1c3344c33}"), sizeof(char));
 	strcpy(fi->fmu_guid[_window_sa], "1");
 	strcpy(fi->fmu_guid[_obstacle], "{8de5bd74-8d30-4a72-9170-0e4bf874b6a8}");
 
@@ -324,32 +324,42 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 		fi->fmu[_window_sa].getFMUstate(fi->c_fmu[_window_sa], &window_sa_temp);
 
 		fi->fmu[_obstacle].setReal(fi->c_fmu[_obstacle], vr_disp,1, &fi->prev_disp);
-		fi->fmu[_obstacle].doStep(fi->c_fmu[_obstacle], currentCommPoint, commStepSize, fmi2True);
+		fi->fmu[_obstacle].doStep(fi->c_fmu[_obstacle], currentCommPoint, h, fmi2False);
 		fi->fmu[_obstacle].getReal(fi->c_fmu[_obstacle],vr_F_obstacle,1,&toWindowSA[0]);
+		printf("from obstacle = %f\n", toWindowSA[0]);
 
 		toWindowSA[1] = fi->r[_in_displacement];
+		printf("to window displacement = %f\n", fi->r[_in_displacement]);
 		toWindowSA[2] = fi->r[_in_speed];
+		printf("to window speed = %f\n", fi->r[_in_speed]);
 		fi->fmu[_window_sa].setReal(fi->c_fmu[_window_sa], vr_to_window_sa, 3, &toWindowSA[0]);
-		fi->fmu[_window_sa].doStep(fi->c_fmu[_window_sa], currentCommPoint, commStepSize, fmi2True);
+		fi->fmu[_window_sa].doStep(fi->c_fmu[_window_sa], currentCommPoint, h, fmi2False);
 		fi->fmu[_window_sa].getReal(fi->c_fmu[_window_sa], vr_from_window, 2, &fromWindow[0]);
 
 		repeat = is_close(fi->prev_disp, fromWindow[1], REL_TOL, ABS_TOL);
-		fi->prev_disp = fromWindow[1];
+		fi->prev_disp = fromWindow[1];\
+
 		if (repeat) {
+			fi->fmu[_obstacle].setFMUstate(fi->c_fmu[_obstacle], obstacle_temp);
+			fi->fmu[_window_sa].setFMUstate(fi->c_fmu[_window_sa], window_sa_temp);
+			fi->fmu[_obstacle].doStep(fi->c_fmu[_obstacle], currentCommPoint, h, fmi2True);
+			fi->fmu[_window_sa].doStep(fi->c_fmu[_window_sa], currentCommPoint, h, fmi2True);
+//			fi->fmu[_obstacle].freeInstance(obstacle_temp);
+//			fi->fmu[_window_sa].freeInstance(window_sa_temp);
 			break;
 		} else {
 			//rollback(obstacle);
 			fi->fmu[_obstacle].setFMUstate(fi->c_fmu[_obstacle], obstacle_temp);
 			fi->fmu[_window_sa].setFMUstate(fi->c_fmu[_window_sa], window_sa_temp);
-
+//			fi->fmu[_obstacle].freeInstance(obstacle_temp);
+//			fi->fmu[_window_sa].freeInstance(window_sa_temp);
 			//rollback(window_sa);
 		}
-		fi->fmu[_obstacle].freeInstance(obstacle_temp);
-		fi->fmu[_window_sa].freeInstance(window_sa_temp);
-		if(1){
-			fi->r[_out_tau] = fromWindow[0];
-		}
 	}
+	if(1){
+		fi->r[_out_tau] = fromWindow[0];
+	}
+
 	return status;
 }
 fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real commStepSize, fmi2Boolean noPrevFMUState)
@@ -372,6 +382,10 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 
 	if(1){
 		simStatus= DoInnerStep(fc,0,currentCommPoint,commStepSize);
+		if (simStatus == fmi2OK){
+			fi->time_last_fmu[0] = currentCommPoint + commStepSize;
+			fi->time_last_fmu[1] = currentCommPoint + commStepSize;
+		}
 	}
 
 	memset(fi->in_condition_executed, 0, sizeof(fmi2Boolean)*_NR_OF_IN_CONDITIONS);
@@ -506,9 +520,8 @@ fmi2Status fmi2GetFMUstate (fmi2Component c, fmi2FMUstate* FMUstate) {
 	//copy r
 	int i=0;
 	for (i=0; i< NUMBER_OF_REALS;i++){
-		printf("Setting real: %i %f\n", i, orig->r[i]);
 		fi->r[i] = orig->r[i];
-		printf("Setted real: %i %f\n", i, fi->r[i]);
+
 	}
 	//copy s
 	for (i=0; i< NUMBER_OF_STRINGS;i++){

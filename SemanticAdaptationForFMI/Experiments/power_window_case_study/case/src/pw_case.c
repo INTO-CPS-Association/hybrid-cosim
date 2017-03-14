@@ -14,8 +14,8 @@
 #include "fmi2.h"
 
 #define START_TIME 0.0
-#define STOP_TIME 10.0
-#define STEP_SIZE 0.01
+#define STOP_TIME 3.0
+#define STEP_SIZE 0.00001
 
 FMU fmu_env, fmu_control_sa, fmu_power_sa, fmu_loop_sa;
 
@@ -27,6 +27,9 @@ int main(void) {
 	fp_fmu_control_sa = fopen("result_Control_sa.csv", "w");
 	FILE *fp_fmu_power_sa;
 	fp_fmu_power_sa = fopen("result_power_sa.csv","w");
+	FILE *fp_fmu_loop_sa;
+	fp_fmu_loop_sa = fopen("result_loop_sa.csv", "w");
+
 
 	puts("Loading Dlls\n"); /* prints Hello World */
 	/* loading */
@@ -116,14 +119,20 @@ int main(void) {
     fmi2ValueReference vr_in_control_sa_from_env[8]={0,1,2,3,4,5,6,7};
     fmi2ValueReference vr_in_control_sa_from_window[1] = {0};
     fmi2ValueReference vr_out_control_sa[2]={9,10};
-    fmi2ValueReference vr_in_power_sa_u_d_tau[3] = {3,4,5};
-    fmi2Real r_in_power[3];
+    fmi2ValueReference vr_in_power_sa_u_d[2] = {3,5};
+    fmi2ValueReference vr_in_power_sa_tau[1] = {4};
+    fmi2ValueReference vr_out_loop_sa[1] = {0};
+    fmi2Real r_in_power_from_control[2] = {0,0};
+    fmi2Real r_in_power_from_loop[1]={0};
     fmi2ValueReference vr_out_power_sa[3] = {0,1,2};
     fmi2Real r_out_power[3];
+    fmi2Real r_out_loop_sa[1];
 
     fmi2Boolean b_out_control_sa[2];
     double currentTime = START_TIME;
     const fmi2StatusKind lst = fmi2LastSuccessfulTime;
+
+
 
     while(currentTime <= STOP_TIME){
     	printf("\n----master new loop, ct:%f, h:%f\n",currentTime,STEP_SIZE);
@@ -133,13 +142,26 @@ int main(void) {
     	fmu_env.getFMUstate(c_env,&ctemp_env);
     	fmu_control_sa.getFMUstate(c_control_sa, &ctemp_control_sa);
     	/* do step*/
+
+    	fmi2Flag[2] = fmu_power_sa.setReal(c_power_sa,vr_in_power_sa_u_d,2, &r_in_power_from_control[0]);
+    	if(fmi2Flag[1] != fmi2OK){
+    		return 1;
+    	}
+    	fmi2Flag[2] = fmu_power_sa.setReal(c_power_sa,vr_in_power_sa_tau,1, &r_in_power_from_loop[0]);
+    	if(fmi2Flag[1] != fmi2OK){
+    		return 1;
+    	}
+
+    	fmi2Flag[2] = fmu_power_sa.doStep(c_power_sa, currentTime, STEP_SIZE, fmi2True);
+
+    	if (fmu_power_sa.getReal(c_power_sa, vr_out_power_sa, 3, &r_out_power[0]) != fmi2OK){
+    		return 1;
+    	}
+    	fflush(stdout);
     	fmi2Flag[0] = fmu_env.doStep(c_env, currentTime, STEP_SIZE, fmi2True);
     	if (fmu_env.getBoolean(c_env, vr_out_env, 9, &b_out_env[0]) != fmi2OK){
-    	            return 1;
+    		return 1;
     	}
-    	if (fmu_power_sa.getReal(c_power_sa, vr_out_power_sa, 3, &r_out_power[0]) != fmi2OK){
-    	    	            return 1;
-    	    	}
 
     	fprintf(fp_fmu_env,"%f,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
     			currentTime,
@@ -161,7 +183,7 @@ int main(void) {
     	if(fmi2Flag[1] != fmi2OK){
     	    		return 1;
     	}
-
+    	fflush(stdout);
     	fmi2Flag[1] = fmu_control_sa.doStep(c_control_sa, currentTime, STEP_SIZE, fmi2True);
 
     	if (fmu_control_sa.getBoolean(c_control_sa, vr_out_control_sa, 2, &b_out_control_sa[0]) != fmi2OK){
@@ -172,21 +194,9 @@ int main(void) {
 				b_out_control_sa[0],
 				b_out_control_sa[1]);
 
-    	r_in_power[0] = b_out_control_sa[1];
-    	r_in_power[1] = 0;
-    	r_in_power[2] = b_out_control_sa[2];
-
-    	fmi2Flag[2] = fmu_power_sa.setReal(c_power_sa,vr_in_power_sa_u_d_tau,3, &r_in_power[0]);
-    	if(fmi2Flag[1] != fmi2OK){
-    		return 1;
-    	}
-
-    	fmi2Flag[2] = fmu_power_sa.doStep(c_power_sa, currentTime, STEP_SIZE, fmi2True);
-
-    	if (fmu_power_sa.setReal(c_power_sa, vr_out_power_sa, 3, &r_out_power[0]) != fmi2OK){
-    	    	            return 1;
-    	    	}
-
+    	r_in_power_from_control[0] = (int)b_out_control_sa[0];
+    	r_in_power_from_control[1] = (int)b_out_control_sa[1];
+    	fflush(stdout);
     	fprintf(fp_fmu_power_sa,"%f,%f,%f,%f\n",
     	    			currentTime,
     					r_out_power[0],
@@ -203,6 +213,19 @@ int main(void) {
     	    	    	            return 1;
     	    	    	}
     	fmi2Flag[3] = fmu_loop_sa.doStep(c_loop_sa, currentTime, STEP_SIZE, fmi2True);
+    	fflush(stdout);
+    	if (fmu_loop_sa.getReal(c_loop_sa, vr_out_loop_sa, 1, &r_out_loop_sa[0]) != fmi2OK){
+    	    	    	            return 1;
+    	    	    	}
+
+    	fprintf(fp_fmu_loop_sa,"%f,%f\n",
+    	    	    			currentTime,
+    	    					r_out_loop_sa[0]
+    	    					);
+
+    	r_in_power_from_loop[0] = r_out_loop_sa[0];
+
+    	//r_in_power_from_loop[0] = -7000;
 
     	int redoStep  = 0;
     	for(int i=0; i<2; i++)
@@ -223,6 +246,8 @@ int main(void) {
     	}else{
     		currentTime += STEP_SIZE;
     	}
+
+    	fflush(stdout);
 
     }
     fclose(fp_fmu_env);

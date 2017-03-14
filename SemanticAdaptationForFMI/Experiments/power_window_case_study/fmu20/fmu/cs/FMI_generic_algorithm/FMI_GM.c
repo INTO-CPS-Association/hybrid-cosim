@@ -52,6 +52,9 @@ Template for a  FMU
 
 
 double relativeError(double a, double b){
+	if(a==0){
+		return  0;
+	}
 	return fabs((a - b) / a);
 }
 

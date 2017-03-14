@@ -236,29 +236,39 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 
 
     if (fi->b[_in_driver_up]){
-    	powerwindowIfaceInput_raise_driver_up(fi->Handle);}
+    	powerwindowIfaceInput_raise_driver_up(fi->Handle);
+    	printf("raise up driver\n");
+    }
+
 
 	if(fi->b[ _in_driver_down]){
 		powerwindowIfaceInput_raise_driver_down(fi->Handle);
+		printf("raise down driver\n");
 	}
 
 	if(fi->b[_in_driver_up_stop]){
 		powerwindowIfaceInput_raise_stop(fi->Handle);
+		printf("raise up stop\n");
 	}
 	if(fi->b[ _in_driver_down_stop]){
 		powerwindowIfaceInput_raise_stop(fi->Handle);
+		printf("raise driver down stop\n");
 	}
 	if(fi->b[_in_passenger_up]){
 		powerwindowIfaceInput_raise_passenger_up(fi->Handle);
+		printf("raise up passenger\n");
 	}
 	if(fi->b[_in_passenger_down]){
 		powerwindowIfaceInput_raise_passenger_down(fi->Handle);
+		printf("raise passenger down\n");
 	}
 	if(fi->b[_in_passenger_up_stop]){
 		powerwindowIfaceInput_raise_stop(fi->Handle);
+		printf("raise passenger up stop\n");
 	}
 	if(fi->b[_in_passenger_down_stop]){
 		powerwindowIfaceInput_raise_stop(fi->Handle);
+		printf("raise passenger down stop\n");
 	}
 	if(fi->b[_in_obj_detected]){
 		powerwindowIfaceInput_raise_obj_detected(fi->Handle);
