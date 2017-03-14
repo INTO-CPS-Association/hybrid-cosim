@@ -77,11 +77,32 @@ fmi2Status fmi2GetString(fmi2Component fc, const fmi2ValueReference vr[], size_t
 fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, const fmi2Real value[])
 {
 	FMUInstance* comp = (FMUInstance *)fc;
-	int i;
-	for (i = 0; i < nvr; i++)
+
+	for (int i = 0; i < nvr; i++)
 	{
 		comp->r[vr[i]] = value[i];
+		fmi2Real theval = value[i];
+		printf("%f\n", theval);
 	}
+	fmi2Boolean in_condition[_NR_OF_IN_CONDITIONS];
+	/*Condition checking:*/
+	// true
+	in_condition[0] = 1;
+
+	for (int i = 0; i < nvr; i++){
+		if(in_condition[0] && (vr[i] == _in_u)){
+			comp->stored_windowsa_u = comp->r[_in_u];
+		}
+		if(in_condition[0] && (vr[i] == _in_d)){
+			comp->stored_windowsa_d = comp->r[_in_d];
+		}
+		if(in_condition[0] && (vr[i] == _in_tau)){
+			comp->stored_tau = comp->r[_in_tau];
+		}
+		/* If mealy do update_in and recursive call */
+
+	}
+
 	//out_condition_executed := empty map
 	memset(comp->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);
 	return fmi2OK;
@@ -105,13 +126,11 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 		comp->out_conditions_executed[0] = 1;
 	}
 
-	if (isEmpty){
-		for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
-			if(comp->out_conditions_executed[i]){
-				comp->r[_out_i] = comp->stored_armature_current;
-				comp->r[_out_omega] = comp->stored_speed;
-				comp->r[_out_theta] = comp->stored_displacement;
-			}
+	for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
+		if(comp->out_conditions_executed[i]){
+			comp->r[_out_i] = comp->stored_armature_current;
+			comp->r[_out_omega] = comp->stored_speed;
+			comp->r[_out_theta] = comp->stored_displacement;
 		}
 	}
 	for (int i = 0; i < nvr; i++)
@@ -125,26 +144,8 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 fmi2Status fmi2SetBoolean(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, const fmi2Boolean value[])
 {
 	FMUInstance* comp = (FMUInstance *)fc;
-	int i;
-	for (i = 0; i < nvr; i++)
-	{
-		comp->b[vr[i]] = value[i];
-	}
-	/*Generated: */
-		fmi2Boolean in_condition[_NR_OF_IN_CONDITIONS];
-		/*Condition checking:*/
-		// true
-		in_condition[0] = 1;
+	printf("Error!!!! Not implemented!!!\n");
 
-		if(in_condition[0]){
-			comp->stored_windowsa_u = (fmi2Real) comp->b[_in_u];
-			comp->stored_windowsa_d = comp->b[_in_d];
-			/* If mealy do update_in and recursive call */
-		}
-		return fmi2OK;
-
-	//out_condition_executed := empty map
-	memset(comp->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);
 	return fmi2OK;
 }
 
@@ -213,7 +214,7 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 
 	/*Instantiate inner components*/
 	for (int i=0; i<1; i++){
-		fi->c_fmu[i] = fi->fmu[i].instantiate("inner", fmi2CoSimulation, "{c6327117-e5f2-4e48-abcd-318439d1e7c4}", fi->fmuResourceLocation[i] , fi->functions, visible, 0);
+		fi->c_fmu[i] = fi->fmu[i].instantiate("inner", fmi2CoSimulation, "{547938fa-ae1c-44b9-971b-64c1c3344c33}", fi->fmuResourceLocation[i] , fi->functions, visible, 0);
 	}
 
 
@@ -317,10 +318,19 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 		values[1] = fi->stored_tau;
 		values[2] = fi->stored_windowsa_u;
 		fi->fmu[index].setReal(fi->c_fmu[index],vr_toPower, 3, &values[0]);
+		printf("t: %f, d in %f \n", currentCommPoint,  fi->stored_windowsa_d );
+		printf("t: %f, tau in %f \n", currentCommPoint,  fi->stored_tau );
+		printf("t: %f, u in %f \n", currentCommPoint,  fi->stored_windowsa_u );
+
 	}
 
+	printf("t: %f, h: %f \n", currentCommPoint, h );
 	status = fi->fmu[index].doStep(fi->c_fmu[index],fi->time_last_fmu[index],h,fmi2True);
+	if(status != fmi2OK){
+		printf("Rejected the step size\n");
+	}
 
+	fi->time_last_fmu[index] = currentCommPoint + h;
 	if (1){
 		fmi2ValueReference vr_fromPower[3] = {0,1,2};
 		fmi2Real out_values[3];
@@ -328,6 +338,8 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 		fi->stored_armature_current = out_values[0];
 		fi->stored_speed = out_values[1];
 		fi->stored_displacement = out_values[2];
+		printf("t: %f, w out %f \n", currentCommPoint, fi->stored_speed );
+		printf("t: %f, i out %f \n", currentCommPoint, fi->stored_armature_current );
 	}
 	return status;
 }

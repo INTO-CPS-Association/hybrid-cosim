@@ -52,6 +52,9 @@ Template for a  FMU
 
 
 double relativeError(double a, double b){
+	if(a==0){
+		return  0;
+	}
 	return fabs((a - b) / a);
 }
 
@@ -90,12 +93,7 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 	int i;
 	for (i = 0; i < nvr; i++)
 	{
-		if(vr[i]>=2){
-			printf("Value reference: %d, cannot be set, it is a store element\n", vr[i]);
-		}else{
-			printf("Value reference: %d\n", vr[i]);
-			comp->r[vr[i]] = value[i];
-		}
+		comp->r[vr[i]] = value[i];
 	}
 
 	/*Generated: */

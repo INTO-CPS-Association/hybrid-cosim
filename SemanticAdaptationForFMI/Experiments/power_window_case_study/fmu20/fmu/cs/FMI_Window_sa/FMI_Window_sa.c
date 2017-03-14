@@ -38,6 +38,9 @@ Template for a  FMU
 #define _in_speed 4
 
 double relativeError(double a, double b){
+	if(a==0){
+		return 0;
+	}
 	return fabs((a - b) / a);
 }
 
@@ -83,7 +86,7 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 	for (i = 0; i < nvr; i++)
 	{
 		comp->r[vr[i]] = value[i];
-		isset[i] = 1;
+		isset[vr[i]] = 1;
 	}
 	/*Generated: */
 	fmi2Boolean in_condition[_NR_OF_IN_CONDITIONS];
@@ -126,14 +129,16 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 		comp->out_conditions_executed[0] = 1;
 	}
 
-	if (isEmpty){
-		for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
-			if(comp->out_conditions_executed[i]){
-				comp->r[_out_tau] = - comp->stored_window_reaction_torque;
-				comp->r[_out_height] = comp->stored_window_height * 100;
-			}
+
+	for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
+		if(comp->out_conditions_executed[i]){
+			comp->r[_out_tau] =  comp->stored_window_reaction_torque;
+			printf("setted out_tau: %f\n",comp->r[_out_tau]);
+			comp->r[_out_height] = comp->stored_window_height;
+			printf("setted out_height: %f\n",comp->r[_out_height]);
 		}
 	}
+
 	for (int i = 0; i < nvr; i++)
 	{
 		value[i] = comp->r[(vr[i])];
@@ -333,10 +338,14 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 		values[0] = fi->stored_windowsa_reaction_force;
 		values[1] = fi->stored_windowsa_speed;
 		values[2] = fi->stored_windowsa_displacement;
+
 		fi->fmu[index].setReal(fi->c_fmu[index],vr_toWindow, 3, &values[0]);
 	}
 
 	status = fi->fmu[index].doStep(fi->c_fmu[index],fi->time_last_fmu[index],h,fmi2True);
+	if(status == fmi2OK){
+		fi->time_last_fmu[index]+= h;
+	}
 
 	if (1){
 		fmi2ValueReference vr_fromWindow[2] = {3,6};
@@ -394,7 +403,7 @@ void fmi2FreeInstance(fmi2Component fc)
 
 	FMUInstance* fi = (FMUInstance*) fc;
 	printf("%s in fmiFreeInstance\n",fi->instanceName);
-	for(int i=0;i<1;i++){
+	for(int i=0;i<_NR_OF_FMUS;i++){
 		fi->fmu[i].freeInstance(fi->c_fmu[i]);
 	}
 
@@ -497,7 +506,7 @@ fmi2Status fmi2GetFMUstate (fmi2Component c, fmi2FMUstate* FMUstate) {
 	 * This is a hierarchical call. First let the lower FMUs do their state saving
 	 * We will store the saved fmu state in the fi->c_order[i]
 	 */
-	for(int i=0;i<1;i++){
+	for(int i=0;i<_NR_OF_FMUS;i++){
 		fi->fmu[i]=orig->fmu[i];
 		orig->fmu[i].getFMUstate(orig->c_fmu[i],fi->c_fmu[i]);
 		fi->fmuResourceLocation[i] = fi->functions->allocateMemory(1+strlen(orig->fmuResourceLocation[i]), sizeof(char));
@@ -507,9 +516,9 @@ fmi2Status fmi2GetFMUstate (fmi2Component c, fmi2FMUstate* FMUstate) {
 	//copy r
 	int i=0;
 	for (i=0; i< NUMBER_OF_REALS;i++){
-		printf("Setting real: %i %f\n", i, orig->r[i]);
+		//printf("Setting real: %i %f\n", i, orig->r[i]);
 		fi->r[i] = orig->r[i];
-		printf("Setted real: %i %f\n", i, fi->r[i]);
+		//printf("Setted real: %i %f\n", i, fi->r[i]);
 	}
 	//copy s
 	for (i=0; i< NUMBER_OF_STRINGS;i++){
@@ -534,7 +543,7 @@ fmi2Status fmi2SetFMUstate (fmi2Component c, fmi2FMUstate FMUstate) {
 	/*
 	 * First restore the hierarchical fmus.
 	 */
-	for(int i=0;i<1;i++){
+	for(int i=0;i<_NR_OF_FMUS;i++){
 		fi->fmu[i].setFMUstate(fi->c_fmu[i],orig->c_fmu[i]);
 		fi->fmuResourceLocation[i] = orig->functions->allocateMemory(1+strlen(orig->fmuResourceLocation[i]), sizeof(char));
 		strcpy((char *)fi->fmuResourceLocation[i],(char *)orig->fmuResourceLocation[i]);

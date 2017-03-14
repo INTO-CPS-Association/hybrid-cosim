@@ -243,7 +243,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	fmi2Status simStatus = fmi2OK;
     printf("%s in fmiDoStep()\n",fi->instanceName);
 
-    if(currentCommPoint < 0.5){
+    if(currentCommPoint < 0.01){
     	fi->b[_out_driver_up] = 0;
     	fi->b[_out_driver_up_stop] = 0;
 		fi->b[_out_driver_down] = 0;
@@ -253,7 +253,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 		fi->b[_out_passenger_down] = 0;
 		fi->b[_out_passenger_down_stop] = 0;
 		fi->b[_out_object] = 0;
-    }else if(currentCommPoint < 1){
+    }else if(currentCommPoint < 4.59){
     	fi->b[_out_driver_up] = 1;
     	fi->b[_out_driver_up_stop] = 0;
 		fi->b[_out_driver_down] = 0;
@@ -263,47 +263,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 		fi->b[_out_passenger_down] = 0;
 		fi->b[_out_passenger_down_stop] = 0;
 		fi->b[_out_object] = 0;
-    }else if(currentCommPoint < 1.5){
-    	fi->b[_out_driver_up] = 1;
-    	fi->b[_out_driver_up_stop] = 0;
-		fi->b[_out_driver_down] = 0;
-		fi->b[_out_driver_down_stop] = 0;
-		fi->b[_out_passenger_up] = 0;
-		fi->b[_out_passenger_up_stop] = 0;
-		fi->b[_out_passenger_down] = 0;
-		fi->b[_out_passenger_down_stop] = 0;
-		fi->b[_out_object] = 1;
-    }else if(currentCommPoint < 1.7){
-    	fi->b[_out_driver_up] = 0;
-    	fi->b[_out_driver_up_stop] = 0;
-		fi->b[_out_driver_down] = 0;
-		fi->b[_out_driver_down_stop] = 0;
-		fi->b[_out_passenger_up] = 0;
-		fi->b[_out_passenger_up_stop] = 0;
-		fi->b[_out_passenger_down] = 0;
-		fi->b[_out_passenger_down_stop] = 0;
-		fi->b[_out_object] = 0;
-    }else if(currentCommPoint < 2.7){
-    	fi->b[_out_driver_up] = 0;
-    	fi->b[_out_driver_up_stop] = 0;
-		fi->b[_out_driver_down] = 0;
-		fi->b[_out_driver_down_stop] = 0;
-		fi->b[_out_passenger_up] = 0;
-		fi->b[_out_passenger_up_stop] = 0;
-		fi->b[_out_passenger_down] = 0;
-		fi->b[_out_passenger_down_stop] = 0;
-		fi->b[_out_object] = 0;
-    }else if(currentCommPoint < 3.1){
-    	fi->b[_out_driver_up] = 1;
-    	fi->b[_out_driver_up_stop] = 0;
-		fi->b[_out_driver_down] = 0;
-		fi->b[_out_driver_down_stop] = 0;
-		fi->b[_out_passenger_up] = 0;
-		fi->b[_out_passenger_up_stop] = 0;
-		fi->b[_out_passenger_down] = 1;
-		fi->b[_out_passenger_down_stop] = 0;
-		fi->b[_out_object] = 0;
-    }else if(currentCommPoint < 3.5){
+    }else if(currentCommPoint < 5){
     	fi->b[_out_driver_up] = 0;
     	fi->b[_out_driver_up_stop] = 1;
 		fi->b[_out_driver_down] = 0;
@@ -311,7 +271,47 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 		fi->b[_out_passenger_up] = 0;
 		fi->b[_out_passenger_up_stop] = 0;
 		fi->b[_out_passenger_down] = 0;
-		fi->b[_out_passenger_down_stop] = 1;
+		fi->b[_out_passenger_down_stop] = 0;
+		fi->b[_out_object] = 0;
+    }else if(currentCommPoint < 5.01){
+    	fi->b[_out_driver_up] = 0;
+    	fi->b[_out_driver_up_stop] = 0;
+		fi->b[_out_driver_down] = 0;
+		fi->b[_out_driver_down_stop] = 0;
+		fi->b[_out_passenger_up] = 0;
+		fi->b[_out_passenger_up_stop] = 0;
+		fi->b[_out_passenger_down] = 0;
+		fi->b[_out_passenger_down_stop] = 0;
+		fi->b[_out_object] = 0;
+    }else if(currentCommPoint < 6.7){
+    	fi->b[_out_driver_up] = 0;
+    	fi->b[_out_driver_up_stop] = 0;
+		fi->b[_out_driver_down] = 0;
+		fi->b[_out_driver_down_stop] = 0;
+		fi->b[_out_passenger_up] = 0;
+		fi->b[_out_passenger_up_stop] = 0;
+		fi->b[_out_passenger_down] = 0;
+		fi->b[_out_passenger_down_stop] = 0;
+		fi->b[_out_object] = 0;
+    }else if(currentCommPoint < 7.1){
+    	fi->b[_out_driver_up] = 0;
+    	fi->b[_out_driver_up_stop] = 0;
+		fi->b[_out_driver_down] = 1;
+		fi->b[_out_driver_down_stop] = 0;
+		fi->b[_out_passenger_up] = 0;
+		fi->b[_out_passenger_up_stop] = 0;
+		fi->b[_out_passenger_down] = 0;
+		fi->b[_out_passenger_down_stop] = 0;
+		fi->b[_out_object] = 0;
+    }else if(currentCommPoint < 8.5){
+    	fi->b[_out_driver_up] = 0;
+    	fi->b[_out_driver_up_stop] = 0;
+		fi->b[_out_driver_down] = 0;
+		fi->b[_out_driver_down_stop] = 0;
+		fi->b[_out_passenger_up] = 0;
+		fi->b[_out_passenger_up_stop] = 0;
+		fi->b[_out_passenger_down] = 0;
+		fi->b[_out_passenger_down_stop] = 0;
 		fi->b[_out_object] = 0;
     }
 
