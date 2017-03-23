@@ -26,42 +26,59 @@ control {
 	return H;
 }
 
-in var 	stored_windowsa_reaction_force := 0., 
-		stored_windowsa_displacement := 0., 
-		stored_windowsa_speed := 0.;
+in var 	stored_windowsa_reaction_force := 0.0, 
+		stored_windowsa_displacement := 0.0, 
+		stored_windowsa_speed := 0.0;
 
 in rules {
+	/*
+	is_set checks whether the input value is given in the setValues call of the adapted FMU.
+	Notice that in the canonical version, all ports are prefixed.
+	*/
+
 	true -> {
-		/*
-		is_set checks whether the input value is given in the setValues call of the adapted FMU.
-		Notice that in the canonical version, all ports are prefixed.
-		*/
 		if (is_set(windowSA.reaction_force)){
 			stored_windowsa_reaction_force := windowSA.reaction_force;
 		}
+	} --> {
+			window.reaction_force := stored_windowsa_reaction_force;
+		};
+	
+	true -> {
 		if (is_set(windowSA.displacement)){
-			stored_windowsa_displacement := windowSA.displacement;			
-		}
+				stored_windowsa_displacement := windowSA.displacement;			
+			}
+	} --> {
+		window.displacement := stored_windowsa_displacement; 
+		};
+	
+	
+	true -> {		
 		if (is_set(windowSA.speed)){
 			stored_windowsa_speed := windowSA.speed;
 		}
 	} --> {
-		window.reaction_force := stored_windowsa_reaction_force;
-		window.displacement := stored_windowsa_displacement; 
+		
 		window.speed := stored_windowsa_speed;
 	};
 }
 
-out var stored_window_reaction_torque := 0,
-		stored_window_height := 0;
+out var stored_window_reaction_torque := 0.0,
+		stored_window_height := 0.0;
 		
 out rules {
+
 	true -> {
-		stored_window_reaction_torque := window.reaction_torque;
-		stored_window_height := window.height;
+		stored_window_reaction_torque := window.tau;
 	} --> {
 		windowSA.tau := - stored_window_reaction_torque;
-		windowSA.disp := stored_window_height / 100;
 	};
+	
+	true -> {
+		stored_window_height := window.disp;
+	} --> {
+		windowSA.disp := stored_window_height * 100;
+	};
+
 }
 

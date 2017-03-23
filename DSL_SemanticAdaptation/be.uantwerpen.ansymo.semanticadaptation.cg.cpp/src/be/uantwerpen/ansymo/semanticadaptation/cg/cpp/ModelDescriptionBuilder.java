@@ -37,7 +37,7 @@ public class ModelDescriptionBuilder {
 		rootElement.setAttribute("fmiVersion", "2.0");
 		rootElement.setAttribute("modelName", modelName);
 		rootElement.setAttribute("guid", guid);
-		rootElement.setAttribute("variableNamingConvention", "structured");
+		rootElement.setAttribute("variableNamingConvention", "flat");
 
 		modelVariables = doc.createElement("ModelVariables");
 		rootElement.appendChild(modelVariables);

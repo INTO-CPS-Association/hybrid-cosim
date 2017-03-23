@@ -42,8 +42,11 @@ public class ModelDescriptionCreator {
 		mdName = name;
 	}
 	
+	public def List<ScalarVariable> getScalars(){
+		return this.sVars;
+	}
+	
 	private def Document getModelDescription(File path) {
-		System.out.println(path.absolutePath);
 		var ZipFile fmu = new ZipFile(path);
 		var Enumeration<? extends ZipEntry> entries = fmu.entries();
 		var boolean entryFound = false;

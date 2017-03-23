@@ -23,14 +23,14 @@ import org.junit.Ignore
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
-class CgCppBasicTest extends AbstractSemanticAdaptationTest {
+class CgCppBasicTestKel extends AbstractSemanticAdaptationTest {
 
 	// @Inject CppGenerator underTest
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
 	
-	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa') }
+	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/windowKEL/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
 		val model = __parse(filename)
@@ -40,13 +40,8 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val IGeneratorContext ctxt = null;
 		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
 		
-		for(files : fsa.allFiles.entrySet)
-		{
-			System.out.println("########################")
-			System.out.println("Filename: " + files.key.substring(14))
-			System.out.println(files.value)
-		}
-		//System.out.println(fsa.allFiles)		
+		
+		System.out.println(fsa.allFiles)		
 	}
 
 	def __parseNoErrorsPrint(String filename) {
