@@ -2,7 +2,7 @@ model Window
   parameter Real r = 0.11;
   parameter Real b = 10;
   input Real speed;
-  input Real disp;
+  input Real displacement;
   input Real reaction_force;
   output Real tau;
   output Real height;
@@ -10,7 +10,7 @@ model Window
   output Real friction;
 equation
   tau = reaction_force * r + friction;
-  height = r * disp;
+  height = r * displacement;
   v = r * speed;
   friction = b * v;
   annotation(
