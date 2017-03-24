@@ -57,13 +57,11 @@ class ModelDescription {
 			
 			for(var j = 0; j < node.childNodes.length; j++)
 			{
-				val subNode = node.childNodes.item(i);
+				val subNode = node.childNodes.item(j);
 				if(subNode.nodeType == Node.ELEMENT_NODE)
 				{
 					val type = SVType.valueOf(subNode.nodeName);
 					this.scalarWithTypes.put(nodeName, type);
-					//Alternative break, as break is not allowed
-					j = node.childNodes.length;
 				}
 			}
 		}

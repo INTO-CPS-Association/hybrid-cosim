@@ -27,15 +27,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		this.fsa = fsa;
 		for (type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
 			type.compile;
-			//fsa.generateFile(type.name + ".cpp", type.compile)
 			mdCreator.name = type.name;
 			fsa.generateFile("modelDescription.xml", mdCreator.modelDescription);
 		}
-//		
-//		for(type : resource.allContents.toIterable)
-//		{
-//			SwitchTest.doSwitch(type);
-//		}
 	}
 
 // TODO: Verify adaptation.name is not a C++ keyword
@@ -43,13 +37,16 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	def void compile(SemanticAdaptation adaptation) {
 		for (type : adaptation.elements.filter(Adaptation)) {
 			var fmus = newArrayList();		
+			
+			// Extract all the scalar values from the model description file
 			for (fmu : type.inner.eAllContents.toIterable.filter(InnerFMU)) {
-				//TODO: Merge this with ModelDescriptionCreator somehow
+				//TODO: Merge this with ModelDescriptionCreator
 				var md = new ModelDescription(fmu.name, new File(fmu.path.replace('\"', '')));
 				fmus.add(fmu.name);
 				this.scalars.putAll(md.scalars);
 			}
 			
+			// Create Defines for the scalar values
 			var defines = newArrayList();
 			for(scalar : this.scalars.entrySet){
 				val pair = scalar.value;
@@ -61,7 +58,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			
 			var String generatedCpp;
 			
-			//This generates all the inrules
+			// Generate the In Rules
 			this.inrules = new InRulesConditionSwitch(type.name, scalars);
 			for (inRules : adaptation.eAllContents.toIterable.filter(InRulesBlock)) {
 				for (dataRule : inRules.eAllContents.toIterable.filter(DataRule)) {
@@ -70,7 +67,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				}
 			}
 			
-			//This generates all the outrules
+			// Generate the Out Rules
 			var outrules = new OutRulesConditionSwitch(type.name, scalars);
 			for(outRules : adaptation.eAllContents.toIterable.filter(OutRulesBlock)){
 				for(dataRule : outRules.eAllContents.toIterable.filter(DataRule)){
@@ -79,6 +76,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				}
 			}
 			
+			// Generate the Control Rules
 			var controlrule = new ControlConditionSwitch(type.name,	 scalars);
 			for(controlRule : adaptation.eAllContents.toIterable.filter(ControlRuleBlock)){
 				for(crtlRule : controlRule.eAllContents.toIterable.filter(ControlRule)){
@@ -86,8 +84,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				}
 			}
 
+			// Generate the cpp file for the SA
 			fsa.generateFile(type.name+".cpp", generatedCpp);
 			
+			// Generate the h file for the SA
 			var String header = 
 			'''
 			class «type.name» : SemanticAdaptation<«type.name»>{

@@ -31,7 +31,7 @@ class ControlConditionSwitch<CharSequence> extends InOutRulesConditionSwitch {
 	}
 	
 	override String caseDoStep(DoStep object){
-		return '''this->doStep(«object.fmu.name»,«doSwitch(object.h)»,«doSwitch(object.t)»);'''
+		return '''this->doStep(«object.fmu.name»,«doSwitch(object.h)»,«doSwitch(object.t)»);''';
 	}
 	
 	override String caseStepSize(StepSize object){
