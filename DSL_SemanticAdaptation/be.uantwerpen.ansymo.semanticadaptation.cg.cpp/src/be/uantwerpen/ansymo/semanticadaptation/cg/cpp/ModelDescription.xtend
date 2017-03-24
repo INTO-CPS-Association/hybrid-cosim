@@ -19,8 +19,8 @@ import javax.lang.model.element.Element
 class ModelDescription {
 	private final Document md;
 	private final String name;
-	private var LinkedHashMap<String,Pair<String,Integer>> scalarDefinitions = newLinkedHashMap();
-	private var LinkedHashMap<String,SVType> scalarWithTypes = newLinkedHashMap();
+	private var LinkedHashMap<String, Pair<String, Integer>> svDefs = newLinkedHashMap();
+	private var LinkedHashMap<String, ScalarVariable> svs = newLinkedHashMap();
 
 	new(String name, File path) {
 		this.name = name;
@@ -51,27 +51,36 @@ class ModelDescription {
 		for (var int i = 0; i < nl.length; i++) {
 			val node = nl.item(i);
 			val nodeName = node.attributes.getNamedItem("name").nodeValue;
+			val valueRef = node.attributes.getNamedItem("valueReference").nodeValue;
 			val name = this.name + nodeName;
-			val define = name.toUpperCase; 
-			this.scalarDefinitions.put(name,define -> i+1);
-			
-			for(var j = 0; j < node.childNodes.length; j++)
-			{
+			val define = name.toUpperCase;
+			this.svDefs.put(name, define -> Integer.parseInt(valueRef));
+			val sv = ScalarVariable.Create().setCausality(
+				SVCausality.valueOf(node.attributes.getNamedItem("causality").nodeValue)).setName(nodeName).setOwner(
+				this.name).setValueReference(valueRef);
+			for (var j = 0; j < node.childNodes.length; j++) {
 				val subNode = node.childNodes.item(j);
-				if(subNode.nodeType == Node.ELEMENT_NODE)
-				{
-					val type = SVType.valueOf(subNode.nodeName);
-					this.scalarWithTypes.put(nodeName, type);
+				if (subNode.nodeType == Node.ELEMENT_NODE) {
+					val startAttribute = subNode.attributes.getNamedItem("start");
+					if (startAttribute !== null) {
+						sv.start = startAttribute.nodeValue;
+					}
+					sv.type = SVType.valueOf(subNode.nodeName);
+
+					this.svs.put(nodeName, sv);
+
 				}
 			}
 		}
 	}
-	
-	public def getName(){
+
+	public def getName() {
 		return this.name;
 	}
-	
-	public def getScalars() {
-		return this.scalarDefinitions;
+
+	public def getSvDef() {
+		return this.svDefs;
 	}
+
+	public def getSv() { return this.svs; }
 }

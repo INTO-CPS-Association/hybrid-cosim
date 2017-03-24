@@ -19,12 +19,18 @@ import org.eclipse.emf.ecore.EObject
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Multi
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Neg
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Literal
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InRulesBlock
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutRulesBlock
 
 abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String> {
 
+	protected var LinkedHashMap<String, Pair<SVType, Object>> globalVars = newLinkedHashMap();
+	private var Pair<SVType, Object> lastVal;
 	protected final String adaptationName;
 	protected final LinkedHashMap<String, Pair<String, Integer>> scalars;
-	protected Integer count = 0;
+	private Integer count = 0;
 	private final String functionPrefix;
 	protected List<String> functionSignatures = newArrayList();
 	protected String externalVariableOwner;
@@ -49,44 +55,67 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String
 		this.count++;
 	}
 
+	override String caseOutRulesBlock(OutRulesBlock object) {
+		var cpp = ""
+		for (gVar : object.globalOutVars) {
+			doSwitch(gVar)
+		}
+		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
+			this.incrementCount;
+			cpp += doSwitch(dataRule);
+		}
+		return cpp;
+	}
+
+	override String caseInRulesBlock(InRulesBlock object) {
+		var cpp = ""
+		for (gVar : object.globalInVars) {
+			doSwitch(gVar)
+		}
+		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
+			this.incrementCount;
+			cpp += doSwitch(dataRule);
+		}
+		return cpp;
+	}
+
 	override String caseBoolLiteral(BoolLiteral object) {
 		return '''«object.value»''';
 	}
 
-	override String caseRealLiteral(RealLiteral object) {
-		return '''«object.value»''';
-	}
-
 	override String caseRuleCondition(RuleCondition object) {
-		val functionSignature = createFunctionSignature("condition","bool");
-		'''«functionSignature»{
-			return «doSwitch(object.condition)»;
-		}''';
+		val functionSignature = createFunctionSignature("condition", "bool");
+		'''
+			«functionSignature»{
+				return «doSwitch(object.condition)»;
+			}
+		''';
 	}
 
 	override String caseStateTransitionFunction(StateTransitionFunction object) {
-		val functionSig = createFunctionSignature("body","void");
-		'''«functionSig»{
-			«IF object.expression !== null»
-			«doSwitch(object.expression)»
-			«ENDIF»
-			«IF object.statements !== null»
-				«FOR stm : object.statements»
-				«doSwitch(stm)»
-				«ENDFOR»
-			«ENDIF»			
-			«IF object.assignment !== null»
-			«doSwitch(object.assignment)»
-			«ENDIF»
-		}
+		val functionSig = createFunctionSignature("body", "void");
+		'''
+			«functionSig»{
+				«IF object.expression !== null»
+					«doSwitch(object.expression)»
+				«ENDIF»
+				«IF object.statements !== null»
+					«FOR stm : object.statements»
+						«doSwitch(stm)»
+					«ENDFOR»
+				«ENDIF»			
+				«IF object.assignment !== null»
+					«doSwitch(object.assignment)»
+				«ENDIF»
+			}
 		''';
 	}
 
 	override String caseDataRule(DataRule object) {
-		return '''			
+		return '''
 			«doSwitch(object.condition)»
-				«doSwitch(object.statetransitionfunction)»
-				«doSwitch(object.outputfunction)»
+			«doSwitch(object.statetransitionfunction)»
+			«doSwitch(object.outputfunction)»
 		'''
 	}
 
@@ -95,7 +124,7 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String
 	}
 
 	override String caseIf(If object) {
-		'''
+		return '''
 			if(«doSwitch(object.ifcondition)»){
 				«FOR stm : object.ifstatements»
 					«doSwitch(stm)»
@@ -143,15 +172,42 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String
 	}
 
 	override String caseCompositeOutputFunction(CompositeOutputFunction object) {
-		val functionSig = createFunctionSignature("flush","void");
+		val functionSig = createFunctionSignature("flush", "void");
 		val returnVal = '''
 			«functionSig»{
 				«FOR stm : object.statements»
 					«doSwitch(stm)»
 				«ENDFOR»
-				}
+			}
 		''';
 		return returnVal;
+	}
+
+	public def getVars() { return this.globalVars; }
+
+	override String caseDeclaration(Declaration object) {
+		var returnVal = "";
+
+		for (decl : object.declarations) {
+			returnVal += doSwitch(decl.expr);
+			globalVars.put(decl.name, lastVal);
+		}
+		return returnVal;
+	}
+
+	override String caseRealLiteral(RealLiteral object) {
+		lastVal = convertType(SVType.Real, object);
+		return '''«object.value»''';
+	}
+
+	private def Pair<SVType, Object> convertType(SVType type, Literal object) {
+		switch (type) {
+			case Real: {
+				return type -> (object as RealLiteral).value.doubleValue;
+			}
+			default: {
+			}
+		}
 	}
 
 }

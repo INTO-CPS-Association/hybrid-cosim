@@ -3,6 +3,7 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp;
 import java.util.Optional;
 
 public class ScalarVariable {
+	private String owner;
 	private String name;
 	private String valueReference;
 	private String description;
@@ -11,12 +12,22 @@ public class ScalarVariable {
 	private String initial;
 	private SVType type;
 	private String start;
-	private ScalarVariable(){
-		
+
+	private ScalarVariable() {
+
 	}
-	public static ScalarVariable Create(){
+
+	public static ScalarVariable Create() {
 		return new ScalarVariable();
 	}
+
+	public ScalarVariable setOwner(String owner) {
+		this.owner = owner;
+		return this;
+	}
+
+	public String getOwner(){return this.owner;}
+
 	public String getName() {
 		return name;
 	}

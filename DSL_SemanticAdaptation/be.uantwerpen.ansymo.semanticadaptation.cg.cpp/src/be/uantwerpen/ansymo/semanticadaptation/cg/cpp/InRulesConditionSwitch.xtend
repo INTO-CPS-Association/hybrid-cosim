@@ -4,7 +4,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import java.util.LinkedHashMap
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 
-class InRulesConditionSwitch<CharSequence> extends InOutRulesConditionSwitch {
+class InRulesConditionSwitch extends InOutRulesConditionSwitch {
 
 	private Boolean inOutput = false;
 
@@ -21,7 +21,7 @@ class InRulesConditionSwitch<CharSequence> extends InOutRulesConditionSwitch {
 
 	override String caseAssignment(Assignment object) {
 		if (inOutput) {	'''
-		setValue(«object.lvalue.owner.name»,«scalars.get(object.lvalue.owner.name+object.lvalue.ref.name).key»,«doSwitch(object.expr)»);
+			setValue(«object.lvalue.owner.name»,«scalars.get(object.lvalue.owner.name+object.lvalue.ref.name).key»,«doSwitch(object.expr)»);
 		''';
 		} else {
 			super.caseAssignment(object);
