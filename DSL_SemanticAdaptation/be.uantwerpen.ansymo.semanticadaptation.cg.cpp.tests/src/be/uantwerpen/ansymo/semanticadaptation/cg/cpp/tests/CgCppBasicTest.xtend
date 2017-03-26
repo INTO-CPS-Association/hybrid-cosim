@@ -20,6 +20,10 @@ import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.junit.Ignore
+import java.io.File
+import java.io.PrintWriter
+import java.nio.file.Files
+import java.io.FileWriter
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -42,9 +46,21 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		
 		for(files : fsa.allFiles.entrySet)
 		{
-			System.out.println("########################")
-			System.out.println("Filename: " + files.key.substring(14))
-			System.out.println(files.value)
+//			System.out.println("########################")
+//			System.out.println("Filename: " + files.key.substring(14))
+//			System.out.println(files.value)
+			var path = new File("generated");
+			if(path.exists)
+				path.delete
+			else
+				path.mkdir;
+				
+			path = new File(path, files.key.substring(14))	
+			
+			val FileWriter writer = new FileWriter(path);
+			writer.write(files.value.toString);
+			writer.close;
+			System.out.println("Stored file: " + files.key.substring(14) + " at: " + path.absolutePath);
 		}
 		//System.out.println(fsa.allFiles)		
 	}
