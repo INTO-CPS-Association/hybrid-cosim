@@ -19,11 +19,15 @@ import javax.lang.model.element.Element
 class ModelDescription {
 	private final Document md;
 	private final String name;
+	private final String type;
 	private var LinkedHashMap<String, Pair<String, Integer>> svDefs = newLinkedHashMap();
 	private var LinkedHashMap<String, ScalarVariable> svs = newLinkedHashMap();
+	private var String guid;
 
-	new(String name, File path) {
+	new(String name, String type, File path) {
 		this.name = name;
+		this.type = type;
+		
 
 		var ZipFile fmu = new ZipFile(path);
 		var Enumeration<? extends ZipEntry> entries = fmu.entries();
@@ -32,20 +36,25 @@ class ModelDescription {
 
 		while (!entryFound && entries.hasMoreElements()) {
 			var ZipEntry entry = entries.nextElement();
-			if (entry.name.equalsIgnoreCase("modelDescription.xml"))
+			if (entry.name.equalsIgnoreCase("modelDescription.xml")) {
 				locatedEntry = entry;
+				entryFound = true;
+
+			}
 		}
 		var DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
 		var DocumentBuilder builder = fac.newDocumentBuilder();
 		val is = fmu.getInputStream(locatedEntry)
 		this.md = builder.parse(is);
 		is.close();
-		calcScalars();
+		calcExtractInformation();
 	}
 
-	private def calcScalars() {
+	private def calcExtractInformation() {
 		val XPathFactory xPathfactory = XPathFactory.newInstance();
 		val XPath xpath = xPathfactory.newXPath();
+		val XPathExpression exprGuid = xpath.compile("/fmiModelDescription/@guid");
+		this.guid = exprGuid.evaluate(this.md);
 		val XPathExpression expr = xpath.compile("/fmiModelDescription/ModelVariables/ScalarVariable");
 		val NodeList nl = expr.evaluate(this.md, XPathConstants.NODESET) as NodeList;
 		for (var int i = 0; i < nl.length; i++) {
@@ -57,7 +66,9 @@ class ModelDescription {
 			this.svDefs.put(name, define -> Integer.parseInt(valueRef));
 			val sv = ScalarVariable.Create().setCausality(
 				SVCausality.valueOf(node.attributes.getNamedItem("causality").nodeValue)).setName(nodeName).setOwner(
-				this.name).setValueReference(valueRef);
+				this.name).setValueReference(valueRef).setIndex((i + 1).toString).setVariability(
+				node.attributes.getNamedItem("variability").nodeValue);
+
 			for (var j = 0; j < node.childNodes.length; j++) {
 				val subNode = node.childNodes.item(j);
 				if (subNode.nodeType == Node.ELEMENT_NODE) {
@@ -83,4 +94,6 @@ class ModelDescription {
 	}
 
 	public def getSv() { return this.svs; }
+
+	public def getGuid() { return this.guid; }
 }

@@ -25,27 +25,27 @@ public class ModelDescriptionCreator {
 	private ModelDescriptionBuilder mdBuilder = new ModelDescriptionBuilder();
 	private String mdName;
 	private String guid;
-	def String getModelDescription(){
-		if(mdName === null){
-			throw new IllegalStateException("Model Description name is missing");		
+
+	def String getModelDescription() {
+		if (mdName === null) {
+			throw new IllegalStateException("Model Description name is missing");
 		}
 		mdBuilder.CreateTemplate(mdName, UUID.randomUUID().toString);
-		for(sVar : sVars)
-		{
+		for (sVar : sVars) {
 			mdBuilder.addScalarVariable(sVar);
 		}
-		
+
 		return mdBuilder.toString();
 	}
 
-	def void setName(String name){
+	def void setName(String name) {
 		mdName = name;
 	}
-	
-	public def List<ScalarVariable> getScalars(){
+
+	public def List<ScalarVariable> getScalars() {
 		return this.sVars;
 	}
-	
+
 	private def Document getModelDescription(File path) {
 		var ZipFile fmu = new ZipFile(path);
 		var Enumeration<? extends ZipEntry> entries = fmu.entries();
@@ -65,40 +65,8 @@ public class ModelDescriptionCreator {
 		return doc;
 	}
 
-	def void CreateInputsOutput(Adaptation adaptation) {
-		var Map<String, Document> wrappedFMUs = new HashMap<String, Document>();
-
-		var test = adaptation.inner.eAllContents.toIterable.filter(InnerFMU);
-		for (type : test) {
-			var file = new File(type.path.replace('\"', ''));
-			var modelDesc = getModelDescription(file);
-			wrappedFMUs.put(type.name, modelDesc);
-		}
-
-		val XPathFactory xPathfactory = XPathFactory.newInstance();
-		val XPath xpath = xPathfactory.newXPath();
-
-		for (port : adaptation.inports) {
-			for (Map.Entry<String,Document> entry : wrappedFMUs.entrySet()) {
-				// Get the input type
-				val XPathExpression expr = xpath.compile(
-					"/fmiModelDescription/ModelVariables/ScalarVariable[@name='" + port.name + "']/*[1]");
-				val Node nl = expr.evaluate(entry.value, XPathConstants.NODE) as Node;
-				sVars.add(
-					ScalarVariable.Create().setName(port.name).setValueReference(mdBuilder.nextValueReference).setCausality(
-						SVCausality.input).setType(SVType.valueOf(nl.nodeName)));
-			}
-		}
-
-		for (port : adaptation.outports) {
-			for (Map.Entry<String,Document> entry : wrappedFMUs.entrySet()) {
-				val XPathExpression expr = xpath.compile(
-					"/fmiModelDescription/ModelVariables/ScalarVariable[@name='" + port.name + "']/*[1]");
-				val Node nl = expr.evaluate(entry.value, XPathConstants.NODE) as Node;
-				sVars.add(
-					ScalarVariable.Create().setName(port.name).setValueReference(mdBuilder.nextValueReference).setCausality(
-						SVCausality.output).setType(SVType.valueOf(nl.nodeName)));
-			}
-		}
+	def void CalcContent(ModelDescription md) {
+		sVars.addAll(md.getSv().values);
 	}
+
 }

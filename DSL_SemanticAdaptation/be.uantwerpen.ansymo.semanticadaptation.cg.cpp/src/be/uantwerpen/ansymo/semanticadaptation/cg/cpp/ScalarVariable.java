@@ -12,6 +12,7 @@ public class ScalarVariable {
 	private String initial;
 	private SVType type;
 	private String start;
+	private String index;
 
 	private ScalarVariable() {
 
@@ -21,6 +22,15 @@ public class ScalarVariable {
 		return new ScalarVariable();
 	}
 
+	public ScalarVariable setIndex(String index){
+		this.index = index;
+		return this;
+	}
+	
+	public String getIndex(){
+		return this.index;
+	}
+	
 	public ScalarVariable setOwner(String owner) {
 		this.owner = owner;
 		return this;
