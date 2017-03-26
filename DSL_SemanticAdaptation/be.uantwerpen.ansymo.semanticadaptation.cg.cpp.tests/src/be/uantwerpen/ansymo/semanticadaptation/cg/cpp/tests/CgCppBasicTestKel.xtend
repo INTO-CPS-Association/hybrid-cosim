@@ -29,7 +29,7 @@ class CgCppBasicTestKel extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
-	
+	@Ignore
 	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/windowKEL/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
