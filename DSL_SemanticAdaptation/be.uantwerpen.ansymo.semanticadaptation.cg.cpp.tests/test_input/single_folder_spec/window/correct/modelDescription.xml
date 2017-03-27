@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><fmiModelDescription fmiVersion="2.0" guid="71e95519-506e-48ca-9de6-55cb071ea842" modelName="windowSA" variableNamingConvention="flat">
+    <ModelVariables>
+        <ScalarVariable causality="output" name="disp" valueReference="0" variability="continuous">
+            <Real/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="displacement" valueReference="1" variability="continuous">
+            <Real start="0.0"/>
+        </ScalarVariable>
+        <ScalarVariable causality="output" name="friction" valueReference="2" variability="continuous">
+            <Real/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="reaction_force" valueReference="3" variability="continuous">
+            <Real start="0.0"/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="speed" valueReference="4" variability="continuous">
+            <Real start="0.0"/>
+        </ScalarVariable>
+        <ScalarVariable causality="output" name="tau" valueReference="5" variability="continuous">
+            <Real/>
+        </ScalarVariable>
+        <ScalarVariable causality="local" name="v" valueReference="6" variability="continuous">
+            <Real/>
+        </ScalarVariable>
+        <ScalarVariable causality="parameter" name="b" valueReference="7" variability="fixed">
+            <Real start="10.0"/>
+        </ScalarVariable>
+        <ScalarVariable causality="parameter" name="r" valueReference="8" variability="fixed">
+            <Real start="0.11"/>
+        </ScalarVariable>
+    </ModelVariables>
+    <Outputs>
+        <Unknown index="1"/>
+        <Unknown index="3"/>
+        <Unknown index="6"/>
+    </Outputs>
+</fmiModelDescription>

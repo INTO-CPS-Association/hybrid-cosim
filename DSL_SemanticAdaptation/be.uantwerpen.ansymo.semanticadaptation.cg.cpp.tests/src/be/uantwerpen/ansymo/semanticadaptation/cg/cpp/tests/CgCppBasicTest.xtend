@@ -24,6 +24,7 @@ import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.io.FileWriter
+import org.eclipse.xtext.junit4.ui.AbstractAutoEditTest
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -33,8 +34,59 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
-	
-	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa') }
+	@Test def powerwindow_model_only() {
+//		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
+		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
+			'test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
+	}
+
+	def __parseNoErrorsWithValidation(String directory, String filename) {
+		val model = __parse(filename);
+		__assertNoParseErrors(model, filename);
+
+		val correctFileDirectory = new File(directory + File.separator + "correct");
+
+		val fsa = new InMemoryFileSystemAccess()
+		val IGeneratorContext ctxt = null;
+		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
+
+		for (files : fsa.allFiles.entrySet) {
+			val filename2 = files.key.substring(14);
+			val file = new File(correctFileDirectory, filename2);
+			val correctFileContent = Files.readAllLines(file.toPath);
+
+			var path = new File("generated");
+			if (path.exists)
+				path.delete
+			else
+				path.mkdir;
+
+			path = new File(path, files.key.substring(14))
+
+			val FileWriter writer = new FileWriter(path);
+			writer.write(files.value.toString);
+			writer.close;
+
+			val testFileContent = Files.readAllLines(path.toPath);
+
+			if (correctFileContent.size != testFileContent.size) {
+				System.out.println("Error: Lines are of different length in file: " + filename2);
+			} else {
+				val error = false;
+				for (var i = 0; i < testFileContent.size; i++) {
+					val testLine = testFileContent.get(i);
+					val correctLine = correctFileContent.get(i);
+					if (testLine.compareTo(correctLine) != 0) {
+						if (!testLine.contains("guid")) {
+							System.out.println("ERROR: The following lines are not equal: \n" + testLine + "\n" +
+								correctLine);
+						}
+					}
+				}
+			}
+		}
+
+	}
 
 	def __parseNoErrors(String filename) {
 		val model = __parse(filename)
@@ -43,26 +95,25 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val fsa = new InMemoryFileSystemAccess()
 		val IGeneratorContext ctxt = null;
 		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
-		
-		for(files : fsa.allFiles.entrySet)
-		{
+
+		for (files : fsa.allFiles.entrySet) {
 //			System.out.println("########################")
 //			System.out.println("Filename: " + files.key.substring(14))
 //			System.out.println(files.value)
 			var path = new File("generated");
-			if(path.exists)
+			if (path.exists)
 				path.delete
 			else
 				path.mkdir;
-				
-			path = new File(path, files.key.substring(14))	
-			
+
+			path = new File(path, files.key.substring(14))
+
 			val FileWriter writer = new FileWriter(path);
 			writer.write(files.value.toString);
 			writer.close;
 			System.out.println("Stored file: " + files.key.substring(14) + " at: " + path.absolutePath);
 		}
-		//System.out.println(fsa.allFiles)		
+	// System.out.println(fsa.allFiles)		
 	}
 
 	def __parseNoErrorsPrint(String filename) {
