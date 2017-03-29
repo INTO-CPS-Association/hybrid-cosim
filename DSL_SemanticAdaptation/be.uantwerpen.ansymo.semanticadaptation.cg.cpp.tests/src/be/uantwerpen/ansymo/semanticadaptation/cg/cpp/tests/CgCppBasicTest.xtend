@@ -35,9 +35,9 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Inject extension  ValidationTestHelper
 
 	@Test def powerwindow_model_only() {
-//		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
-		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
-			'test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
+		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
+//		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
+//			'test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {

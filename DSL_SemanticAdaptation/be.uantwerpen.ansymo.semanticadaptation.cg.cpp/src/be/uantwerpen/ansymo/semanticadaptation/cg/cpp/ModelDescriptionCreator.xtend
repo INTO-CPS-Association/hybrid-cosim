@@ -46,25 +46,6 @@ public class ModelDescriptionCreator {
 		return this.sVars;
 	}
 
-	private def Document getModelDescription(File path) {
-		var ZipFile fmu = new ZipFile(path);
-		var Enumeration<? extends ZipEntry> entries = fmu.entries();
-		var boolean entryFound = false;
-		var ZipEntry locatedEntry;
-
-		while (!entryFound && entries.hasMoreElements()) {
-			var ZipEntry entry = entries.nextElement();
-			if (entry.name.equalsIgnoreCase("modelDescription.xml"))
-				locatedEntry = entry;
-		}
-		var DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
-		var DocumentBuilder builder = fac.newDocumentBuilder();
-		val is = fmu.getInputStream(locatedEntry)
-		var Document doc = builder.parse(is);
-		is.close();
-		return doc;
-	}
-
 	def void CalcContent(ModelDescription md) {
 		sVars.addAll(md.getSv().values);
 	}

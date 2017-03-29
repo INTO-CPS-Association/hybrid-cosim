@@ -10,8 +10,8 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ControlRule
 
 class ControlConditionSwitch extends InOutRulesConditionSwitch {
 
-	new(String adaptationName, LinkedHashMap<String, Pair<String, Integer>> scalars) {
-		super(adaptationName, scalars, "");
+	new(String adaptationClassName, String adaptationName, LinkedHashMap<String, Pair<String, Integer>> scalars) {
+		super(adaptationClassName, adaptationName, "", null);
 	}
 
 	override String caseControlRuleBlock(ControlRuleBlock obj) {

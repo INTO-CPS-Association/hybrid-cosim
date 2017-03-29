@@ -12,7 +12,8 @@ Require-Bundle: be.uantwerpen.ansymo.semanticadaptation,
  org.eclipse.xtext.xbase.lib,
  org.eclipse.jdt.core,
  org.eclipse.xtext.testing,
- org.eclipse.xtext.xbase.testing
+ org.eclipse.xtext.xbase.testing,
+ org.eclipse.xtext.util
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Import-Package: org.apache.log4j
 Export-Package: be.uantwerpen.ansymo.semanticadaptation.cg.cpp

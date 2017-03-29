@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><fmiModelDescription fmiVersion="2.0" guid="71e95519-506e-48ca-9de6-55cb071ea842" modelName="windowSA" variableNamingConvention="flat">
+<?xml version="1.0" encoding="UTF-8"?><fmiModelDescription fmiVersion="2.0" guid="124d182d-3cfe-4fa6-bb9e-97e1bbb40fb4" modelName="WindowSA" variableNamingConvention="flat">
     <ModelVariables>
         <ScalarVariable causality="output" name="disp" valueReference="0" variability="continuous">
             <Real/>

@@ -8,12 +8,12 @@ public class Conversions {
 		switch (t) {
 		case Real:
 			return "double";
-		case Int:
+		case Integer:
 			return "int";
-		case Bool:
+		case Boolean:
 			return "bool";
 		case String:
-			return "String";
+			return "string";
 		default:
 			throw new InvalidConversionException("The value type: " + t + " is invalid.");
 		}
@@ -23,9 +23,9 @@ public class Conversions {
 		switch (t) {
 		case Real:
 			return "Double";
-		case Int:
+		case Integer:
 			return "Integer";
-		case Bool:
+		case Boolean:
 			return "Bool";
 		case String:
 			return "String";
@@ -33,14 +33,14 @@ public class Conversions {
 			throw new InvalidConversionException("The value type: " + t + " is invalid.");
 		}
 	}
-	
+
 	public static String fmiTypeToCppDefaultValue(SVType t) throws InvalidConversionException {
 		switch (t) {
 		case Real:
 			return "0.0";
-		case Int:
+		case Integer:
 			return "0";
-		case Bool:
+		case Boolean:
 			return "false";
 		case String:
 			return "\"\"";
@@ -48,6 +48,5 @@ public class Conversions {
 			throw new InvalidConversionException("The value type: " + t + " is invalid.");
 		}
 	}
-	
-	
+
 }

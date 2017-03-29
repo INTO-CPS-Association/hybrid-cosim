@@ -23,22 +23,30 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Literal
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InRulesBlock
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutRulesBlock
+import java.util.ArrayList
 
 abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String> {
 
 	protected var LinkedHashMap<String, Pair<SVType, Object>> globalVars = newLinkedHashMap();
 	private var Pair<SVType, Object> lastVal;
 	protected final String adaptationName;
-	protected final LinkedHashMap<String, Pair<String, Integer>> scalars;
+	protected final String adaptationClassName;
 	private Integer count = 0;
 	private final String functionPrefix;
 	protected List<String> functionSignatures = newArrayList();
 	protected String externalVariableOwner;
+	protected final LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars;
 
-	new(String adaptationName, LinkedHashMap<String, Pair<String, Integer>> scalars, String functionPrefix) {
+	new(
+		String adaptationClassName,
+		String adaptationName,
+		String functionPrefix,
+		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars
+	) {
 		this.adaptationName = adaptationName;
-		this.scalars = scalars;
+		this.adaptationClassName = adaptationClassName;
 		this.functionPrefix = functionPrefix;
+		this.mSVars = mSVars;
 	}
 
 	/**
@@ -47,8 +55,8 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String
 	 */
 	protected def String createFunctionSignature(String functionName, String type) {
 		val functionSignature = this.functionPrefix + functionName + this.count + "()";
-		this.functionSignatures.add(type + " " + functionSignature+";");
-		return type + " " + this.adaptationName + "::" + functionSignature;
+		this.functionSignatures.add(type + " " + functionSignature + ";");
+		return type + " " + this.adaptationClassName + "::" + functionSignature;
 	}
 
 	def void incrementCount() {
@@ -72,15 +80,19 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String
 		for (gVar : object.globalInVars) {
 			doSwitch(gVar)
 		}
-		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
+		for (DataRule dataRule : object.eAllContents.toIterable.filter(DataRule)) {
 			this.incrementCount;
 			cpp += doSwitch(dataRule);
 		}
 		return cpp;
 	}
 
-	override String caseBoolLiteral(BoolLiteral object) {
-		return '''«object.value»''';
+	override String caseDataRule(DataRule object) {
+		return '''
+			«doSwitch(object.condition)»
+			«doSwitch(object.statetransitionfunction)»
+			«doSwitch(object.outputfunction)»
+		'''
 	}
 
 	override String caseRuleCondition(RuleCondition object) {
@@ -111,12 +123,8 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<String
 		''';
 	}
 
-	override String caseDataRule(DataRule object) {
-		return '''
-			«doSwitch(object.condition)»
-			«doSwitch(object.statetransitionfunction)»
-			«doSwitch(object.outputfunction)»
-		'''
+	override String caseBoolLiteral(BoolLiteral object) {
+		return '''«object.value»''';
 	}
 
 	override String defaultCase(EObject object) {

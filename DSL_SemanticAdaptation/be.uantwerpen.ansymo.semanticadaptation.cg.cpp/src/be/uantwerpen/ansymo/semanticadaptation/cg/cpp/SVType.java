@@ -4,6 +4,6 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp;
 public enum SVType {
 	Real,
 	String,
-	Int,
-	Bool
+	Integer,
+	Boolean
 }

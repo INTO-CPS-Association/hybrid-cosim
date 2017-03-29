@@ -20,6 +20,7 @@ class ModelDescription {
 	private final Document md;
 	private final String name;
 	private final String type;
+	//Get rid of these. We need more information anyways.
 	private var LinkedHashMap<String, Pair<String, Integer>> svDefs = newLinkedHashMap();
 	private var LinkedHashMap<String, ScalarVariable> svs = newLinkedHashMap();
 	private var String guid;
@@ -63,11 +64,15 @@ class ModelDescription {
 			val valueRef = node.attributes.getNamedItem("valueReference").nodeValue;
 			val name = this.name + nodeName;
 			val define = name.toUpperCase;
+			
 			this.svDefs.put(name, define -> Integer.parseInt(valueRef));
-			val sv = ScalarVariable.Create().setCausality(
-				SVCausality.valueOf(node.attributes.getNamedItem("causality").nodeValue)).setName(nodeName).setOwner(
-				this.name).setValueReference(valueRef).setIndex((i + 1).toString).setVariability(
-				node.attributes.getNamedItem("variability").nodeValue);
+			val sv = ScalarVariable.Create()
+				.setCausality(SVCausality.valueOf(node.attributes.getNamedItem("causality").nodeValue))
+				.setName(nodeName)
+				.setOwner(this.name)
+				.setValueReference(valueRef)
+				.setIndex((i + 1).toString)
+				.setVariability(node.attributes.getNamedItem("variability").nodeValue);
 
 			for (var j = 0; j < node.childNodes.length; j++) {
 				val subNode = node.childNodes.item(j);

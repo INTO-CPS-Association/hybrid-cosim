@@ -1,7 +1,5 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp;
 
-import java.util.Optional;
-
 public class ScalarVariable {
 	private String owner;
 	private String name;
@@ -17,7 +15,11 @@ public class ScalarVariable {
 	private ScalarVariable() {
 
 	}
-
+	
+	protected ScalarVariable(ScalarVariable var) {
+		
+	}
+	
 	public static ScalarVariable Create() {
 		return new ScalarVariable();
 	}

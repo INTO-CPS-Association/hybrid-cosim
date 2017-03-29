@@ -17,8 +17,8 @@ input ports 	reaction_force,
 				displacement,
 				speed
 
-output ports	disp,
-				tau
+	output ports	disp,
+					tau
 
 
 control {
@@ -69,13 +69,13 @@ out var stored_window_reaction_torque := 0.0,
 out rules {
 
 	true -> {
-		stored_window_reaction_torque := window.tau;
+		stored_window_reaction_torque := window.reaction_torque;
 	} --> {
 		windowSA.tau := - stored_window_reaction_torque;
 	};
 	
 	true -> {
-		stored_window_height := window.disp;
+		stored_window_height := window.height;
 	} --> {
 		windowSA.disp := stored_window_height * 100;
 	};
