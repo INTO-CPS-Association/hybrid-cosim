@@ -1,13 +1,7 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp;
 
-import java.util.LinkedHashMap;
-
-import org.eclipse.xtext.xbase.lib.Pair;
-
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment;
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
-import java.util.ArrayList
+import java.util.LinkedHashMap
 
 public class OutRulesConditionSwitch extends InOutRulesConditionSwitch {
 
@@ -16,15 +10,23 @@ public class OutRulesConditionSwitch extends InOutRulesConditionSwitch {
 
 	new(String adaptationClassName, 
 		String adaptationName,  
-
-		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars) {
-		super(adaptationClassName, adaptationName, "out_rule_", mSVars);
+		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
+		LinkedHashMap<String,SAScalarVariable> SASVs) {
+		super(adaptationClassName, adaptationName, "out_rule_", mSVars, SASVs);
 	}
 	
-	override String casePort(Port object){
-		//TODO getValueBoolean, getValueInteger, getValueString, getValueReal
+	override ReturnInformation casePort(Port object){
+		var retVal = new ReturnInformation();
+		
 		val type = mSVars.get(this.externalVariableOwner).get(object.name).mappedSv.type.toString;
 		val define = mSVars.get(this.externalVariableOwner).get(object.name).define;
-		return '''getValue«type»(«this.externalVariableOwner»,«define»)'''
+		retVal.code = '''getValue«type»(«this.externalVariableOwner»,«define»)''';
+		
+		return retVal;
+		
+		
+//		val type = mSVars.get(this.externalVariableOwner).get(object.name).mappedSv.type.toString;
+//		val define = mSVars.get(this.externalVariableOwner).get(object.name).define;
+//		return '''getValue«type»(«this.externalVariableOwner»,«define»)'''
 	}
 }

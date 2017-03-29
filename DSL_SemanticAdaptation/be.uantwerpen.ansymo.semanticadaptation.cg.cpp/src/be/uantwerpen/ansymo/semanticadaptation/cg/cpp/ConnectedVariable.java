@@ -10,6 +10,7 @@ public class ConnectedVariable {
 	private String value;
 	private ConnectedVariable conVar;
 	private MappedScalarVariable mapSV;
+	private ConnectedVariable parent;
 	
 	public ConnectedVariable() {
 		
@@ -77,6 +78,14 @@ public class ConnectedVariable {
 
 	public void setMapSV(MappedScalarVariable mapSV) {
 		this.mapSV = mapSV;
+	}
+
+	public ConnectedVariable getParent() {
+		return parent;
+	}
+
+	public void setParent(ConnectedVariable parent) {
+		this.parent = parent;
 	}
 
 }

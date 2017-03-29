@@ -1,8 +1,5 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp;
 
-import javax.management.InvalidAttributeValueException;
-import javax.naming.directory.InvalidAttributeIdentifierException;
-
 public class Conversions {
 	public static String fmiTypeToCppType(SVType t) throws InvalidConversionException {
 		switch (t) {
@@ -14,6 +11,19 @@ public class Conversions {
 			return "bool";
 		case String:
 			return "string";
+		default:
+			throw new InvalidConversionException("The value type: " + t + " is invalid.");
+		}
+	}
+	
+	public static SVVariability fmiTypeToVariability(SVType t) throws InvalidConversionException{
+		switch (t) {
+		case Real:
+			return SVVariability.continuous;
+		case Integer:
+		case Boolean:
+		case String:
+			return SVVariability.discrete;
 		default:
 			throw new InvalidConversionException("The value type: " + t + " is invalid.");
 		}

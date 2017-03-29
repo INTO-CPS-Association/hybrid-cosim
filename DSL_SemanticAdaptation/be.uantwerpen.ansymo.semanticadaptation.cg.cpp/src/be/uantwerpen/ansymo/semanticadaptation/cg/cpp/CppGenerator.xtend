@@ -21,7 +21,6 @@ import org.eclipse.emf.common.util.EList
 class CppGenerator extends SemanticAdaptationGenerator {
 
 	var ModelDescriptionCreator mdCreator = new ModelDescriptionCreator()
-	var SwitchTest = new Visitor();
 
 	private var IFileSystemAccess2 fsa;
 
@@ -57,7 +56,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				throw new IncorrectAmountOfElementsException("The adaptation does not contain any InnerFMUs.")
 			}
 
-			var ArrayList<SAScalarVariable> SASVs = calcSASVsFromInportsOutports(adapInteralRefName, type.inports, type.outports)
+			var LinkedHashMap<String,SAScalarVariable> SASVs = calcSASVsFromInportsOutports(adapInteralRefName, type.inports, type.outports)
 
 			for (fmu : type.inner.eAllContents.toList.filter(InnerFMU)) {
 				// TODO: Merge this with ModelDescriptionCreator
@@ -89,12 +88,12 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			
 			// Compile the in rules
 			val inRuleResult = compileInOutRuleBlocks(InputOutputType.Input, adaptation.eAllContents.toIterable.filter(
-				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables);
+				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs);
 			genSource += inRuleResult.generatedCpp;
 
 			// Compile the out rules
 			val outRuleResult = compileInOutRuleBlocks(InputOutputType.Output, adaptation.eAllContents.toIterable.
-				filter(OutRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables);
+				filter(OutRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs);
 			genSource += outRuleResult.generatedCpp;
 
 			/*
@@ -103,7 +102,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			 */
 			// Generate the Control Rules
 			val crtlRuleResult = compileControlRuleBlock(adaptation.eAllContents.toIterable.filter(ControlRuleBlock),
-				adapClassName, adapInteralRefName, svDefs);
+				adapClassName, adapInteralRefName, svDefs, SASVs);
 			genSource += crtlRuleResult.generatedCpp;
 
 			// Compile the source file includes, namespace and constructor 
@@ -373,9 +372,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 * Calculates necessary information on function signatures necessary for generation of the header file.
 	 */
 	def RulesBlockResult compileControlRuleBlock(Iterable<ControlRuleBlock> crtlRuleBlocks, String adaptationClassName,
-		String adaptationName, LinkedHashMap<String, Pair<String, Integer>> svDefs) {
+		String adaptationName, LinkedHashMap<String, Pair<String, Integer>> svDefs, LinkedHashMap<String, SAScalarVariable> SASVs) {
 		var cpp = "";
-		val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, svDefs);
+		val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, svDefs, SASVs);
 		for (crtlRule : crtlRuleBlocks) {
 			cpp += visitor.doSwitch(crtlRule);
 		}
@@ -394,11 +393,13 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 */
 	def InOutRulesBlockResult compileInOutRuleBlocks(InputOutputType ioType, Iterable<InOutRules> rulesBlocks,
 		String adaptationClassName, String adaptationName,
-		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars) {
+		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars, LinkedHashMap<String,SAScalarVariable> SASVs) {
+			
 		val visitor = if (ioType == InputOutputType.Input)
-				new InRulesConditionSwitch(adaptationClassName, adaptationName, mSVars)
+				new InRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs)
 			else
-				new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars);
+				new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs);
+				
 		val functionName = "create" + ioType + "Rules()";
 		var String cpp = "";
 		val ruleBlock = rulesBlocks.head;
@@ -450,8 +451,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		return defines;
 	}
 
-	def ArrayList<SAScalarVariable> calcSASVsFromInportsOutports(String definePrefix, EList<Port> inports, EList<Port> outports) {
-		var saSVs = newArrayList();
+	def LinkedHashMap<String, SAScalarVariable> calcSASVsFromInportsOutports(String definePrefix, EList<Port> inports, EList<Port> outports) {
+		var LinkedHashMap<String, SAScalarVariable> saSVs = newLinkedHashMap();
 		
 		var int valueReference = 0;
 		for (inport : inports) {
@@ -459,7 +460,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			saSV.valueReference = valueReference++;
 			saSV.name = inport.name;
 			saSV.defineName = (definePrefix + inport.name).toUpperCase
-			saSVs.add(saSV);
+			saSV.causality = SVCausality.input;
+			saSVs.put(saSV.name, saSV);
 		}
 
 		for (outport : outports) {
@@ -467,7 +469,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			saSV.valueReference = valueReference++;
 			saSV.defineName = (definePrefix + outport.name).toUpperCase
 			saSV.name = outport.name;
-			saSVs.add(saSV);
+			saSV.causality = SVCausality.output;
+			saSVs.put(saSV.name, saSV);
 		}
 		
 		return saSVs;
