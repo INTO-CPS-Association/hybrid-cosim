@@ -294,6 +294,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						«ENDFOR»
 				};
 			}
+			
+			#endif
 		''';
 	}
 
@@ -309,16 +311,11 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				«FOR v : globalVariables.entrySet»
 					this->«(v.key)» = «v.value.value»;
 				«ENDFOR»
-				
-				const char* path = Fmu::combinePath(resourceLocation, make_shared<string>("«fmuTypeName».fmu"))->c_str();
-				auto «fmuName»Fmu = make_shared<fmi2::Fmu>(path);
-				«fmuName»Fmu->initialize();
-				this->«fmuName» = «fmuName»Fmu->instantiate("«fmuName»",fmi2CoSimulation, "«guid»", true, true, make_shared<Callback>()); 
 			}
 			
 			void «adapClassName»::initialize()
 			{
-				const char* path = Fmu::combinePath(resourceLocation, make_shared<string>("«fmuTypeName».fmu"))->c_str();
+				auto path = Fmu::combinePath(resourceLocation, make_shared<string>("«fmuTypeName».fmu"));
 				auto «fmuName»Fmu = make_shared<fmi2::Fmu>(*path);
 				«fmuName»Fmu->initialize();
 				this->«fmuName» = «fmuName»Fmu->instantiate("«fmuName»",fmi2CoSimulation, "«guid»", true, true, shared_from_this());
@@ -452,6 +449,11 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	def String SplitAtSpaceAndRemoveFirst(String content) {
 		content.substring(content.indexOf(" ") + 1, content.length);
 	}
+	
+	def String removeEmptyArgumentParenthesis(String content)
+	{
+		return	content.substring(0,content.length-2);
+	}
 
 	/*
 	 * Compiles the source file functions <in/out>_rule_<condition, body, flush>.
@@ -480,9 +482,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					'''
 						list->push_back(
 							(Rule<«adaptationClassName»>){
-								&«adaptationClassName»::«visitor.functionSignatures.get(i).SplitAtSpaceAndRemoveFirst»,
-								&«adaptationClassName»::«visitor.functionSignatures.get(i+1).SplitAtSpaceAndRemoveFirst»,
-								&«adaptationClassName»::«visitor.functionSignatures.get(i+2).SplitAtSpaceAndRemoveFirst»
+								&«adaptationClassName»::«visitor.functionSignatures.get(i).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»,
+								&«adaptationClassName»::«visitor.functionSignatures.get(i+1).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»,
+								&«adaptationClassName»::«visitor.functionSignatures.get(i+2).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»
 							});
 						
 					''');

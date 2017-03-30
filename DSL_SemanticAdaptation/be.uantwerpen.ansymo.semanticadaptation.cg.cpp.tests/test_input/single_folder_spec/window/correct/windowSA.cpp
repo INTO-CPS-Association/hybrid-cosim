@@ -1,27 +1,34 @@
-#include "windowSA.h"
+#include "WindowSA.h"
 
 namespace adaptation 
 {
-	WindowSA::WindowSA(shared_ptr<string> resourceLocation) : SemanticAdaptation(createInputRules(),createOutputRules())
+	WindowSA::WindowSA(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
+		SemanticAdaptation(resourceLocation, createInputRules(),createOutputRules(), functions)
 	{
-		stored_window_reaction_torque = 0.0;
-		stored_window_height = 0.0;
-		
+		this->stored_window_reaction_torque = 0.0;
+		this->stored_window_height = 0.0;
 		this->stored_windowsa_reaction_force = 0.0;
 		this->stored_windowsa_displacement = 0.0;
 		this->stored_windowsa_speed = 0.0;
 		
-		this->displacement = 0.0;
-		this->reaction_force = 0.0;
-		this->speed = 0.0;
-		this->b = 10.0;
-		this->r = 0.11;
-		
 		const char* path = Fmu::combinePath(resourceLocation, make_shared<string>("Window.fmu"))->c_str();
 		auto windowFmu = make_shared<fmi2::Fmu>(path);
 		windowFmu->initialize();
-		this->window = windowFmu->instantiate("Window",fmi2CoSimulation, "{29e3eae4-7ed5-4ccc-a0e7-7d8198e20bc0}", true, true, make_shared<Callback>()); 
+		this->window = windowFmu->instantiate("window",fmi2CoSimulation, "{efb4a002-4c0c-487b-8816-c0311d2f04d9}", true, true, make_shared<Callback>()); 
 	}
+	
+	void WindowSA::initialize()
+	{
+		const char* path = Fmu::combinePath(resourceLocation, make_shared<string>("Window.fmu"))->c_str();
+		auto windowFmu = make_shared<fmi2::Fmu>(*path);
+		windowFmu->initialize();
+		this->window = windowFmu->instantiate("window",fmi2CoSimulation, "{efb4a002-4c0c-487b-8816-c0311d2f04d9}", true, true, shared_from_this());
+		
+		if(this->window->component == NULL)
+			this->lastErrorState = fmi2Fatal;
+		this->instances->push_back(this->window);
+	}
+	
 	WindowSA::~WindowSA()
 	{
 	}
@@ -31,19 +38,15 @@ namespace adaptation
 		return this;
 	}
 	
-	double  WindowSA::getFmiValueReal(fmi2ValueReference id)
+	double WindowSA::getFmiValueReal(fmi2ValueReference id)
 	{
 		switch (id)
 		{
-			case WINDOWDISP:
+			case WINDOWSADISP:
 			{
 				return this->disp;
 			}
-			case WINDOWFRICTION:
-			{
-				return this->friction;
-			}
-			case WINDOWTAU:
+			case WINDOWSATAU:
 			{
 				return this->tau;
 			}
@@ -55,17 +58,17 @@ namespace adaptation
 		
 	}
 	
-	string  WindowSA::getFmiValueString(fmi2ValueReference id)
+	string WindowSA::getFmiValueString(fmi2ValueReference id)
 	{
 		return "";
 	}
 	
-	int  WindowSA::getFmiValueInteger(fmi2ValueReference id)
+	int WindowSA::getFmiValueInteger(fmi2ValueReference id)
 	{
 		return 0;
 	}
 	
-	bool  WindowSA::getFmiValueBoolean(fmi2ValueReference id)
+	bool WindowSA::getFmiValueBoolean(fmi2ValueReference id)
 	{
 		return false;
 	}
@@ -74,19 +77,19 @@ namespace adaptation
 	{
 		switch (id)	
 			{
-				case WINDOWDISPLACEMENT:
-				{
-					this->displacement = value;
-					this->isSetdisplacement = true;
-					break;
-				}
-				case WINDOWREACTION_FORCE:
+				case WINDOWSAREACTION_FORCE:
 				{
 					this->reaction_force = value;
 					this->isSetreaction_force = true;
 					break;
 				}
-				case WINDOWSPEED:
+				case WINDOWSADISPLACEMENT:
+				{
+					this->displacement = value;
+					this->isSetdisplacement = true;
+					break;
+				}
+				case WINDOWSASPEED:
 				{
 					this->speed = value;
 					this->isSetspeed = true;
@@ -145,29 +148,29 @@ namespace adaptation
 	}
 	shared_ptr<list<Rule<WindowSA>>> WindowSA::createInputRules()
 	{
-		auto list = make_shared<list<Rule<WindowSA>>>()
+		auto list = make_shared<std::list<Rule<WindowSA>>>();
 		
 		list->push_back(
 			(Rule<WindowSA>){
-				&WindowSA::in_rule_condition1();,
-				&WindowSA::in_rule_body1();
-				&WindowSA::in_rule_flush1();
+				&WindowSA::in_rule_condition1(),
+				&WindowSA::in_rule_body1(),
+				&WindowSA::in_rule_flush1()
 			});
 		
 		
 		list->push_back(
 			(Rule<WindowSA>){
-				&WindowSA::in_rule_condition2();,
-				&WindowSA::in_rule_body2();
-				&WindowSA::in_rule_flush2();
+				&WindowSA::in_rule_condition2(),
+				&WindowSA::in_rule_body2(),
+				&WindowSA::in_rule_flush2()
 			});
 		
 		
 		list->push_back(
 			(Rule<WindowSA>){
-				&WindowSA::in_rule_condition3();,
-				&WindowSA::in_rule_body3();
-				&WindowSA::in_rule_flush3();
+				&WindowSA::in_rule_condition3(),
+				&WindowSA::in_rule_body3(),
+				&WindowSA::in_rule_flush3()
 			});
 		
 		
@@ -176,46 +179,46 @@ namespace adaptation
 	}
 	
 	
-	void windowSA::executeInternalControlFlow(double h, double dt)
+	void WindowSA::executeInternalControlFlow(double h, double dt)
 	{
-		this->doStep(window,h,dt);
+		this->do_step(window,h,dt);
 	}
 	
 	bool WindowSA::out_rule_condition1(){
 		return true;
 	}
 	void WindowSA::out_rule_body1(){
-		this->stored_window_reaction_torque = getValueReal(window,WINDOWTAU);
+		this->stored_window_reaction_torque = getValueDouble(window,WINDOWREACTION_TORQUE);
 	}
 	void WindowSA::out_rule_flush1(){
-		this->tau = -this->stored_window_reaction_torque;
+		this->tau = this->stored_window_reaction_torque;
 	}
 	bool WindowSA::out_rule_condition2(){
 		return true;
 	}
 	void WindowSA::out_rule_body2(){
-		this->stored_window_height = getValueReal(window,WINDOWDISP);
+		this->stored_window_height = getValueDouble(window,WINDOWHEIGHT);
 	}
 	void WindowSA::out_rule_flush2(){
 		this->disp = this->stored_window_height * 100;
 	}
 	shared_ptr<list<Rule<WindowSA>>> WindowSA::createOutputRules()
 	{
-		auto list = make_shared<list<Rule<WindowSA>>>()
+		auto list = make_shared<std::list<Rule<WindowSA>>>();
 		
 		list->push_back(
 			(Rule<WindowSA>){
-				&WindowSA::out_rule_condition1();,
-				&WindowSA::out_rule_body1();
-				&WindowSA::out_rule_flush1();
+				&WindowSA::out_rule_condition1(),
+				&WindowSA::out_rule_body1(),
+				&WindowSA::out_rule_flush1()
 			});
 		
 		
 		list->push_back(
 			(Rule<WindowSA>){
-				&WindowSA::out_rule_condition2();,
-				&WindowSA::out_rule_body2();
-				&WindowSA::out_rule_flush2();
+				&WindowSA::out_rule_condition2(),
+				&WindowSA::out_rule_body2(),
+				&WindowSA::out_rule_flush2()
 			});
 		
 		
