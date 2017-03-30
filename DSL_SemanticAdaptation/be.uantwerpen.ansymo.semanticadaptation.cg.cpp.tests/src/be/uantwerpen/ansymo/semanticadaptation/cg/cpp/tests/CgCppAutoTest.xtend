@@ -3,7 +3,6 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests
 
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.CppGenerator
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.testframework.XtextParametersRunnerFactory
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
@@ -27,6 +26,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import org.junit.Ignore
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
 
 @RunWith(typeof(Parameterized))
 @InjectWith(SemanticAdaptationInjectorProvider)

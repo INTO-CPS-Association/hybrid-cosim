@@ -15,11 +15,11 @@ import org.eclipse.xtext.testing.util.ParseHelper
 import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Test
 import org.junit.runner.RunWith
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.CppGenerator
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.junit.Ignore
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
