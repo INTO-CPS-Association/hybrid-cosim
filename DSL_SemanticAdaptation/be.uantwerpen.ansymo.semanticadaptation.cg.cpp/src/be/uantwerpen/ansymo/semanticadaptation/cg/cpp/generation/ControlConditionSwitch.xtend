@@ -42,7 +42,7 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 		functionSignatures.add(functionPrefix + functionNameArgs + ";");
 		retVal.code = 
 			'''
-				«functionPrefix+this.adaptationName»::«functionNameArgs»
+				«functionPrefix+this.adaptationClassName»::«functionNameArgs»
 				{
 					«tempDoSwitchCode»
 				}
@@ -53,7 +53,7 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 
 	override ReturnInformation caseDoStep(DoStep object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''this->doStep(«object.fmu.name»,«doSwitch(object.h)»,«doSwitch(object.t)»);''';
+		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»);''';
 		return retVal;
 	}
 

@@ -17,9 +17,9 @@ public class OutRulesConditionSwitch extends InOutRulesConditionSwitch {
 	override ReturnInformation casePort(Port object){
 		var retVal = new ReturnInformation();
 		
-		val type = mSVars.get(this.externalVariableOwner).get(object.name).mappedSv.type.toString;
+		val type = mSVars.get(this.externalVariableOwner).get(object.name).mappedSv.type;
 		val define = mSVars.get(this.externalVariableOwner).get(object.name).define;
-		retVal.code = '''getValue«type»(«this.externalVariableOwner»,«define»)''';
+		retVal.code = '''getValue«Conversions.fmiTypeToCppTypeCapitalized(type)»(«this.externalVariableOwner»,«define»)''';
 		
 		return retVal;
 	}

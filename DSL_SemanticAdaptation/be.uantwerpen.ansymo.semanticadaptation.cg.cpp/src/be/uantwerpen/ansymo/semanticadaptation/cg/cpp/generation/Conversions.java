@@ -19,6 +19,12 @@ public class Conversions {
 			throw new InvalidConversionException("The value type: " + t + " is invalid.");
 		}
 	}
+	
+	public static String fmiTypeToCppTypeCapitalized(SVType t) throws InvalidConversionException
+	{
+		String converted = fmiTypeToCppType(t);
+		return converted.substring(0,1).toUpperCase()+ converted.substring(1);
+	}
 
 	public static SVVariability fmiTypeToFmiVariability(SVType t) throws InvalidConversionException {
 		switch (t) {

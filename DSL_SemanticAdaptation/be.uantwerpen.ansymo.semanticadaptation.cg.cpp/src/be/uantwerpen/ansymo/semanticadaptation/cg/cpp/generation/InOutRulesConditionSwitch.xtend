@@ -89,7 +89,7 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 	 */
 	protected def String createFunctionSignature(String functionName, String type) {
 		val functionSignature = this.functionPrefix + functionName + this.count + "()";
-		this.functionSignatures.add(type + " " + functionSignature + ";");
+		this.functionSignatures.add(type + " " + functionSignature);
 		return type + " " + this.adaptationClassName + "::" + functionSignature;
 	}
 

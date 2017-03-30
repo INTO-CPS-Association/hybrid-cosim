@@ -127,9 +127,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			
 
 			/*
-			 * Compile the de and constructors
+			 * Compile the constructor, destructor and initialize functions
 			 */
-			val String deAndConstructorSource = compileDeAndConstructor(adapClassName, globalVariables, fmus.head.key,
+			val String deAndConstructorAndInitializeSource = compileDeAndConstructorAndInitialize(adapClassName, globalVariables, fmus.head.key,
 				fmus.head.value, md.guid);
 
 			/*
@@ -138,10 +138,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			val String getRuleThisSource = compileGetRuleThis(adapClassName);
 
 			// Compile the source file
-			val String sourceInclude = '''#include "«adapClassName.toFirstLower».h"''';
+			val String sourceInclude = '''#include "«adapClassName».h"''';
 			val sourceFile = compileSource(
 				sourceInclude,
-				deAndConstructorSource,
+				deAndConstructorAndInitializeSource,
 				getRuleThisSource,
 				getFuncsSource,
 				setFuncsSource,
@@ -149,7 +149,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				outRuleResult.generatedCpp,
 				crtlRuleResult.generatedCpp
 			);
-			fsa.generateFile(adapClassName.toFirstLower + ".cpp", sourceFile);
+			fsa.generateFile(adapClassName + ".cpp", sourceFile);
 
 			// Compile the header file
 			val headerFile = compileHeader(
@@ -163,7 +163,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				fmus,
 				SASVs.values.map[CalcSVar()].toList
 			);
-			fsa.generateFile(adapClassName.toFirstLower + ".h", headerFile);
+			fsa.generateFile(adapClassName + ".h", headerFile);
 
 			// Compile the model description file
 			val modelDescCreator = new ModelDescriptionCreator(adapExternalName);
@@ -231,6 +231,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<Pair<String, String>> fmus,
 		Collection<ScalarVariable> sVars) {
 		return '''
+		
+			#ifndef SRC_«adapClassName.toUpperCase»_H
+			#define SRC_«adapClassName.toUpperCase»_H
+		
 			#include "SemanticAdaptation.h"
 			#include <memory>
 			#include "Fmu.h"
@@ -245,29 +249,34 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				
 				«SADefines»
 			
-				class «adapClassName» : public SemanticAdaptation<«adapClassName»>{
+				class «adapClassName» : public SemanticAdaptation<«adapClassName»>, public enable_shared_from_this<«adapClassName»>
+				{
 					public:
-						«adapClassName»(shared_ptr<string> resourceLocation);
+						«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions);
+						void initialize();
 						virtual ~«adapClassName»();
 						
 						void setFmiValue(fmi2ValueReference id, int value);
 						void setFmiValue(fmi2ValueReference id, bool value);
 						void setFmiValue(fmi2ValueReference id, double value);
+						void setFmiValue(fmi2ValueReference id, string value);
 					
 						int getFmiValueInteger(fmi2ValueReference id);
 						bool getFmiValueBoolean(fmi2ValueReference id);
-						double getFmiValueDouble(fmi2ValueReference id);
+						double getFmiValueReal(fmi2ValueReference id);
+						string getFmiValueString(fmi2ValueReference id);
+						
 					private:
 						
 						«adapClassName»* getRuleThis();
 						
 						/*in rules*/
-						«inRulesFuncSig.join("\n")»
+						«inRulesFuncSig.map[x | x+";"].join("\n")»
 						
 						/*out rules*/
-						«outRulesFuncSig.join("\n")»
+						«outRulesFuncSig.map[x | x+";"].join("\n")»
 						
-						«crtlRulesFuncSig.join("\n")»
+						«crtlRulesFuncSig.map[x | x+";"].join("\n")»
 						
 						«FOR fmu : fmus»
 							shared_ptr<FmuComponent> «fmu.key»;
@@ -283,18 +292,19 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						«FOR v : globalVariables.entrySet»
 							«Conversions.fmiTypeToCppType(v.value.type)» «v.key»;
 						«ENDFOR»
-				}
+				};
 			}
 		''';
 	}
 
 	/*
-	 * Compiles the source file constructor and destructor
+	 * Compiles the source file constructor, destructor and the initialize function
 	 */
-	def String compileDeAndConstructor(String adapClassName, LinkedHashMap<String, GlobalInOutVariable> globalVariables,
+	def String compileDeAndConstructorAndInitialize(String adapClassName, LinkedHashMap<String, GlobalInOutVariable> globalVariables,
 		String fmuName, String fmuTypeName, String guid) {
 		return '''
-			«adapClassName»::«adapClassName»(shared_ptr<string> resourceLocation) : SemanticAdaptation(createInputRules(),createOutputRules())
+			«adapClassName»::«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
+				SemanticAdaptation(resourceLocation, createInputRules(),createOutputRules(), functions)
 			{
 				«FOR v : globalVariables.entrySet»
 					this->«(v.key)» = «v.value.value»;
@@ -305,6 +315,19 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				«fmuName»Fmu->initialize();
 				this->«fmuName» = «fmuName»Fmu->instantiate("«fmuName»",fmi2CoSimulation, "«guid»", true, true, make_shared<Callback>()); 
 			}
+			
+			void «adapClassName»::initialize()
+			{
+				const char* path = Fmu::combinePath(resourceLocation, make_shared<string>("«fmuTypeName».fmu"))->c_str();
+				auto «fmuName»Fmu = make_shared<fmi2::Fmu>(*path);
+				«fmuName»Fmu->initialize();
+				this->«fmuName» = «fmuName»Fmu->instantiate("«fmuName»",fmi2CoSimulation, "«guid»", true, true, shared_from_this());
+				
+				if(this->«fmuName»->component == NULL)
+					this->lastErrorState = fmi2Fatal;
+				this->instances->push_back(this->«fmuName»);
+			}
+			
 			«adapClassName»::~«adapClassName»()
 			{
 			}
@@ -458,7 +481,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						list->push_back(
 							(Rule<«adaptationClassName»>){
 								&«adaptationClassName»::«visitor.functionSignatures.get(i).SplitAtSpaceAndRemoveFirst»,
-								&«adaptationClassName»::«visitor.functionSignatures.get(i+1).SplitAtSpaceAndRemoveFirst»
+								&«adaptationClassName»::«visitor.functionSignatures.get(i+1).SplitAtSpaceAndRemoveFirst»,
 								&«adaptationClassName»::«visitor.functionSignatures.get(i+2).SplitAtSpaceAndRemoveFirst»
 							});
 						
@@ -469,7 +492,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				cpp += '''
 					«functionPrefix» «adaptationClassName»::«functionName»
 					{
-						auto list = make_shared<list<Rule<«adaptationClassName»>>>()
+						auto list = make_shared<std::list<Rule<«adaptationClassName»>>>();
 						
 						«createRulesFunction.join("\n")»
 						
