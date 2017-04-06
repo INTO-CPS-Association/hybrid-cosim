@@ -77,11 +77,31 @@ fmi2Status fmi2GetString(fmi2Component fc, const fmi2ValueReference vr[], size_t
 fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, const fmi2Real value[])
 {
 	FMUInstance* comp = (FMUInstance *)fc;
-	int i;
-	for (i = 0; i < nvr; i++)
+	for (int i = 0; i < nvr; i++)
 	{
 		comp->r[vr[i]] = value[i];
+		fmi2Real theval = value[i];
+		printf("%f\n", theval);
 	}
+	fmi2Boolean in_condition[_NR_OF_IN_CONDITIONS];
+	/*Condition checking:*/
+	// true
+	in_condition[0] = 1;
+
+	for (int i = 0; i < nvr; i++){
+		if(in_condition[0] && (vr[i] == _in_u)){
+			comp->stored_windowsa_u = comp->r[_in_u];
+		}
+		if(in_condition[0] && (vr[i] == _in_d)){
+			comp->stored_windowsa_d = comp->r[_in_d];
+		}
+		if(in_condition[0] && (vr[i] == _in_tau)){
+			comp->stored_tau = comp->r[_in_tau];
+		}
+		/* If mealy do update_in and recursive call */
+
+	}
+	
 	//out_condition_executed := empty map
 	memset(comp->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);
 	return fmi2OK;

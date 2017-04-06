@@ -126,11 +126,13 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 		comp->out_conditions_executed[0] = 1;
 	}
 
-	for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
-		if(comp->out_conditions_executed[i]){
-			comp->r[_out_i] = comp->stored_armature_current;
-			comp->r[_out_omega] = comp->stored_speed;
-			comp->r[_out_theta] = comp->stored_displacement;
+	if (isEmpty){
+		for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
+			if(comp->out_conditions_executed[i]){
+				comp->r[_out_i] = comp->stored_armature_current;
+				comp->r[_out_omega] = comp->stored_speed;
+				comp->r[_out_theta] = comp->stored_displacement;
+			}
 		}
 	}
 	for (int i = 0; i < nvr; i++)
@@ -144,8 +146,27 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 fmi2Status fmi2SetBoolean(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, const fmi2Boolean value[])
 {
 	FMUInstance* comp = (FMUInstance *)fc;
-	printf("Error!!!! Not implemented!!!\n");
 
+	int i;
+	for (i = 0; i < nvr; i++)
+	{
+		comp->b[vr[i]] = value[i];
+	}
+	/*Generated: */
+		fmi2Boolean in_condition[_NR_OF_IN_CONDITIONS];
+		/*Condition checking:*/
+		// true
+		in_condition[0] = 1;
+
+		if(in_condition[0]){
+			comp->stored_windowsa_u = (fmi2Real) comp->b[_in_u];
+			comp->stored_windowsa_d = comp->b[_in_d];
+			/* If mealy do update_in and recursive call */
+		}
+		return fmi2OK;
+
+	//out_condition_executed := empty map
+	memset(comp->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);
 	return fmi2OK;
 }
 
