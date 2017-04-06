@@ -4,7 +4,6 @@
  Author      : Joachim Denil
  Version     :
  Copyright   : Your copyright notice
- Description : Hello World in C, Ansi-style
  ============================================================================
  */
 
@@ -31,7 +30,7 @@ int main(void) {
 	fp_fmu_loop_sa = fopen("result_loop_sa.csv", "w");
 
 
-	puts("Loading Dlls\n"); /* prints Hello World */
+	puts("Loading Dlls\n");
 	/* loading */
     loadDll("libFMI_Environment.dll", &fmu_env, "PW_ENV");
     loadDll("libFMI_controller_sa.dll", &fmu_control_sa, "PW_CONTROLLER_SA");
