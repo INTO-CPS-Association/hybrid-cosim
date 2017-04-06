@@ -42,3 +42,4 @@ xtend-gen/
 *.o
 *.o
 *.o
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/lib/*.libs

@@ -19,7 +19,6 @@ Template for a  FMU
 #include "fmi2.h"
 #include "sim_support.h"
 
-
 #define MAX 100000
 
 #define NUMBER_OF_REALS 5
