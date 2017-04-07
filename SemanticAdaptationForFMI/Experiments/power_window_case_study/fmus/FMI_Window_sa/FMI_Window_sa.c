@@ -59,6 +59,8 @@ int is_close(double a, double b, double REL_TOL, double ABS_TOL){
 
 fmi2Status fmi2SetDebugLogging(fmi2Component fc, fmi2Boolean loggingOn, size_t nCategories, const fmi2String categories[])
 {
+	FMUInstance* fi = (FMUInstance *)fc;
+	fi->fmu[0].setDebugLogging(fi->c_fmu[0],loggingOn,nCategories,categories);
 	return fmi2OK;
 }
 
@@ -112,8 +114,12 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 
 fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, fmi2Real value[])
 {
-
 	FMUInstance* comp = (FMUInstance *)fc;
+
+	printf("%s: getReal with vr: \n", comp->instanceName);
+	for (int i = 0; i < nvr; ++i) {
+		printf("vr[%d] = %d \n", i, vr[i]);
+	}
 
 	int isEmpty = 1;
 	for (int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
@@ -127,7 +133,6 @@ fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 	if(1){
 		comp->out_conditions_executed[0] = 1;
 	}
-
 
 	for(int i=0; i<_NR_OF_OUT_CONDITIONS;i++){
 		if(comp->out_conditions_executed[i]){
@@ -346,10 +351,9 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 	if (1){
 		fmi2ValueReference vr_fromWindow[2] = {1,2};
 		fmi2Real out_values[2];
-		fi->fmu[index].getReal(fi->c_fmu[index],vr_fromWindow, 3, &out_values[0]);
+		fi->fmu[index].getReal(fi->c_fmu[index],vr_fromWindow, 2, &out_values[0]);
 		fi->stored_window_reaction_torque = out_values[0];
 		fi->stored_window_height = out_values[1];
-
 	}
 	return status;
 }

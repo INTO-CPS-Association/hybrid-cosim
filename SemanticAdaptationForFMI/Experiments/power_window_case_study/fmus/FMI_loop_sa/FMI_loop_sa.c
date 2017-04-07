@@ -9,7 +9,6 @@ Template for a  FMU
 #define MODEL_GUID "{41f87101-edf2-4eef-90f3-42db56d4565f}"
 #define FMI2_FUNCTION_PREFIX LOOP_SA
 
-
 #include <stdio.h>
 #include "string.h"
 #include "fmi2Functions.h"
@@ -196,7 +195,6 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 		fi->s = functions->allocateMemory(NUMBER_OF_STRINGS,  sizeof(fmi2String));
 	} // variables in predefined arrays (performance issue) --> makes multiple instances of fmu impossible
 
-
 	fi->instanceName = functions->allocateMemory(1 + strlen(instanceName), sizeof(char));
 	fi->GUID = functions->allocateMemory(1 + strlen(fmuGUID), sizeof(char));
 
@@ -208,20 +206,29 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 	fi->state = fmuInstantiated;
 	/* Load the inner FMUs:*/
 
+	printf("%s loading internal dlls...\n",instanceName);
+
 	loadDll("libFMI_Window_sa.dll", &(fi->fmu[_window_sa]), "WINDOW_SA");
 	fi->fmuResourceLocation[_window_sa] = "libFMI_Window_sa";
 	loadDll("Obstacle.dll", &(fi->fmu[_obstacle]),"");
 	fi->fmuResourceLocation[_obstacle] = "Obstacle.dll";
 
 	fi->fmu_guid[_window_sa]= functions->allocateMemory(1 + strlen("1"), sizeof(char));
-	fi->fmu_guid[_obstacle] = functions->allocateMemory(1 + strlen("{547938fa-ae1c-44b9-971b-64c1c3344c33}"), sizeof(char));
+	fi->fmu_guid[_obstacle] = functions->allocateMemory(1 + strlen("{f5edf8de-102d-41c8-a439-ded057d2dee2}"), sizeof(char));
 	strcpy(fi->fmu_guid[_window_sa], "1");
-	strcpy(fi->fmu_guid[_obstacle], "{8de5bd74-8d30-4a72-9170-0e4bf874b6a8}");
+	strcpy(fi->fmu_guid[_obstacle], "{f5edf8de-102d-41c8-a439-ded057d2dee2}");
 
 	/*Instantiate inner components*/
+	printf("%s instantiating internal fmus...\n",instanceName);
 
-	fi->c_fmu[_window_sa] = fi->fmu[_window_sa].instantiate("window_sa", fmi2CoSimulation, fi->fmu_guid[_window_sa], fi->fmuResourceLocation[_window_sa] , fi->functions, visible, 0);
-	fi->c_fmu[_obstacle] = fi->fmu[_obstacle].instantiate("obstacle", fmi2CoSimulation, fi->fmu_guid[_obstacle], fi->fmuResourceLocation[_obstacle] , fi->functions, visible, 0);
+	fmi2Boolean childLoggingOn = fmi2True;
+
+	fi->c_fmu[_window_sa] = fi->fmu[_window_sa].instantiate("window_sa", fmi2CoSimulation, fi->fmu_guid[_window_sa], fi->fmuResourceLocation[_window_sa] , fi->functions, visible, childLoggingOn);
+	fi->c_fmu[_obstacle] = fi->fmu[_obstacle].instantiate("obstacle", fmi2CoSimulation, fi->fmu_guid[_obstacle], fi->fmuResourceLocation[_obstacle] , fi->functions, visible, childLoggingOn);
+
+	fmi2String categories[] = {"logAll"};
+	fi->fmu[_window_sa].setDebugLogging(fi->c_fmu[_window_sa], childLoggingOn, 1, categories);
+	fi->fmu[_obstacle].setDebugLogging(fi->c_fmu[_obstacle], childLoggingOn, 1, categories);
 
 	return fi;
 }
@@ -229,12 +236,11 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 fmi2Status fmi2SetupExperiment(fmi2Component fc, fmi2Boolean toleranceDefined, fmi2Real tolerance,
 		fmi2Real startTime, fmi2Boolean stopTimeDefined, fmi2Real stopTime) {
 
-
 	FMUInstance* fi = (FMUInstance*) fc;
 	printf("%s in fmiSetupExperiment\n",fi->instanceName);
 	if (fi->state != fmuInstantiated)
 	{
-		printf("fmu: %s was not instatiated before calling fmiSetupExperiment\n", fi->instanceName);
+		printf("fmu: %s was not instantiated before calling fmiSetupExperiment\n", fi->instanceName);
 		return fmi2Error;
 	}
 	fi->currentTime = startTime;
@@ -310,21 +316,26 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 
 	fmi2Real dt =currentCommPoint - fi->time_last_fmu[index];
 	fmi2Real h = commStepSize + dt;
-	int repeat = 0;
+	fmi2Boolean converged = 0;
 
-	fmi2Component obstacle_temp, window_sa_temp;
+	//fmi2Component obstacle_temp, window_sa_temp;
 	fmi2ValueReference vr_to_window_sa[3]={2,3,4};
 	fmi2ValueReference vr_disp[1] = {2};
 	fmi2ValueReference vr_F_obstacle[1] = {0};
 	fmi2ValueReference vr_from_window[2] = {0,1};
 	fmi2Real toWindowSA[3];
 	fmi2Real fromWindow[2];
-	for (int iter= 0; iter< MAXITER; iter++) {
-		fi->fmu[_obstacle].getFMUstate(fi->c_fmu[_obstacle], &obstacle_temp);
-		fi->fmu[_window_sa].getFMUstate(fi->c_fmu[_window_sa], &window_sa_temp);
+
+	fi->fmu[_obstacle].doStep(fi->c_fmu[_obstacle], currentCommPoint, h, fmi2False);
+	fi->fmu[_window_sa].doStep(fi->c_fmu[_window_sa], currentCommPoint, h, fmi2False);
+
+	int iter;
+	for (iter = 0; iter<MAXITER; iter++) {
+		// Since these FMUs are stateless, no need to do this.
+		//fi->fmu[_obstacle].getFMUstate(fi->c_fmu[_obstacle], &obstacle_temp);
+		//fi->fmu[_window_sa].getFMUstate(fi->c_fmu[_window_sa], &window_sa_temp);
 
 		fi->fmu[_obstacle].setReal(fi->c_fmu[_obstacle], vr_disp,1, &fi->prev_disp);
-		fi->fmu[_obstacle].doStep(fi->c_fmu[_obstacle], currentCommPoint, h, fmi2False);
 		fi->fmu[_obstacle].getReal(fi->c_fmu[_obstacle],vr_F_obstacle,1,&toWindowSA[0]);
 		printf("from obstacle = %f\n", toWindowSA[0]);
 
@@ -332,30 +343,34 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 		printf("to window displacement = %f\n", fi->r[_in_displacement]);
 		toWindowSA[2] = fi->r[_in_speed];
 		printf("to window speed = %f\n", fi->r[_in_speed]);
+		fflush(stdout);
 		fi->fmu[_window_sa].setReal(fi->c_fmu[_window_sa], vr_to_window_sa, 3, &toWindowSA[0]);
-		fi->fmu[_window_sa].doStep(fi->c_fmu[_window_sa], currentCommPoint, h, fmi2False);
 		fi->fmu[_window_sa].getReal(fi->c_fmu[_window_sa], vr_from_window, 2, &fromWindow[0]);
 
-		repeat = is_close(fi->prev_disp, fromWindow[1], REL_TOL, ABS_TOL);
+		converged = is_close(fi->prev_disp, fromWindow[1], REL_TOL, ABS_TOL);
 		fi->prev_disp = fromWindow[1];\
 
-		if (repeat) {
-			fi->fmu[_obstacle].setFMUstate(fi->c_fmu[_obstacle], obstacle_temp);
-			fi->fmu[_window_sa].setFMUstate(fi->c_fmu[_window_sa], window_sa_temp);
-			fi->fmu[_obstacle].doStep(fi->c_fmu[_obstacle], currentCommPoint, h, fmi2True);
-			fi->fmu[_window_sa].doStep(fi->c_fmu[_window_sa], currentCommPoint, h, fmi2True);
-//			fi->fmu[_obstacle].freeInstance(obstacle_temp);
-//			fi->fmu[_window_sa].freeInstance(window_sa_temp);
+		if (converged) {
+			printf("Step converged!\n");
+			fflush(stdout);
 			break;
 		} else {
-			//rollback(obstacle);
-			fi->fmu[_obstacle].setFMUstate(fi->c_fmu[_obstacle], obstacle_temp);
-			fi->fmu[_window_sa].setFMUstate(fi->c_fmu[_window_sa], window_sa_temp);
-//			fi->fmu[_obstacle].freeInstance(obstacle_temp);
-//			fi->fmu[_window_sa].freeInstance(window_sa_temp);
-			//rollback(window_sa);
+			printf("Rolling back and repeating step...\n");
+			fflush(stdout);
+			// Since these FMUs are stateless, no need to do this.
+			//fi->fmu[_obstacle].setFMUstate(fi->c_fmu[_obstacle], obstacle_temp);
+			//fi->fmu[_window_sa].setFMUstate(fi->c_fmu[_window_sa], window_sa_temp);
 		}
+
 	}
+
+	if (iter == MAXITER){
+		printf("Loop_sa did not converge within %d iterations!\n", MAXITER);
+		return fmi2Fatal;
+		fflush(stdout);
+	}
+
+
 	if(1){
 		fi->r[_out_tau] = fromWindow[0];
 	}
