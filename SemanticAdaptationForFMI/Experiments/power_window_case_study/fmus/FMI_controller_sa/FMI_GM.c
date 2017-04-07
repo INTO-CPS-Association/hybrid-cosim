@@ -388,7 +388,6 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	}else if(simStatus == fmi2OK){
 		fi->currentTime = currentCommPoint + commStepSize;
 		fi->time_last_fmu[0] = currentCommPoint + commStepSize;
-	}else{
 	}
 
 	/* do out functions*/
