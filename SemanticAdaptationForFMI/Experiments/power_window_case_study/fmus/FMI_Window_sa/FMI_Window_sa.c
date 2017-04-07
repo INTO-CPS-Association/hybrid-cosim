@@ -218,7 +218,6 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 		fi->s = functions->allocateMemory(NUMBER_OF_STRINGS,  sizeof(fmi2String));
 	} // variables in predefined arrays (performance issue) --> makes multiple instances of fmu impossible
 
-
 	fi->instanceName = functions->allocateMemory(1 + strlen(instanceName), sizeof(char));
 	fi->GUID = functions->allocateMemory(1 + strlen(fmuGUID), sizeof(char));
 
@@ -235,10 +234,8 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 
 	/*Instantiate inner components*/
 	for (int i=0; i<1; i++){
-		fi->c_fmu[i] = fi->fmu[i].instantiate("Window", fmi2CoSimulation, "{bead1740-5500-42db-88d5-eb3872b63305}", fi->fmuResourceLocation[i] , fi->functions, visible, 0);
+		fi->c_fmu[i] = fi->fmu[i].instantiate("Window", fmi2CoSimulation, "{6732d7cb-1034-4ea3-b345-8072a4efef22}", fi->fmuResourceLocation[i] , fi->functions, visible, 0);
 	}
-
-
 
 	return fi;
 }
@@ -251,7 +248,7 @@ fmi2Status fmi2SetupExperiment(fmi2Component fc, fmi2Boolean toleranceDefined, f
 	printf("%s in fmiSetupExperiment\n",fi->instanceName);
 	if (fi->state != fmuInstantiated)
 	{
-		printf("fmu: %s was not instatiated before calling fmiSetupExperiment\n", fi->instanceName);
+		printf("fmu: %s was not instantiated before calling fmiSetupExperiment\n", fi->instanceName);
 		return fmi2Error;
 	}
 	fi->currentTime = startTime;
@@ -332,7 +329,7 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 	fmi2Real dt =   currentCommPoint - fi->time_last_fmu[index];
 	fmi2Real h = commStepSize + dt;
 	if (1){
-		fmi2ValueReference vr_toWindow[3] = {1,2,4};
+		fmi2ValueReference vr_toWindow[3] = {3,4,0};
 		fmi2Real values[3];
 		values[0] = fi->stored_windowsa_reaction_force;
 		values[1] = fi->stored_windowsa_speed;
@@ -347,7 +344,7 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 	}
 
 	if (1){
-		fmi2ValueReference vr_fromWindow[2] = {3,6};
+		fmi2ValueReference vr_fromWindow[2] = {1,2};
 		fmi2Real out_values[2];
 		fi->fmu[index].getReal(fi->c_fmu[index],vr_fromWindow, 3, &out_values[0]);
 		fi->stored_window_reaction_torque = out_values[0];

@@ -235,10 +235,8 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 
 	/*Instantiate inner components*/
 	for (int i=0; i<1; i++){
-		fi->c_fmu[i] = fi->fmu[i].instantiate("inner", fmi2CoSimulation, "{547938fa-ae1c-44b9-971b-64c1c3344c33}", fi->fmuResourceLocation[i] , fi->functions, visible, 0);
+		fi->c_fmu[i] = fi->fmu[i].instantiate("inner", fmi2CoSimulation, "{f4c82b15-22ba-4ddc-b051-cdd96896e097}", fi->fmuResourceLocation[i] , fi->functions, visible, 0);
 	}
-
-
 
 	return fi;
 }
