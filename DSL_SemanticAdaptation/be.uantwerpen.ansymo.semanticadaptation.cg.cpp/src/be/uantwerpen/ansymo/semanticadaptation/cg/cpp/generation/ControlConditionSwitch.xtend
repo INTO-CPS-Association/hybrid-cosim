@@ -9,6 +9,8 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlR
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStep
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
 
 class ControlConditionSwitch extends InOutRulesConditionSwitch {
 
@@ -16,7 +18,7 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 		String adaptationName, 
 		LinkedHashMap<String,SAScalarVariable> SASVs
 	) {
-		super(adaptationClassName, adaptationName, "", null, SASVs);
+		super(adaptationClassName, adaptationName, "", null, SASVs, newLinkedHashMap());
 	}
 
 	override ReturnInformation caseControlRuleBlock(ControlRuleBlock obj) {
@@ -29,13 +31,15 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 		return retVal;
 	}
 
-	override ReturnInformation caseCustomControlRule(CustomControlRule object) {
+	override ReturnInformation caseCustomControlRule(CustomControlRule object) {	
 		var retVal = new ReturnInformation();
 
 		var String tempDoSwitchCode = "";
 		for (ruleStm : object.controlRulestatements) {
 			tempDoSwitchCode += doSwitch(ruleStm).code;
 		}
+		tempDoSwitchCode += System.lineSeparator() + '''return «doSwitch(object.returnstatement).code»;
+			''';
 		
 		var functionPrefix = "void ";
 		var functionNameArgs = "executeInternalControlFlow(double h, double dt)"
@@ -47,7 +51,14 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 					«tempDoSwitchCode»
 				}
 			''';
+		return retVal;
+	}
 
+	override ReturnInformation caseDoStepFun(DoStepFun object)
+	{
+		var retVal = new ReturnInformation();
+		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»);''';
+		retVal.type = SVType.Integer;
 		return retVal;
 	}
 

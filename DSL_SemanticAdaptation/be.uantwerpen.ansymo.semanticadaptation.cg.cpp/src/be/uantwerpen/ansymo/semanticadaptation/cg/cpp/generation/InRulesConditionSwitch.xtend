@@ -6,13 +6,16 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ReturnInformation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.GlobalInOutVariable
 
 class InRulesConditionSwitch extends InOutRulesConditionSwitch {
 
 	private Boolean inOutputFunction = false;
 
-	new(String adaptationClassName, String adaptationName, LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars, LinkedHashMap<String,SAScalarVariable> SASVs) {
-		super(adaptationClassName, adaptationName, "in_rule_", mSVars, SASVs);
+	new(String adaptationClassName, String adaptationName, LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars, LinkedHashMap<String,SAScalarVariable> SASVs
+		,LinkedHashMap<String, GlobalInOutVariable> params
+	) {
+		super(adaptationClassName, adaptationName, "in_rule_", mSVars, SASVs, params);
 	}
 
 

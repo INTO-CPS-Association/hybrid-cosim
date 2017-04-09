@@ -10,9 +10,10 @@ public class SAScalarVariable {
 	private String defineName;
 	private Optional<Integer> valueReference = Optional.empty();
 	private Optional<SVCausality> causality = Optional.empty();
-	private Optional<SVType> type = Optional.empty();;
+	private Optional<SVType> type = Optional.empty();
 	private String name;
 	private Optional<SVVariability> variability = Optional.empty();
+	private boolean partOfMD = false;
 
 	public ScalarVariable CalcSVar() throws MissingScalarVariableInformationException {
 
@@ -90,5 +91,13 @@ public class SAScalarVariable {
 
 	public void setDefineName(String defineName) {
 		this.defineName = defineName;
+	}
+
+	public boolean getPartOfMD() {
+		return partOfMD;
+	}
+
+	public void SetPartOfMD(boolean partOfMD) {
+		this.partOfMD = partOfMD;
 	}
 }

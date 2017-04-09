@@ -29,6 +29,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.RulesBlockResult
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
 import java.util.List
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ParamDeclarations
 
 class CppGenerator extends SemanticAdaptationGenerator {
 	private var IFileSystemAccess2 fsa;
@@ -90,6 +91,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			// Defines for accessing FMU scalar variables.
 			val String fmusDefines = calcDefines2(mappedScalarVariables);
 
+			// Compile Params 
+			var LinkedHashMap<String, GlobalInOutVariable> params = newLinkedHashMap;
+			val String paramsConstructorSource = compileParams(params, type.params);
+
 			/*
 			 * This map contains all the ScalarVariables for the semantic adaptation. 
 			 * The are not populated yet, but they will be during the compilation of the in and out rule blocks. 
@@ -102,16 +107,17 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 			// Compile the in rules
 			val inRuleResult = compileInOutRuleBlocks(InputOutputType.Input, adaptation.eAllContents.toIterable.filter(
-				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs);
+				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs, params);
 
 			// Compile the out rules
 			val outRuleResult = compileInOutRuleBlocks(InputOutputType.Output, adaptation.eAllContents.toIterable.
 				filter(OutRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables,
-				SASVs);
+				SASVs, params);
 
-			// Merge the global variables
+			// Merge the global variables for h file and cpp file
 			// TODO: Check for duplicates
 			var LinkedHashMap<String, GlobalInOutVariable> globalVariables = newLinkedHashMap();
+			globalVariables.putAll(params);
 			globalVariables.putAll(outRuleResult.globalVars2);
 			globalVariables.putAll(inRuleResult.globalVars2);
 
@@ -120,22 +126,28 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				adapClassName, adapInteralRefName, SASVs);
 
 			/*
-			 * As the in and out rules have populated the semantic adaptation scalar variables we can generate the getFmiValue* and setFmiValue functions.
-			 */
-			val String getFuncsSource = compileGetFmiValueFunctions(adapClassName, SASVs);
-			val String setFuncsSource = compileSetFmiValueFunctions(adapClassName, SASVs);
-			
-
-			/*
 			 * Compile the constructor, destructor and initialize functions
 			 */
-			val String deAndConstructorAndInitializeSource = compileDeAndConstructorAndInitialize(adapClassName, globalVariables, fmus.head.key,
-				fmus.head.value, md.guid);
+			val String deAndConstructorAndInitializeSource = compileDeAndConstructorAndInitialize(
+				adapClassName, 
+				fmus.head.key, 
+				fmus.head.value, 
+				md.guid, 
+				paramsConstructorSource, 
+				inRuleResult.constructorInitialization, 
+				outRuleResult.constructorInitialization
+			);
 
 			/*
 			 * Compile getRuleThis function
 			 */
 			val String getRuleThisSource = compileGetRuleThis(adapClassName);
+
+			/*
+			 * The in and out rules have populated the semantic adaptation scalar variables we can generate the getFmiValue* and setFmiValue functions.
+			 */
+			val String getFuncsSource = compileGetFmiValueFunctions(adapClassName, SASVs);
+			val String setFuncsSource = compileSetFmiValueFunctions(adapClassName, SASVs);
 
 			// Compile the source file
 			val String sourceInclude = '''#include "«adapClassName».h"''';
@@ -160,6 +172,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				outRuleResult.functionSignatures,
 				crtlRuleResult.functionSignatures,
 				globalVariables,
+				params,
 				fmus,
 				SASVs.values.map[CalcSVar()].toList
 			);
@@ -169,12 +182,22 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			val modelDescCreator = new ModelDescriptionCreator(adapExternalName);
 			val modelDescription = modelDescCreator.generateModelDescription(SASVs.values);
 			fsa.generateFile("modelDescription.xml", modelDescription);
-			
+
 			// Compile the fmu.cpp file
 			val fmuCppFile = StaticGenerators.GenFmuCppFile(adapClassName);
 			fsa.generateFile("Fmu.cpp", fmuCppFile);
 
 		}
+	}
+
+	def String compileParams(LinkedHashMap<String, GlobalInOutVariable> gVars, EList<ParamDeclarations> params) {
+		val paramsConditionSwitch = new ParamConditionSwitch(gVars);
+		var String paramsConstructorSource = "";
+		for (paramDecl : params) {
+			val doSwitchRes = paramsConditionSwitch.doSwitch(paramDecl);
+			paramsConstructorSource += doSwitchRes.code;
+		}
+		return paramsConstructorSource;
 	}
 
 	def calcSADefines(Collection<SAScalarVariable> variables) {
@@ -232,89 +255,93 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 */
 	def String compileHeader(String adapClassName, String fmusDefines, String SADefines, List<String> inRulesFuncSig,
 		List<String> outRulesFuncSig, List<String> crtlRulesFuncSig,
-		LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<Pair<String, String>> fmus,
+		LinkedHashMap<String, GlobalInOutVariable> globalVariables, LinkedHashMap<String, GlobalInOutVariable> params, ArrayList<Pair<String, String>> fmus,
 		Collection<ScalarVariable> sVars) {
 		return '''
-		
-			#ifndef SRC_«adapClassName.toUpperCase»_H
-			#define SRC_«adapClassName.toUpperCase»_H
-		
-			#include "SemanticAdaptation.h"
-			#include <memory>
-			#include "Fmu.h"
 			
-			using namespace std;
-			using namespace fmi2;
+				#ifndef SRC_«adapClassName.toUpperCase»_H
+				#define SRC_«adapClassName.toUpperCase»_H
 			
-			namespace adaptation
-			{
+				#include "SemanticAdaptation.h"
+				#include <memory>
+				#include "Fmu.h"
 				
-				«fmusDefines»
+				using namespace std;
+				using namespace fmi2;
 				
-				«SADefines»
-			
-				class «adapClassName» : public SemanticAdaptation<«adapClassName»>, public enable_shared_from_this<«adapClassName»>
+				namespace adaptation
 				{
-					public:
-						«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions);
-						void initialize();
-						virtual ~«adapClassName»();
-						
-						void setFmiValue(fmi2ValueReference id, int value);
-						void setFmiValue(fmi2ValueReference id, bool value);
-						void setFmiValue(fmi2ValueReference id, double value);
-						void setFmiValue(fmi2ValueReference id, string value);
 					
-						int getFmiValueInteger(fmi2ValueReference id);
-						bool getFmiValueBoolean(fmi2ValueReference id);
-						double getFmiValueReal(fmi2ValueReference id);
-						string getFmiValueString(fmi2ValueReference id);
+					«fmusDefines»
+					
+					«SADefines»
+				
+					class «adapClassName» : public SemanticAdaptation<«adapClassName»>, public enable_shared_from_this<«adapClassName»>
+					{
+						public:
+							«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions);
+							void initialize();
+							virtual ~«adapClassName»();
+							
+							void setFmiValue(fmi2ValueReference id, int value);
+							void setFmiValue(fmi2ValueReference id, bool value);
+							void setFmiValue(fmi2ValueReference id, double value);
+							void setFmiValue(fmi2ValueReference id, string value);
 						
-					private:
-						
-						«adapClassName»* getRuleThis();
-						
-						/*in rules*/
-						«inRulesFuncSig.map[x | x+";"].join("\n")»
-						
-						/*out rules*/
-						«outRulesFuncSig.map[x | x+";"].join("\n")»
-						
-						«crtlRulesFuncSig.map[x | x+";"].join("\n")»
-						
-						«FOR fmu : fmus»
-							shared_ptr<FmuComponent> «fmu.key»;
-						«ENDFOR»
-						
-						«FOR sv : sVars»
-							«Conversions.fmiTypeToCppType(sv.type)» «sv.name»;
-							«IF sv.causality == SVCausality.input»
-								bool isSet«sv.name»;
-							«ENDIF»
-						«ENDFOR»
-						
-						«FOR v : globalVariables.entrySet»
-							«Conversions.fmiTypeToCppType(v.value.type)» «v.key»;
-						«ENDFOR»
-				};
-			}
-			
-			#endif
+							int getFmiValueInteger(fmi2ValueReference id);
+							bool getFmiValueBoolean(fmi2ValueReference id);
+							double getFmiValueReal(fmi2ValueReference id);
+							string getFmiValueString(fmi2ValueReference id);
+							
+						private:
+							
+							«adapClassName»* getRuleThis();
+							
+							/*in rules*/
+							«inRulesFuncSig.map[x | x+";"].join("\n")»
+							
+							/*out rules*/
+							«outRulesFuncSig.map[x | x+";"].join("\n")»
+							
+							«crtlRulesFuncSig.map[x | x+";"].join("\n")»
+							
+							«FOR fmu : fmus»
+								shared_ptr<FmuComponent> «fmu.key»;
+							«ENDFOR»
+							
+							«FOR sv : sVars»
+								«Conversions.fmiTypeToCppType(sv.type)» «sv.name»;
+								«IF sv.causality == SVCausality.input»
+									bool isSet«sv.name»;
+								«ENDIF»
+							«ENDFOR»
+							
+							«FOR v : globalVariables.entrySet»
+								«Conversions.fmiTypeToCppType(v.value.type)» «v.key»;
+							«ENDFOR»
+							
+							«FOR v : params.entrySet»
+								«Conversions.fmiTypeToCppType(v.value.type)» «v.key»;
+							«ENDFOR»
+					};
+				}
+				
+				#endif
 		''';
 	}
 
 	/*
 	 * Compiles the source file constructor, destructor and the initialize function
 	 */
-	def String compileDeAndConstructorAndInitialize(String adapClassName, LinkedHashMap<String, GlobalInOutVariable> globalVariables,
-		String fmuName, String fmuTypeName, String guid) {
+	def String compileDeAndConstructorAndInitialize(String adapClassName, String fmuName, String fmuTypeName, String guid, String paramsCons, String inCons, String outCons) {
 		return '''
 			«adapClassName»::«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
 				SemanticAdaptation(resourceLocation, createInputRules(),createOutputRules(), functions)
 			{
-				«FOR v : globalVariables.entrySet»
-					this->«(v.key)» = «v.value.value»;
-				«ENDFOR»
+				
+				«paramsCons»
+				«inCons»
+				«outCons»
 			}
 			
 			void «adapClassName»::initialize()
@@ -453,10 +480,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	def String SplitAtSpaceAndRemoveFirst(String content) {
 		content.substring(content.indexOf(" ") + 1, content.length);
 	}
-	
-	def String removeEmptyArgumentParenthesis(String content)
-	{
-		return	content.substring(0,content.length-2);
+
+	def String removeEmptyArgumentParenthesis(String content) {
+		return content.substring(0, content.length - 2);
 	}
 
 	/*
@@ -467,12 +493,12 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	def InOutRulesBlockResult compileInOutRuleBlocks(InputOutputType ioType, Iterable<InOutRules> rulesBlocks,
 		String adaptationClassName, String adaptationName,
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
-		LinkedHashMap<String, SAScalarVariable> SASVs) {
+		LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params) {
 
 		val visitor = if (ioType == InputOutputType.Input)
-				new InRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs)
+				new InRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params)
 			else
-				new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs);
+				new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params);
 
 		val functionName = "create" + ioType + "Rules()";
 		var String cpp = "";
@@ -509,7 +535,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				'''
 			}
 		}
-		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.vars, visitor.getGlobalVars);
+		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.vars, visitor.getGlobalVars, visitor.constructorInitialization);
 	}
 
 	/*
@@ -523,6 +549,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		var int valueReference = 0;
 		for (inport : inports) {
 			var saSV = new SAScalarVariable();
+			saSV.SetPartOfMD(true);
 			saSV.valueReference = valueReference++;
 			saSV.name = inport.name;
 			saSV.defineName = (definePrefix + inport.name).toUpperCase
@@ -532,6 +559,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 		for (outport : outports) {
 			var saSV = new SAScalarVariable();
+			saSV.SetPartOfMD(true);
 			saSV.valueReference = valueReference++;
 			saSV.defineName = (definePrefix + outport.name).toUpperCase
 			saSV.name = outport.name;

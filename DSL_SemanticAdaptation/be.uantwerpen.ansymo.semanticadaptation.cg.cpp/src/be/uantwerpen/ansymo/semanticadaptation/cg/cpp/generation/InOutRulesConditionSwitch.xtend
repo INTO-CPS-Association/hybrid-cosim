@@ -28,11 +28,13 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.LValueDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Div
 
 abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 
 	protected var LinkedHashMap<String, Pair<SVType, Object>> globalVars = newLinkedHashMap();
 	protected var LinkedHashMap<String, GlobalInOutVariable> globalVars2 = newLinkedHashMap();
+	protected var LinkedHashMap<String, GlobalInOutVariable> params;
 	private var Pair<SVType, Object> lastVal;
 	protected final String adaptationName;
 	protected final String adaptationClassName;
@@ -45,14 +47,21 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 	protected boolean inRuleCondition;
 	protected boolean inRuleTransition;
 	protected boolean inRuleOutput;
+	protected String constructorInitialization = "";
+	protected boolean inControlRule;
+	protected boolean globalDeclaration = false;
+// Add scope information to this.
+	protected var LinkedHashMap<String, SVType> localDeclarations = newLinkedHashMap();
 
 	new(
 		String adaptationClassName,
 		String adaptationName,
 		String functionPrefix,
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
-		LinkedHashMap<String, SAScalarVariable> SASVs
+		LinkedHashMap<String, SAScalarVariable> SASVs,
+		LinkedHashMap<String, GlobalInOutVariable> params
 	) {
+		this.params = params;
 		this.SASVs = SASVs;
 		this.adaptationName = adaptationName;
 		this.adaptationClassName = adaptationClassName;
@@ -80,8 +89,10 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 	}
 
 	public def getVars() { return this.globalVars; }
-	
+
 	public def getGlobalVars() { return this.globalVars2; }
+
+	public def getConstructorInitialization() { return this.constructorInitialization; }
 
 	/**
 	 * This function adds a header style function signature to the list <i>functionsignatures</i> 
@@ -101,37 +112,30 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 	 * COMPILATION FUNCTIONS
 	 */
 	override ReturnInformation caseOutRulesBlock(OutRulesBlock object) {
+		this.globalDeclaration = true;
+
 		var retVal = new ReturnInformation();
 
 		// Get the global variables added to globalVars
 		for (gVar : object.globalOutVars) {
-			doSwitch(gVar)
+			constructorInitialization += doSwitch(gVar).code;
 		}
 		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
 			this.incrementCount;
 			retVal.appendCode(doSwitch(dataRule).code);
 		}
-
+		this.globalDeclaration = false;
 		return retVal;
-
-//		var cpp = ""
-//		for (gVar : object.globalOutVars) {
-//			doSwitch(gVar)
-//		}
-//		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
-//			this.incrementCount;
-//			cpp += doSwitch(dataRule);
-//		}
-//		return cpp;
 	}
 
 	override ReturnInformation caseInRulesBlock(InRulesBlock object) {
+		this.globalDeclaration = true;
 
 		var retVal = new ReturnInformation();
 
 		// Get the global variables added to globalVars
 		for (gVar : object.globalInVars) {
-			doSwitch(gVar)
+			constructorInitialization += doSwitch(gVar).code
 		}
 
 		for (DataRule dataRule : object.eAllContents.toIterable.filter(DataRule)) {
@@ -140,17 +144,8 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 			retVal.appendCode(doSwitch(dataRule).code);
 		}
 
+		this.globalDeclaration = false;
 		return retVal;
-
-//		var cpp = ""
-//		for (gVar : object.globalInVars) {
-//			doSwitch(gVar)
-//		}
-//		for (DataRule dataRule : object.eAllContents.toIterable.filter(DataRule)) {
-//			this.incrementCount;
-//			cpp += doSwitch(dataRule);
-//		}
-//		return cpp;
 	}
 
 	override ReturnInformation caseDataRule(DataRule object) {
@@ -164,12 +159,11 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		inRuleOutput = true;
 		val outputSwitch = doSwitch(object.outputfunction);
 		inRuleOutput = false;
-		retVal.code = 
-			'''
-				«conditionSwitch.code»
-				«transitionSwitch.code»
-				«outputSwitch.code»
-			'''
+		retVal.code = '''
+			«conditionSwitch.code»
+			«transitionSwitch.code»
+			«outputSwitch.code»
+		'''
 
 		return retVal;
 	}
@@ -185,13 +179,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		''';
 
 		return retVal;
-
-//		val functionSignature = createFunctionSignature("condition", "bool");
-//		'''
-//			«functionSignature»{
-//				return «doSwitch(object.condition)»;
-//			}
-//		''';
 	}
 
 	override ReturnInformation caseStateTransitionFunction(StateTransitionFunction object) {
@@ -215,31 +202,12 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		''';
 
 		return retVal;
-
-//		val functionSig = createFunctionSignature("body", "void");
-//		'''
-//			«functionSig»{
-//				«IF object.expression !== null»
-//					«doSwitch(object.expression)»
-//				«ENDIF»
-//				«IF object.statements !== null»
-//					«FOR stm : object.statements»
-//						«doSwitch(stm)»
-//					«ENDFOR»
-//				«ENDIF»			
-//				«IF object.assignment !== null»
-//					«doSwitch(object.assignment)»
-//				«ENDIF»
-//			}
-//		''';
 	}
 
 	override ReturnInformation defaultCase(EObject object) {
 		var retVal = new ReturnInformation();
 		retVal.code = '''[«object.class»]''';
 		return retVal;
-
-//		return '''[«object.class»]''';
 	}
 
 	override ReturnInformation caseIf(If object) {
@@ -253,14 +221,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		''';
 
 		return retVal;
-
-//		return '''
-//			if(«doSwitch(object.ifcondition)»){
-//				«FOR stm : object.ifstatements»
-//					«doSwitch(stm)»
-//				«ENDFOR»
-//			}
-//		''';
 	}
 
 	private def calcConSaSvData(SAScalarVariable SASV, ReturnInformation rI) {
@@ -295,39 +255,40 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 
 		retVal.code = '''«lValSwitch.code» = «rValSwitch.code»;''';
 		return retVal;
-
-//		return '''«doSwitch(object.lvalue)» = «doSwitch(object.expr)»;'''
 	}
 
 	override ReturnInformation caseMulti(Multi object) {
-		
+
 		val doSwitchLeft = doSwitch(object.left);
-		val doSwitchRight =  doSwitch(object.right);
+		val doSwitchRight = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
 		retVal.code = '''«doSwitchLeft.code» * «doSwitchRight.code»''';
 		return retVal;
+	}
 
-//		return '''«doSwitch(object.left)» * «doSwitch(object.right)»''';
+	override ReturnInformation caseDiv(Div object) {
+		val doSwitchLeft = doSwitch(object.left);
+		val doSwitchRight = doSwitch(object.right);
+		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
+		retVal.code = '''«doSwitchLeft.code» / «doSwitchRight.code»''';
+		retVal.type = SVType.Real;
+		retVal.forceType = true;
+		return retVal;
 	}
 
 	override ReturnInformation caseNeg(Neg object) {
-		
+
 		var doSwitch = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitch);
 		retVal.code = doSwitch.code;
 
 		return retVal;
-
-//		return '''-«doSwitch(object.right)»'''
 	}
 
 	override ReturnInformation caseSingleVarDeclaration(SingleVarDeclaration object) {
 		var retVal = new ReturnInformation();
 		retVal.code = '''«object.name»''';
 		return retVal;
-
-//		var returnVal = '''«object.name»'''
-//		return returnVal;
 	}
 
 	override ReturnInformation caseCompositeOutputFunction(CompositeOutputFunction object) {
@@ -342,16 +303,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 			}
 		''';
 		return retVal;
-
-//		val functionSig = createFunctionSignature("flush", "void");
-//		val returnVal = '''
-//			«functionSig»{
-//				«FOR stm : object.statements»
-//					«doSwitch(stm)»
-//				«ENDFOR»
-//			}
-//		''';
-//		return returnVal;
 	}
 
 	override ReturnInformation caseVariable(Variable object) {
@@ -360,10 +311,21 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 
 		if (object.owner === null || object.owner.name == this.adaptationName) {
 			retVal.code = '''this->«object.ref.name»''';
-			if (SASVs.containsKey(object.ref.name)) {
-				retVal.conSaSv = SASVs.get(object.ref.name);
-			} else if (globalVars2.containsKey(object.ref.name)) {
-				retVal.conGlobVar = globalVars2.get(object.ref.name);
+			if (SASVs.containsKey(object.ref.name) || globalVars2.containsKey(object.ref.name) ||
+				params.containsKey(object.ref.name)) {
+					
+				retVal.code = '''this->«object.ref.name»''';
+				
+				if (SASVs.containsKey(object.ref.name)) {
+					retVal.conSaSv = SASVs.get(object.ref.name);
+				} else if (globalVars2.containsKey(object.ref.name)) {
+					retVal.conGlobVar = globalVars2.get(object.ref.name);
+				} else if (params.containsKey(object.ref.name)) {
+					retVal.conGlobVar = params.get(object.ref.name);
+				}
+			} else if (localDeclarations.containsKey(object.ref.name)) {
+				retVal.code = '''«object.ref.name»'''
+				retVal.type = localDeclarations.get(object.ref.name);
 			}
 		} else {
 			// TODO: Extract the correct variable here
@@ -371,13 +333,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 			retVal.code = '''«doSwitch(object.ref).code»''';
 		}
 		return retVal;
-
-//		if (object.owner === null || object.owner.name == this.adaptationName) {
-//			return '''this->«object.ref.name»''';
-//		} else {
-//			this.externalVariableOwner = object.owner.name;
-//			return '''«doSwitch(object.ref)»''';
-//		}
 	}
 
 	override ReturnInformation caseLValueDeclaration(LValueDeclaration object) {
@@ -385,47 +340,41 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		var retVal = new ReturnInformation();
 		retVal.code = '''«object.name»''';
 		return retVal;
-
-//		return '''«object.name»'''
 	}
 
-	/*
-	 * This is out var and in var declarations.
-	 */
 	override ReturnInformation caseDeclaration(Declaration object) {
-		var retVal2 = new ReturnInformation();
-		for (decl : object.declarations) {
+		var retVal = new ReturnInformation();
+		for (SingleVarDeclaration decl : object.declarations) {
 			var doSwitchRes = doSwitch(decl.expr);
+			var String code = "";
 
-			retVal2.appendCode(doSwitchRes.code);
+			if (globalDeclaration) {
+				// This is an in var or out var declaration	
+				code = '''
+					this->«decl.name» = «doSwitchRes.code»;
+				'''
+				var globVar = new GlobalInOutVariable();
+				globVar.name = decl.name;
+				globVar.value = doSwitchRes.value;
+				globVar.type = doSwitchRes.type;
 
-			var globVar = new GlobalInOutVariable();
-			globVar.name = decl.name;
-			globVar.value = doSwitchRes.value;
-			globVar.type = doSwitchRes.type;
-
-			globalVars2.put(decl.name, globVar);
+				globalVars2.put(decl.name, globVar);
+			} else {
+				// This is a local declaration.
+				val String type = Conversions.fmiTypeToCppType(doSwitchRes.type)
+				code = '''«type» «decl.name» = «doSwitchRes.code»''';
+				this.localDeclarations.put(decl.name, doSwitchRes.type);
+			}
+			retVal.appendCode = code;
 		}
 
-		return retVal2;
-
-//		var returnVal = "";
-//
-//		for (decl : object.declarations) {
-//			returnVal += doSwitch(decl.expr);
-//			globalVars.put(decl.name, lastVal);
-//		}
-//		return returnVal;
+		return retVal;
 	}
 
 	override ReturnInformation caseIsSet(IsSet object) {
 		var retInfo = new ReturnInformation();
-//		retInfo.type = SVType.Real;
-//		retInfo.value = convertTypeToObject(retInfo.type, object);
 		retInfo.code = '''this->isSet«(object.args as Variable).ref.name»''';
 		return retInfo;
-
-//		return '''this->isSet«(object.args as Variable).ref.name»'''
 	}
 
 	override ReturnInformation caseRealLiteral(RealLiteral object) {
@@ -434,9 +383,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		retInfo.value = convertTypeToObject(retInfo.type, object);
 		retInfo.code = '''«object.value»''';
 		return retInfo;
-
-//		lastVal = convertType(SVType.Real, object);
-//		return '''«object.value»''';
 	}
 
 	override ReturnInformation caseIntLiteral(IntLiteral object) {
@@ -445,8 +391,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		retInfo.value = convertTypeToObject(retInfo.type, object);
 		retInfo.code = '''«object.value»''';
 		return retInfo;
-
-//		return '''«object.value»''';
 	}
 
 	override ReturnInformation caseBoolLiteral(BoolLiteral object) {
@@ -456,17 +400,6 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		retInfo.code = '''«object.value»''';
 
 		return retInfo;
-
-//		return '''«object.value»''';
 	}
 
-//	private def Pair<SVType, Object> convertType(SVType type, Literal object) {
-//		switch (type) {
-//			case Real: {
-//				return type -> (object as RealLiteral).value.doubleValue;
-//			}
-//			default: {
-//			}
-//		}
-//	}
 }

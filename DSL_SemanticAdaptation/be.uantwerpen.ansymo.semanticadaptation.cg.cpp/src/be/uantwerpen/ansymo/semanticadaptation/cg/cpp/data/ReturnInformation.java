@@ -11,6 +11,7 @@ public class ReturnInformation {
 	private String code = "";
 	private SAScalarVariable ConSaSv;
 	private GlobalInOutVariable conGlobVar;
+	private boolean forceType = false;
 
 	public ReturnInformation() {
 		// TODO Auto-generated constructor stub
@@ -28,7 +29,12 @@ public class ReturnInformation {
 		this.code = code;
 	}
 
-	public SVType getType() {
+	public SVType getType() throws Exception {
+		if(!typeIsSet)
+		{
+			throw new Exception(
+					"Attempt to retrieve unset type for code: " + code);
+		}
 		return type;
 	}
 
@@ -144,7 +150,34 @@ public class ReturnInformation {
 				this.setConSaSv(information2.ConSaSv);
 			}
 		}
+		
+		if(information.forceType && information2.forceType)
+		{
+			if(information.getType() != information2.getType())
+			{
+				throw new Exception(
+						"Two connected return informations with force types contain different types: "
+								+ information.getType() + " and " + information2.getType());
+			}
+		}
+		else if(information.forceType || information2.forceType)
+		{
+			
+			this.forceType = true;
+			if(information.forceType)
+				this.type = information.type;
+			else
+				this.type = information2.type;
+		}
 
+	}
+
+	public boolean getForceType() {
+		return forceType;
+	}
+
+	public void setForceType(boolean forceType) {
+		this.forceType = forceType;
 	}
 
 }

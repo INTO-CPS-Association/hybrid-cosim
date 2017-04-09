@@ -3,6 +3,10 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation;
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType;
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVVariability;
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.InvalidConversionException;
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral;
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral;
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Literal;
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RealLiteral;
 
 public class Conversions {
 	public static String fmiTypeToCppType(SVType t) throws InvalidConversionException {
@@ -93,6 +97,26 @@ public class Conversions {
 			}
 		default:
 			throw new InvalidConversionException("The type: " + t1 + " is invalid.");
+		}
+	}
+	
+	/*
+	 * UTILITY FUNCTIONS 
+	 */
+	public static Object convertTypeToObject(SVType type, Literal object) throws Exception {
+		switch (type) {
+			case Real: {
+				return (new Float(((RealLiteral)object).getValue())).doubleValue();
+			}
+			case Integer: {
+				return ((IntLiteral)object).getValue();
+			}
+			case Boolean: {
+				return Boolean.parseBoolean(((BoolLiteral)object).getValue());
+			}
+			default: {
+				throw new Exception("Missing conversion");
+			}
 		}
 	}
 

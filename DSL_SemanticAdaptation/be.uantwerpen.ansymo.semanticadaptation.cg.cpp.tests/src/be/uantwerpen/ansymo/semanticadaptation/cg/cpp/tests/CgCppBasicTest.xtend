@@ -33,10 +33,14 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
-	@Test def powerwindow_model_only() {
+	@Test def window_sa_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa', 'generated', "powerwindow");
 //		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
 //			'test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
+	}
+	
+	@Test def window_sa_canonical_new() {
+		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated', "powerwindow");
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
