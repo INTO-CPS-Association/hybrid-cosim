@@ -3,39 +3,38 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests
 
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.BuildUtilities
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
 import be.uantwerpen.ansymo.semanticadaptation.tests.SemanticAdaptationInjectorProvider
 import com.google.inject.Inject
+import java.io.File
+import java.io.FileWriter
+import java.nio.file.Files
 import java.util.regex.Pattern
 import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.resource.ResourceSet
+import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
 import org.eclipse.xtext.testing.util.ParseHelper
 import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.eclipse.xtext.generator.InMemoryFileSystemAccess
-import org.eclipse.xtext.generator.IGeneratorContext
-import org.eclipse.emf.ecore.resource.ResourceSet
-import org.junit.Ignore
-import java.io.File
-import java.io.PrintWriter
-import java.nio.file.Files
-import java.io.FileWriter
-import org.eclipse.xtext.junit4.ui.AbstractAutoEditTest
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
+import be.uantwerpen.ansymo.semanticadaptation.testframework.StaticGenerators
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
 class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
-	// @Inject CppGenerator underTest
+// @Inject CppGenerator underTest
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
 	@Test def powerwindow_model_only() {
-		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
+		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa', 'generated', "powerwindow");
 //		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
 //			'test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
 	}
@@ -88,7 +87,30 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 	}
 
-	def __parseNoErrors(String filename) {
+	def void deleteFolder(File folder) {
+		var	files = folder.listFiles();
+		if (files !== null) { // some JVMs return null for empty dirs
+			for (File f : files) {
+				if (f.isDirectory()) {
+					deleteFolder(f);
+				} else {
+					f.delete();
+				}
+			}
+		}
+		folder.delete();
+	}
+
+	def void writeToFile(File file, String content)
+	{
+		val FileWriter writer = new FileWriter(file);
+		writer.write(content);
+		writer.close;
+		System.out.println("Stored file at: " + file.absolutePath);
+	}
+
+	def __parseNoErrors(String filename, String directory, String projectName) {
+		val buildUtils = new BuildUtilities();
 		val model = __parse(filename)
 		__assertNoParseErrors(model, filename)
 
@@ -96,24 +118,35 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val IGeneratorContext ctxt = null;
 		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
 
+		var genPath = new File(directory);
+		System.out.println(genPath.absolutePath)
+		if (genPath.exists) {
+			deleteFolder(genPath);
+		}
+		
+		val srcGenPath = new File(directory + File.separatorChar + "src")
+		srcGenPath.mkdirs();	
+
 		for (files : fsa.allFiles.entrySet) {
 //			System.out.println("########################")
 //			System.out.println("Filename: " + files.key.substring(14))
 //			System.out.println(files.value)
-			var path = new File("generated");
-			if (path.exists)
-				path.delete
-			else
-				path.mkdir;
+			val path = new File(srcGenPath, files.key.substring(14))
 
-			path = new File(path, files.key.substring(14))
-
-			val FileWriter writer = new FileWriter(path);
-			writer.write(files.value.toString);
-			writer.close;
-			System.out.println("Stored file: " + files.key.substring(14) + " at: " + path.absolutePath);
+			writeToFile(path, files.value.toString);
 		}
-	// System.out.println(fsa.allFiles)		
+		
+		val mainCpp = StaticGenerators.generateMainCppFile((new File(directory)).absolutePath.replace("\\","\\\\"));
+		writeToFile(new File(srcGenPath,"main.cpp"), mainCpp);
+		
+		var saFrameworkPath = new File(directory + File.separatorChar + "framework")
+		saFrameworkPath.mkdirs();
+		buildUtils.copyNativeLibFiles(saFrameworkPath);
+		System.out.println("Stored sa framework at: " + saFrameworkPath.absolutePath);
+		
+		writeToFile(new File(genPath,"CMakeLists.txt"), StaticGenerators.generateCMakeLists(projectName, "framework"));
+		
+		
 	}
 
 	def __parseNoErrorsPrint(String filename) {
@@ -126,7 +159,10 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		return readFile(filename).parse
 	}
 
-	def __parse(String filename, ResourceSet resourceSetToUse) {
+	def __parse(
+		String filename,
+		ResourceSet resourceSetToUse
+	) {
 
 		return readFile(filename).parse(resourceSetToUse)
 	}
