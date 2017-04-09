@@ -57,8 +57,6 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			// List of FMUs with a pairing between its name and its type.name.
 			var ArrayList<Pair<String, String>> fmus = newArrayList();
 
-
-
 			// TODO: Currently only 1 inner fmu is supported
 			val innerFmus = type.inner.eAllContents.toList.filter(InnerFMU);
 			if (innerFmus.size > 1) {
@@ -111,7 +109,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 			// Compile the in rules
 			val inRuleResult = compileInOutRuleBlocks(InputOutputType.Input, adaptation.eAllContents.toIterable.filter(
-				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs, params);
+				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs,
+				params);
 
 			// Compile the out rules
 			val outRuleResult = compileInOutRuleBlocks(InputOutputType.Output, adaptation.eAllContents.toIterable.
@@ -126,12 +125,12 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			 * Compile the constructor, destructor and initialize functions
 			 */
 			val String deAndConstructorAndInitializeSource = compileDeAndConstructorAndInitialize(
-				adapClassName, 
-				fmus.head.key, 
-				fmus.head.value, 
-				md.guid, 
-				paramsConstructorSource, 
-				inRuleResult.constructorInitialization, 
+				adapClassName,
+				fmus.head.key,
+				fmus.head.value,
+				md.guid,
+				paramsConstructorSource,
+				inRuleResult.constructorInitialization,
 				outRuleResult.constructorInitialization
 			);
 
@@ -176,7 +175,6 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				outRuleResult.functionSignatures,
 				crtlRuleResult.functionSignatures,
 				allGVars,
-				params,
 				fmus,
 				SASVs.values.map[CalcSVar()].toList
 			);
@@ -259,7 +257,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 */
 	def String compileHeader(String adapClassName, String fmusDefines, String SADefines, List<String> inRulesFuncSig,
 		List<String> outRulesFuncSig, List<String> crtlRulesFuncSig,
-		LinkedHashMap<String, GlobalInOutVariable> globalVariables, LinkedHashMap<String, GlobalInOutVariable> params, ArrayList<Pair<String, String>> fmus,
+		LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<Pair<String, String>> fmus,
 		Collection<ScalarVariable> sVars) {
 		return '''
 			
@@ -323,10 +321,6 @@ class CppGenerator extends SemanticAdaptationGenerator {
 							«FOR v : globalVariables.entrySet»
 								«Conversions.fmiTypeToCppType(v.value.type)» «v.key»;
 							«ENDFOR»
-							
-							«FOR v : params.entrySet»
-								«Conversions.fmiTypeToCppType(v.value.type)» «v.key»;
-							«ENDFOR»
 					};
 				}
 				
@@ -337,7 +331,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	/*
 	 * Compiles the source file constructor, destructor and the initialize function
 	 */
-	def String compileDeAndConstructorAndInitialize(String adapClassName, String fmuName, String fmuTypeName, String guid, String paramsCons, String inCons, String outCons) {
+	def String compileDeAndConstructorAndInitialize(String adapClassName, String fmuName, String fmuTypeName,
+		String guid, String paramsCons, String inCons, String outCons) {
 		return '''
 			«adapClassName»::«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
 				SemanticAdaptation(resourceLocation, createInputRules(),createOutputRules(), functions)
@@ -524,7 +519,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					''');
 				}
 				val functionPrefix = '''shared_ptr<list<Rule<«adaptationClassName»>>>''';
-				visitor.functionSignatures.add(functionPrefix + " " + functionName + ";")
+				visitor.functionSignatures.add(functionPrefix + " " + functionName)
 				cpp += '''
 					«functionPrefix» «adaptationClassName»::«functionName»
 					{
@@ -539,7 +534,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				'''
 			}
 		}
-		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.getGlobalVars, visitor.constructorInitialization);
+		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.getGlobalVars,
+			visitor.constructorInitialization);
 	}
 
 	/*

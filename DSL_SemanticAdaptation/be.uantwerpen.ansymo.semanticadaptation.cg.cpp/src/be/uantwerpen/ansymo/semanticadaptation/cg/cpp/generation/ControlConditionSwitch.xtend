@@ -43,7 +43,7 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 		
 		var functionPrefix = "void ";
 		var functionNameArgs = "executeInternalControlFlow(double h, double dt)"
-		functionSignatures.add(functionPrefix + functionNameArgs + ";");
+		functionSignatures.add(functionPrefix + functionNameArgs);
 		retVal.code = 
 			'''
 				«functionPrefix+this.adaptationClassName»::«functionNameArgs»
