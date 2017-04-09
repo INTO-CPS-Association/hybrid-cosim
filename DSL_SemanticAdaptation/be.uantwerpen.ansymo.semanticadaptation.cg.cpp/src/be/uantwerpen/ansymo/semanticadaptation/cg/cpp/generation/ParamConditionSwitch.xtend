@@ -26,11 +26,7 @@ class ParamConditionSwitch extends GeneralConditionSwitch {
 
 	override ReturnInformation caseSingleParamDeclaration(SingleParamDeclaration object) {
 		val doSwitchRes = doSwitch(object.expr);
-		var GlobalInOutVariable gVar = new GlobalInOutVariable();
-		gVar.type = doSwitchRes.type;
-		gVar.name = object.name;
-		// TODO: Does this hold?
-		gVar.value = doSwitchRes.value;
+		var GlobalInOutVariable gVar = new GlobalInOutVariable(object.name, doSwitchRes.type);
 		this.gVars.put(gVar.name, gVar);		
 		val retInfo = new ReturnInformation();
 		retInfo.code = 

@@ -74,11 +74,11 @@ public class ReturnInformation {
 	public void setConGlobVar(GlobalInOutVariable conGlobVar) throws InvalidConversionException {
 		this.conGlobVar = conGlobVar;
 		if (this.typeIsSet) {
-			this.type = Conversions.typeDecider(conGlobVar.getType(), this.type);
+			this.type = Conversions.typeDecider(conGlobVar.type, this.type);
 		}
 		else
 		{
-			this.type = conGlobVar.getType();
+			this.type = conGlobVar.type;
 			this.typeIsSet = true;
 		}
 	}
@@ -103,9 +103,9 @@ public class ReturnInformation {
 				}
 				// In this case they must have the same type otherwise the
 				// return value is impossible to typecheck.
-				else if (information.conGlobVar.getType() != information2.conGlobVar.getType()) {
-					throw new Exception("The two connected global variables: " + information.conGlobVar.getName()
-							+ " and " + information2.conGlobVar.getName() + " have different types");
+				else if (information.conGlobVar.type != information2.conGlobVar.type) {
+					throw new Exception("The two connected global variables: " + information.conGlobVar.name
+							+ " and " + information2.conGlobVar.name + " have different types");
 				}
 
 			} else {

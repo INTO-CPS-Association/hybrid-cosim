@@ -363,10 +363,7 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 				code = '''
 					this->«decl.name» = «doSwitchRes.code»;
 				'''
-				var globVar = new GlobalInOutVariable();
-				globVar.name = decl.name;
-				globVar.value = doSwitchRes.value;
-				globVar.type = doSwitchRes.type;
+				var globVar = new GlobalInOutVariable(decl.name, doSwitchRes.type);
 
 				gVars.put(decl.name, globVar);
 			} else {
