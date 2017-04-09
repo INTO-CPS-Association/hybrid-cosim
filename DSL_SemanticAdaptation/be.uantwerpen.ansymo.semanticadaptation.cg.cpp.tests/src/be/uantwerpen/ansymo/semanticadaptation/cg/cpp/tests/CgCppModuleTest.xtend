@@ -33,14 +33,14 @@ class CgCppModuleTest extends AbstractSemanticAdaptationTest {
 	@Inject extension  ValidationTestHelper
 
 	@Ignore
-	@Test def powerwindow_model_only() { __parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa') }
+	@Test def powerwindow_model_only() { __parseNoErrors('input/single_folder_spec/window/window_sa_canonical.BASE.sa') }
 
 	def __parseNoErrors(String filename) {
 
 		val file = new File(filename)
 
 		assertTrue("File not found: " + filename, file.exists);
-
+		
 		var SemanticAdaptation model = null;
 		if (file.isDirectory) {
 			for (f : file.listFiles) {

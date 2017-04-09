@@ -21,7 +21,6 @@ Thumbs.db
 *.jar
 
 .classpath
-.project
 .metadata
 .settings
 
@@ -37,3 +36,14 @@ xtend-gen/
 .DS_Store
 /DSL_SemanticAdaptation/copy.bat
 /DSL_SemanticAdaptation/copyfiles.bat
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/case/result_Control_sa.html
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/case/result_ENV.html
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/case/result_power_sa.html
+*.o
+*.o
+*.o
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/lib/*.libs
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_Window_sa/log.txt
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_power_sa/log.txt
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_loop_sa/log.txt
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_controller/log.txt

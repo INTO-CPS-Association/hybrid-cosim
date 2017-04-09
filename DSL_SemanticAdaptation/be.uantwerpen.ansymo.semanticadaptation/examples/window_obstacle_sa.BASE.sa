@@ -47,7 +47,7 @@ in rules {
 		Upon execution, this block must call setValues of the original FMUs (window_sa and obstacle).
 		The correct thing then is to execute the next block and then do the setValues of the original FMUs.
 		*/
-		current_speed := speed
+		current_speed := speed;
 	} --> {
 		/*
 		This block will be called whenever any of the input ports that are unconnected in the original FMUs is read, in the control rules block.

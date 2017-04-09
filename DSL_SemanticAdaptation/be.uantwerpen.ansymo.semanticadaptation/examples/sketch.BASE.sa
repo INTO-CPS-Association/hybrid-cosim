@@ -45,7 +45,7 @@ in rules {
 
 control rules {
 	control_block_part_1
-	do_step(fmu1, inner_t, h)
+	do_step(fmu1, inner_t, some_step_size)
 	control_block_part_2
 	
 	return step_size;

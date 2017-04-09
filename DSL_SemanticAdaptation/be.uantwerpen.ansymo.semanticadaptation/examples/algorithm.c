@@ -86,7 +86,7 @@ code AdaptedFMU:
 		out_condition_executed := empty map // force output computation.
 	end function
 	
-	function do_inner_step(fmu, t, inner_t, h) 
+	function do_inner_step(fmu, t, inner_t, some_step_size) 
 		/*
 		Evaluate each update_in block of the rules that were successfully evaluated before the doStep was called.
 		This is because the window.doStep will be called immediately afterward.
@@ -96,17 +96,17 @@ code AdaptedFMU:
 			These variables are available in the scope of the update_in block.
 				It's not a good idea to have t also in that scope, because it is not available when getValues/setValues is called.
 			*/
-			var h = h
+			var h = some_step_size
 			var dt = inner_t - t
 			<update_in_1>
 		end if
 		if (in_condition_executed[IN_COND_2]) then
-			var h = h
+			var h = some_step_size
 			var dt = inner_t - t
 			<update_in_2>
 		end if
 		...
-		fmi2DoStep(fmu1, inner_t, h)
+		fmi2DoStep(fmu1, inner_t, some_step_size)
 		/*
 		Executes the update_out blocks.
 		These always execute after a doStep is called on an internal FMU.
@@ -116,7 +116,7 @@ code AdaptedFMU:
 		*/
 		if (<out_condition_1>) then
 			out_condition_executed[OUT_COND_1] = true
-			var h = h
+			var h = some_step_size
 			var dt = inner_t - t
 			<update_out_1>
 		end if
@@ -139,7 +139,7 @@ code AdaptedFMU:
 		
 		<control_block_part_1>
 		
-		do_inner_step(fmu1, t, inner_t, h);
+		do_inner_step(fmu1, t, inner_t, some_step_size);
 		
 		<control_block_part_2>
 		

@@ -1,0 +1,57 @@
+module PowerWindowModel
+
+fmu Environment environment
+at "./path/to/Environment.fmu"
+output ports passenger_up, passenger_down, driver_up, driver_down
+
+semantic adaptation ControllerSA controller_sa
+at "./path/to/ControllerSA.fmu"
+for inner fmu Controller controller
+	at "./path/to/Controller.fmu"
+	with input ports obj_detected, passenger_up, passenger_down, driver_up, driver_down
+	with output ports up, down, stop
+input ports obj_detected -> obj_detected, passenger_up, passenger_down, driver_up, driver_down
+triggered by signal == true
+in rules with crossing absolute tolerance = 1e-8 and relative tolerance = 0.0001, no hold {
+	armature_current >! 5 -> obj_detected := true;
+	otherwise -> obj_detected := false;
+}
+out rules with zero order hold {
+	"up" -> up := 1;
+	"stop" -> { up := 0; down := 0; };
+	"down" -> down := 1;
+}
+
+semantic adaptation WindowSA window_sa
+at "./path/to/WindowSA.fmu"
+for inner fmu Window window
+	at "./path/to/Window.fmu"
+	with input ports motor_speed (m/s), reaction_force (N)
+	with output ports height (cm), reaction_torque (N.m)
+out rules {
+	reaction_torque := -reaction_torque;
+}
+
+semantic adaptation WindowObstacleSA window_obstacle_sa
+at "./path/to/WindowObstacleSA.fmu"
+for inner fmu WindowSA window_sa
+	with input ports motor_speed (m/s), reaction_force (N)
+	with output ports height (cm), reaction_torque (N.m)
+for inner fmu Obstacle obstacle
+	at "./path/to/Obstacle.fmu"
+	with input ports height (m)
+	with output ports reaction_force (N)
+multiply rate 10 times with first order interpolation
+successive substitution starts at height with absolute tolerance = 1e-8 and relative tolerance = 0.0001
+
+semantic adaptation PlantSA plant_sa
+at "./path/to/PlantSA.fmu"
+for inner fmu Power power
+	at "./path/to/Power.fmu"
+	with input ports up, down, reaction_torque (N.m)
+	with output ports armature_current (mA), motor_speed (m/s)
+for inner fmu WindowSA window_sa
+	with input ports motor_speed (m/s), reaction_force (N)
+	with output ports height (cm), reaction_torque (N.m)
+successive substitution starts at reaction_torque with absolute tolerance = 1e-6 and relative tolerance = 1e-6
+

@@ -1,5 +1,3 @@
-module Window_SA
-
 semantic adaptation reactive mealy WindowSA windowSA
 at "./path/to/WindowSA.fmu"
 
@@ -8,11 +6,6 @@ at "./path/to/WindowSA.fmu"
 		with input ports displacement (rad), speed (rad/s), reaction_force (N)
 		with output ports height (m), reaction_torque (N.m)
 
-/*
-In the original version, no input ports where declared, so all dangling inputs of the original fmus are bound to the input ports of the adapted FMU.
-In the canonical version, the input and output ports are all declared explicitly, and their bindings are implemented in the in/out rules.
-*/
-
 input ports 	reaction_force,
 				displacement,
 				speed
@@ -20,31 +13,26 @@ input ports 	reaction_force,
 output ports	disp,
 				tau
 
+param 	INIT_WINDOWSA_REACTION_FORCE := 0.0,
+		INIT_WINDOWSA_DISPLACEMENT := 0.0,
+		INIT_WINDOWSA_SPEED := 0.0,
+		INIT_WINDOW_REACTION_TORQUE := 0.0,
+		INIT_WINDOW_REACTION_HEIGHT := 0.0;
 
-control {
-	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
-	return H;
+control rules {
+	var H_window := do_step(window, t, H);
+	return H_window;
 }
 
-in var 	stored_windowsa_reaction_force := 0.0, 
-		stored_windowsa_displacement := 0.0, 
-		stored_windowsa_speed := 0.0;
+in var 	stored_windowsa_reaction_force := INIT_WINDOWSA_REACTION_FORCE, 
+		stored_windowsa_displacement := INIT_WINDOWSA_DISPLACEMENT, 
+		stored_windowsa_speed := INIT_WINDOWSA_SPEED;
 
 in rules {
 	true -> {
-		/*
-		is_set checks whether the input value is given in the setValues call of the adapted FMU.
-		Notice that in the canonical version, all ports are prefixed.
-		*/
-		if (is_set(windowSA.reaction_force)){
-			stored_windowsa_reaction_force := windowSA.reaction_force;
-		}
-		if (is_set(windowSA.displacement)){
-			stored_windowsa_displacement := windowSA.displacement;			
-		}
-		if (is_set(windowSA.speed)){
-			stored_windowsa_speed := windowSA.speed;
-		}
+		stored_windowsa_reaction_force := windowSA.reaction_force;
+		stored_windowsa_displacement := windowSA.displacement;			
+		stored_windowsa_speed := windowSA.speed;
 	} --> {
 		window.reaction_force := stored_windowsa_reaction_force;
 		window.displacement := stored_windowsa_displacement; 
@@ -52,16 +40,17 @@ in rules {
 	};
 }
 
-out var stored_window_reaction_torque := 0,
-		stored_window_height := 0;
-		
+out var stored_window_reaction_torque := INIT_WINDOW_REACTION_TORQUE,
+		stored_window_height := INIT_WINDOW_REACTION_HEIGHT;
+
 out rules {
 	true -> {
 		stored_window_reaction_torque := window.reaction_torque;
 		stored_window_height := window.height;
 	} --> {
-		windowSA.tau := - stored_window_reaction_torque;
 		windowSA.disp := stored_window_height / 100;
 	};
+	true -> { } --> {
+		windowSA.tau := -stored_window_reaction_torque;
+	};
 }
-
