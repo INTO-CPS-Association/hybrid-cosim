@@ -6,17 +6,14 @@ import java.util.List;
 import org.eclipse.xtext.xbase.lib.Pair;
 
 public class InOutRulesBlockResult extends RulesBlockResult {
-	public final LinkedHashMap<String, Pair<SVType, Object>> globalVars;
-	public final LinkedHashMap<String, GlobalInOutVariable> globalVars2;
+	public final LinkedHashMap<String, GlobalInOutVariable> gVars;
 	public final String constructorInitialization;
 
-	public InOutRulesBlockResult(String generatedCpp, List<String> functionSignatures, 
-			LinkedHashMap<String, Pair<SVType, Object>> globalVars, 
-			LinkedHashMap<String, GlobalInOutVariable> globalVars2, String constructorInitialization)
+	public InOutRulesBlockResult(String generatedCpp, List<String> functionSignatures,
+			LinkedHashMap<String, GlobalInOutVariable> gVars, String constructorInitialization)
 	{
 		super(generatedCpp, functionSignatures);
-		this.globalVars = globalVars;
-		this.globalVars2 = globalVars2;
+		this.gVars = gVars;
 		this.constructorInitialization = constructorInitialization;
 	}
 }

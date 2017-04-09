@@ -57,8 +57,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			// List of FMUs with a pairing between its name and its type.name.
 			var ArrayList<Pair<String, String>> fmus = newArrayList();
 
-			// The scalar variables above with additional data
-			var LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mappedScalarVariables = newLinkedHashMap();
+
 
 			// TODO: Currently only 1 inner fmu is supported
 			val innerFmus = type.inner.eAllContents.toList.filter(InnerFMU);
@@ -70,11 +69,16 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			}
 
 			/*
-			 * Loading the FMU defined in InnerFMU, the related model description file and its scalar variables.
-			 * This is stored in a map of fmuName -> (SVName -> mappedSV)
-			 * where the mappedSV contains the original scalar variable and some extra data such as define name. 
+			 * This map will contain scalar variables from the FMUs defined in InnerFMU.
+			 * The structure is fmuName -> (SVName -> mappedSV) where SVName = mappedSV.name for easy lookup.
+			 * The mappedSV contains the original scalar variable and extra data such as define name.
 			 */
-			// TODO: Currently only 1 model description is supported
+			var LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mappedScalarVariables = newLinkedHashMap();
+
+			/*
+			 * Loading the FMU defined in InnerFMU, the related model description file and its scalar variables.
+			 */
+			// TODO: Add support for multiple inner fmus
 			var ModelDescription md;
 			for (fmu : type.inner.eAllContents.toList.filter(InnerFMU)) {
 				md = new ModelDescription(fmu.name, fmu.type.name, new File(fmu.path.replace('\"', '')));
@@ -88,10 +92,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				mappedScalarVariables.put(fmu.name, mSV);
 			}
 
-			// Defines for accessing FMU scalar variables.
-			val String fmusDefines = calcDefines2(mappedScalarVariables);
+			// C++ Defines for accessing FMU scalar variables.
+			val String fmusDefines = calcDefines(mappedScalarVariables);
 
-			// Compile Params 
+			// Compile Params
 			var LinkedHashMap<String, GlobalInOutVariable> params = newLinkedHashMap;
 			val String paramsConstructorSource = compileParams(params, type.params);
 
@@ -102,7 +106,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			var LinkedHashMap<String, SAScalarVariable> SASVs = calcSASVsFromInportsOutports(adapInteralRefName,
 				type.inports, type.outports)
 
-			// Generate defines for the scalar variables of the semantic adaptation 
+			// C++ defines for accessing semantic adaptation scalar variables 
 			val String SADefines = calcSADefines(SASVs.values);
 
 			// Compile the in rules
@@ -113,13 +117,6 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			val outRuleResult = compileInOutRuleBlocks(InputOutputType.Output, adaptation.eAllContents.toIterable.
 				filter(OutRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables,
 				SASVs, params);
-
-			// Merge the global variables for h file and cpp file
-			// TODO: Check for duplicates
-			var LinkedHashMap<String, GlobalInOutVariable> globalVariables = newLinkedHashMap();
-			globalVariables.putAll(params);
-			globalVariables.putAll(outRuleResult.globalVars2);
-			globalVariables.putAll(inRuleResult.globalVars2);
 
 			// Compile the Control Rules
 			val crtlRuleResult = compileControlRuleBlock(adaptation.eAllContents.toIterable.filter(ControlRuleBlock),
@@ -163,6 +160,13 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			);
 			fsa.generateFile(adapClassName + ".cpp", sourceFile);
 
+			// Merge the global variables for use in compiling the header file.
+			// TODO: Check for duplicates
+			var LinkedHashMap<String, GlobalInOutVariable> allGVars = newLinkedHashMap();
+			allGVars.putAll(params);
+			allGVars.putAll(outRuleResult.gVars);
+			allGVars.putAll(inRuleResult.gVars);
+
 			// Compile the header file
 			val headerFile = compileHeader(
 				adapClassName,
@@ -171,7 +175,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				inRuleResult.functionSignatures,
 				outRuleResult.functionSignatures,
 				crtlRuleResult.functionSignatures,
-				globalVariables,
+				allGVars,
 				params,
 				fmus,
 				SASVs.values.map[CalcSVar()].toList
@@ -210,7 +214,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		return defines.join("\n");
 	}
 
-	def calcDefines2(LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> map) {
+	def calcDefines(LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> map) {
 		var ArrayList<String> defines = newArrayList();
 
 		for (fmuEntries : map.entrySet) {
@@ -535,7 +539,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				'''
 			}
 		}
-		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.vars, visitor.getGlobalVars, visitor.constructorInitialization);
+		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.getGlobalVars, visitor.constructorInitialization);
 	}
 
 	/*
