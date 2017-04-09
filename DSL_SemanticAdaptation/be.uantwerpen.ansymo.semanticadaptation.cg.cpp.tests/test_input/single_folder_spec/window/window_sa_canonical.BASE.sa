@@ -21,7 +21,7 @@ input ports 	reaction_force,
 					tau
 
 
-control {
+control rules {
 	do_step(window, t, H); // includes update_in rules and update_out (update-in rules do not update state)
 	return H;
 }
