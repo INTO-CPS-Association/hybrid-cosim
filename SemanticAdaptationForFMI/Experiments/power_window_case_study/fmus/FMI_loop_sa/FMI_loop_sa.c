@@ -7,7 +7,7 @@ Template for a  FMU
 
 #define MODEL_IDENTIFIER GM
 #define MODEL_GUID "{41f87101-edf2-4eef-90f3-42db56d4565f}"
-#define FMI2_FUNCTION_PREFIX LOOP_SA
+#define FMI2_FUNCTION_PREFIX LOOP_SA_
 
 #include <stdio.h>
 #include "string.h"

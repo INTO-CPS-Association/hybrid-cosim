@@ -3,7 +3,7 @@ mingw32-make exe makefile
 
 pause
 
-$LibAbsolutionPath = (Get-Item -Path ".\lib" -Verbose).FullName
+$LibAbsolutionPath = (Get-Item -Path ".\Debug" -Verbose).FullName
 
 Echo "Building FMUs and getting their dlls..."
 

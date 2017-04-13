@@ -8,7 +8,7 @@ Template for a sc FMU
 
 #define MODEL_IDENTIFIER SEL
 #define MODEL_GUID "{41f87101-edf2-4eef-90f3-42db56d4565f}"
-#define FMI2_FUNCTION_PREFIX PW_ENV
+#define FMI2_FUNCTION_PREFIX PW_ENV_
 
 
 #include <stdio.h>

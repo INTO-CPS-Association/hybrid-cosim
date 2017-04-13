@@ -13,7 +13,7 @@ int main(void) {
 
 	puts("Loading Dlls\n");
 	/* loading */
-    loadDll("libFMI_Environment.dll", &fmu_env, "PW_ENV");
+    loadDll("libFMI_Environment.dll", &fmu_env, "PW_ENV_");
 
     puts("instantiating fmus\n");
     fmi2Component c_env;

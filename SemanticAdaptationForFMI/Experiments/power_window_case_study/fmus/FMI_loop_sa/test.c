@@ -13,7 +13,7 @@ int main(void) {
 
 	puts("Loading Dlls\n");
 	/* loading */
-    loadDll("libFMI_loop_sa.dll", &fmu_loop_sa, "LOOP_SA");
+    loadDll("libFMI_loop_sa.dll", &fmu_loop_sa, "LOOP_SA_");
 
     puts("instantiating fmus\n");
     fmi2Component c_loop_sa;

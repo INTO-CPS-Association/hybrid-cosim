@@ -349,37 +349,39 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	printf("%s in fmiDoStep(), ct:%f, h:%f\n",fi->instanceName,currentCommPoint,commStepSize);
 	fi->aux_obj_detected = 0;
 	fi->step_size = commStepSize;
-	if( (
-			(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
-			&& fi->previous_arm_current < fi->CROSSING
-		)
-		&&
-		(
-			(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
-			&& fi->stored_arm_current > fi->CROSSING
-		)
-	   ){
-		double negative_value = fi->previous_arm_current - fi->CROSSING;
-		double positive_value = fi->stored_arm_current - fi->CROSSING;
-		fi->step_size = (commStepSize * (-negative_value)) / (positive_value - negative_value);
-		fi->currentTime = currentCommPoint + fi->step_size;
-		externalSimStatus = fmi2Discard;
-		printf("%s: crossed too far, rejecting step size %f and proposing %f... \n",fi->instanceName, commStepSize, fi->step_size);
-		printf("%s: fi->previous_arm_current = %f \n",fi->instanceName, fi->previous_arm_current);
-		printf("%s: fi->stored_arm_current = %f \n",fi->instanceName, fi->stored_arm_current);
-	}else{
-		if((
-				(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
-				&& fi->previous_arm_current < fi->CROSSING
-			)
-			&&
-			(
-				is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE)
-			)
-		  ){
-			fi->aux_obj_detected = 1;
-			printf("%s: crossed just right... \n",fi->instanceName);
-		}
+
+	if (fi->toleranceDefined){
+		printf("%s: Checking for threshold crossing...\n",fi->instanceName);
+		if( (
+					(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
+					&& fi->previous_arm_current < fi->CROSSING
+				)
+				&&
+				(
+					(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
+					&& fi->stored_arm_current > fi->CROSSING
+				)
+			   ){
+				double negative_value = fi->previous_arm_current - fi->CROSSING;
+				double positive_value = fi->stored_arm_current - fi->CROSSING;
+				fi->step_size = (commStepSize * (-negative_value)) / (positive_value - negative_value);
+				fi->currentTime = currentCommPoint + fi->step_size;
+				externalSimStatus = fmi2Discard;
+				printf("%s: crossed too far, rejecting step size %f and proposing %f... \n",fi->instanceName, commStepSize, fi->step_size);
+				printf("%s: fi->previous_arm_current = %f \n",fi->instanceName, fi->previous_arm_current);
+				printf("%s: fi->stored_arm_current = %f \n",fi->instanceName, fi->stored_arm_current);
+			} else if((
+						(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
+						&& fi->previous_arm_current < fi->CROSSING
+					)
+					&&
+					(
+						is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE)
+					)
+				  ){
+					fi->aux_obj_detected = 1;
+					printf("%s: crossed just right... \n",fi->instanceName);
+			}
 	}
 
 	if (externalSimStatus == fmi2OK){ // only do the internal step if the current step is OK
