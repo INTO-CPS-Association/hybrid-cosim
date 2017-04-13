@@ -198,6 +198,7 @@ fmi2Status fmi2ExitInitializationMode(fmi2Component fc)
 	if (fi->state != fmuInitMode)
 	{
 		printf("fmu: %s did not enter Initialization Mode before calling fmiExitInitializationMode\n", fi->instanceName);
+		fflush(stdout);
 		return fmi2Error;
 	}
 	// TODO
@@ -205,6 +206,7 @@ fmi2Status fmi2ExitInitializationMode(fmi2Component fc)
 	//initialize();
 	powerwindow_enter(fi->Handle);
     fi->state = fmuInitialized;
+    printf("fmu: %s finish fmiExitInitializationMode\n", fi->instanceName);
     return initStatus;
 }
 
@@ -232,16 +234,12 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
     	}
     }else{powerwindow_timeradvance(fi->thePWTimer, (currentCommPoint+commStepSize)*1000);}
 
-
-
-
     if (fi->b[_in_driver_up]){
     	powerwindowIfaceInput_raise_driver_up(fi->Handle);
     	printf("raise up driver\n");
     }
 
-
-	if(fi->b[ _in_driver_down]){
+	if(fi->b[_in_driver_down]){
 		powerwindowIfaceInput_raise_driver_down(fi->Handle);
 		printf("raise down driver\n");
 	}
@@ -250,7 +248,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 		powerwindowIfaceInput_raise_stop(fi->Handle);
 		printf("raise up stop\n");
 	}
-	if(fi->b[ _in_driver_down_stop]){
+	if(fi->b[_in_driver_down_stop]){
 		powerwindowIfaceInput_raise_stop(fi->Handle);
 		printf("raise driver down stop\n");
 	}
@@ -272,13 +270,13 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	}
 	if(fi->b[_in_obj_detected]){
 		powerwindowIfaceInput_raise_obj_detected(fi->Handle);
+		printf("raise object detected\n");
 	}
 
 	powerwindow_runCycle(fi->Handle);
 
-
-	fi->b[_motor_up] = powerwindowIfaceOutput_get_down(fi->Handle);
-	fi->b[_motor_down] = powerwindowIfaceOutput_get_up(fi->Handle);
+	fi->b[_motor_up] = powerwindowIfaceOutput_get_up(fi->Handle);
+	fi->b[_motor_down] = powerwindowIfaceOutput_get_down(fi->Handle);
 	/*
 	 * Check timers and set
 	 */

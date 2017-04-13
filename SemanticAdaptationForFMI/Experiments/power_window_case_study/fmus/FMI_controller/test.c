@@ -12,15 +12,15 @@
 #include "fmi2.h"
 #include "sim_support.h"
 
-#define _out_driver_up 0
-#define _out_driver_up_stop 1
-#define _out_driver_down 2
-#define _out_driver_down_stop 3
-#define _out_passenger_up 4
-#define _out_passenger_up_stop 5
-#define _out_passenger_down 6
-#define _out_passenger_down_stop 7
-#define _out_object 8
+#define _out_object 0
+#define _out_driver_up 1
+#define _out_driver_up_stop 2
+#define _out_driver_down 3
+#define _out_driver_down_stop 4
+#define _out_passenger_up 5
+#define _out_passenger_up_stop 6
+#define _out_passenger_down 7
+#define _out_passenger_down_stop 8
 
 #define START_TIME 0.0
 #define STOP_TIME 9.0
@@ -58,16 +58,25 @@ int main(void) {
     	return -1;
     }
 
-    fmi2Flag = fmu_control.exitInitializationMode(c_control);
+    puts("Experiment setup, exiting init mode\n");
+        fmi2Flag = fmu_control.exitInitializationMode(c_control);
     if (fmi2Flag == fmi2Error){
     	return -1;
     }
 
-    fmi2ValueReference vr_in_control_sa_from_env[8]={0,1,2,3,4,5,6,7};
+    fmi2ValueReference vr_in_control_sa_from_env[9]={
+    		_out_object,
+			_out_driver_up,
+			_out_driver_up_stop,
+			_out_driver_down,
+			_out_driver_down_stop,
+			_out_passenger_up,
+			_out_passenger_up_stop,
+			_out_passenger_down,
+			_out_passenger_down_stop
+    };
     fmi2Boolean b_out_env[9];
-    fmi2ValueReference vr_in_control_sa_from_power[1] = {0};
-    fmi2Real in_control_sa_from_power[1] = {0.0f};
-    fmi2ValueReference vr_out_control_sa[2]={9,10};
+    fmi2ValueReference vr_out_control_sa[2]={9,10}; // Up, Down
     fmi2Boolean b_out_control_sa[2];
 
     double currentTime = START_TIME;
@@ -76,6 +85,7 @@ int main(void) {
     	printf("\n----master new loop, ct:%f, h:%f\n",currentTime,STEP_SIZE);
 
     	if(currentTime < 0.01){
+			b_out_env[_out_object] = 0;
 			b_out_env[_out_driver_up] = 0;
 			b_out_env[_out_driver_up_stop] = 0;
 			b_out_env[_out_driver_down] = 0;
@@ -84,8 +94,8 @@ int main(void) {
 			b_out_env[_out_passenger_up_stop] = 0;
 			b_out_env[_out_passenger_down] = 0;
 			b_out_env[_out_passenger_down_stop] = 0;
-			b_out_env[_out_object] = 0;
 		}else if(currentTime < 4.59){
+			b_out_env[_out_object] = 0;
 			b_out_env[_out_driver_up] = 1;
 			b_out_env[_out_driver_up_stop] = 0;
 			b_out_env[_out_driver_down] = 0;
@@ -94,8 +104,38 @@ int main(void) {
 			b_out_env[_out_passenger_up_stop] = 0;
 			b_out_env[_out_passenger_down] = 0;
 			b_out_env[_out_passenger_down_stop] = 0;
-			b_out_env[_out_object] = 0;
 		}else if(currentTime < 5){
+			b_out_env[_out_object] = 1;
+			b_out_env[_out_driver_up] = 0;
+			b_out_env[_out_driver_up_stop] = 0;
+			b_out_env[_out_driver_down] = 0;
+			b_out_env[_out_driver_down_stop] = 0;
+			b_out_env[_out_passenger_up] = 0;
+			b_out_env[_out_passenger_up_stop] = 0;
+			b_out_env[_out_passenger_down] = 0;
+			b_out_env[_out_passenger_down_stop] = 0;
+		}else if(currentTime < 5.01){
+			b_out_env[_out_object] = 0;
+			b_out_env[_out_driver_up] = 0;
+			b_out_env[_out_driver_up_stop] = 0;
+			b_out_env[_out_driver_down] = 0;
+			b_out_env[_out_driver_down_stop] = 0;
+			b_out_env[_out_passenger_up] = 0;
+			b_out_env[_out_passenger_up_stop] = 0;
+			b_out_env[_out_passenger_down] = 0;
+			b_out_env[_out_passenger_down_stop] = 0;
+		}else if(currentTime < 6.7){
+			b_out_env[_out_object] = 0;
+			b_out_env[_out_driver_up] = 1;
+			b_out_env[_out_driver_up_stop] = 0;
+			b_out_env[_out_driver_down] = 0;
+			b_out_env[_out_driver_down_stop] = 0;
+			b_out_env[_out_passenger_up] = 0;
+			b_out_env[_out_passenger_up_stop] = 0;
+			b_out_env[_out_passenger_down] = 0;
+			b_out_env[_out_passenger_down_stop] = 0;
+		}else if(currentTime < 7.1){
+			b_out_env[_out_object] = 0;
 			b_out_env[_out_driver_up] = 0;
 			b_out_env[_out_driver_up_stop] = 1;
 			b_out_env[_out_driver_down] = 0;
@@ -104,8 +144,8 @@ int main(void) {
 			b_out_env[_out_passenger_up_stop] = 0;
 			b_out_env[_out_passenger_down] = 0;
 			b_out_env[_out_passenger_down_stop] = 0;
+		}else {
 			b_out_env[_out_object] = 0;
-		}else if(currentTime < 5.01){
 			b_out_env[_out_driver_up] = 0;
 			b_out_env[_out_driver_up_stop] = 0;
 			b_out_env[_out_driver_down] = 0;
@@ -114,53 +154,22 @@ int main(void) {
 			b_out_env[_out_passenger_up_stop] = 0;
 			b_out_env[_out_passenger_down] = 0;
 			b_out_env[_out_passenger_down_stop] = 0;
-			b_out_env[_out_object] = 0;
-		}else if(currentTime < 6.7){
-			b_out_env[_out_driver_up] = 0;
-			b_out_env[_out_driver_up_stop] = 0;
-			b_out_env[_out_driver_down] = 0;
-			b_out_env[_out_driver_down_stop] = 0;
-			b_out_env[_out_passenger_up] = 0;
-			b_out_env[_out_passenger_up_stop] = 0;
-			b_out_env[_out_passenger_down] = 0;
-			b_out_env[_out_passenger_down_stop] = 0;
-			b_out_env[_out_object] = 0;
-		}else if(currentTime < 7.1){
-			b_out_env[_out_driver_up] = 0;
-			b_out_env[_out_driver_up_stop] = 0;
-			b_out_env[_out_driver_down] = 1;
-			b_out_env[_out_driver_down_stop] = 0;
-			b_out_env[_out_passenger_up] = 0;
-			b_out_env[_out_passenger_up_stop] = 0;
-			b_out_env[_out_passenger_down] = 0;
-			b_out_env[_out_passenger_down_stop] = 0;
-			b_out_env[_out_object] = 0;
-		}else if(currentTime < 8.5){
-			b_out_env[_out_driver_up] = 0;
-			b_out_env[_out_driver_up_stop] = 0;
-			b_out_env[_out_driver_down] = 0;
-			b_out_env[_out_driver_down_stop] = 0;
-			b_out_env[_out_passenger_up] = 0;
-			b_out_env[_out_passenger_up_stop] = 0;
-			b_out_env[_out_passenger_down] = 0;
-			b_out_env[_out_passenger_down_stop] = 0;
-			b_out_env[_out_object] = 0;
 		}
 
     	/* do step*/
     	fmi2Flag = fmu_control.setBoolean(c_control,vr_in_control_sa_from_env,8,&b_out_env[0]);
     	if(fmi2Flag != fmi2OK){
-    		return 1;
-    	}
-    	fmi2Flag = fmu_control.setReal(c_control,vr_in_control_sa_from_power,1, &in_control_sa_from_power[0]);
-    	if(fmi2Flag != fmi2OK){
-    		return 1;
+    		printf("Failed setBoolean\n");
+    		fflush(stdout);
+			return 1;
     	}
     	fflush(stdout);
     	fmi2Flag = fmu_control.doStep(c_control, currentTime, STEP_SIZE, fmi2True);
 
     	if (fmu_control.getBoolean(c_control, vr_out_control_sa, 2, &b_out_control_sa[0]) != fmi2OK){
-    		return 1;
+    		printf("Failed getBoolean\n");
+			fflush(stdout);
+			return 1;
 		}
 
     	if(fmi2Flag == fmi2Discard){
