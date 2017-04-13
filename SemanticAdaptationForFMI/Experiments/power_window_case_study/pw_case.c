@@ -131,8 +131,6 @@ int main(void) {
     double currentTime = START_TIME;
     const fmi2StatusKind lst = fmi2LastSuccessfulTime;
 
-
-
     while(currentTime <= STOP_TIME){
     	printf("\n----master new loop, ct:%f, h:%f\n",currentTime,STEP_SIZE);
     	double next_step_size = STEP_SIZE;

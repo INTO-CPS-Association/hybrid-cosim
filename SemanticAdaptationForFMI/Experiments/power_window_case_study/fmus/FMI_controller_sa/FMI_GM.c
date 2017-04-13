@@ -6,7 +6,7 @@ Template for a  FMU
  */
 
 #define MODEL_IDENTIFIER GM
-#define MODEL_GUID "{41f87101-edf2-4eef-90f3-42db56d4565f}"
+#define MODEL_GUID "1"
 #define FMI2_FUNCTION_PREFIX PW_CONTROLLER_SA_
 
 #define MAX 10000
@@ -31,7 +31,6 @@ Template for a  FMU
  */
 
 #define _in_armature_current 0
-
 
 #define _in_driver_up 0
 #define _in_driver_up_stop 1
@@ -105,6 +104,8 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 	in_condition[1] = 1;
 
 	if(in_condition[0]){
+		printf("%s: Calculating max allowed step size... \n",comp->instanceName);
+
 		fmi2Component fmu0_temp;
 		comp->fmu[0].getFMUstate(comp->c_fmu[0],&fmu0_temp);
 		fmi2Status status;
@@ -116,11 +117,14 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 		}else{
 			comp->next_time_step = -1;
 		}
+		printf("%s: Step size max = %f... \n",comp->instanceName, comp->next_time_step);
 		comp->fmu[0].setFMUstate(comp->c_fmu[0],fmu0_temp);
-		comp->fmu[0].freeInstance(fmu0_temp);
+		comp->fmu[0].freeInstance(fmu0_temp); // TODO: should be fmi2FreeFMUState
 	}
 	if(in_condition[1]){
 		comp->stored_arm_current = comp->r[_in_armature_current];
+		printf("%s: comp->stored_arm_current = %f... \n",comp->instanceName, comp->stored_arm_current);
+		printf("%s: comp->previous_arm_current = %f... \n",comp->instanceName, comp->previous_arm_current);
 		/* If mealy do update_in and recursive call */
 	}
 
@@ -225,7 +229,6 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 		fi->s = functions->allocateMemory(NUMBER_OF_STRINGS,  sizeof(fmi2String));
 	} // variables in predefined arrays (performance issue) --> makes multiple instances of fmu impossible
 
-
 	fi->instanceName = functions->allocateMemory(1 + strlen(instanceName), sizeof(char));
 	fi->GUID = functions->allocateMemory(1 + strlen(fmuGUID), sizeof(char));
 
@@ -237,7 +240,7 @@ fmi2Component fmi2Instantiate(fmi2String instanceName, fmi2Type fmuType, fmi2Str
 	fi->state = fmuInstantiated;
 	/* Load the inner FMUs:*/
 
-	loadDll("libpw_controller.dll", &(fi->fmu[0]), "PW_Controller");
+	loadDll("libFMI_controller.dll", &(fi->fmu[0]), "PW_Controller");
 	fi->fmuResourceLocation[0] = "libpw_controller";
 
 	/*Instantiate inner components*/
@@ -255,7 +258,7 @@ fmi2Status fmi2SetupExperiment(fmi2Component fc, fmi2Boolean toleranceDefined, f
 	printf("%s in fmiSetupExperiment\n",fi->instanceName);
 	if (fi->state != fmuInstantiated)
 	{
-		printf("fmu: %s was not instatiated before calling fmiSetupExperiment\n", fi->instanceName);
+		printf("fmu: %s was not instantiated before calling fmiSetupExperiment\n", fi->instanceName);
 		return fmi2Error;
 	}
 	fi->currentTime = startTime;
@@ -338,56 +341,82 @@ fmi2Status fmi2ExitInitializationMode(fmi2Component fc)
 fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real commStepSize, fmi2Boolean noPrevFMUState)
 {
 	FMUInstance* fi = (FMUInstance *)fc;
-	fmi2Status simStatus = fmi2OK;
+	fmi2Status externalSimStatus = fmi2OK;
+	fmi2Status internalSimStatus = fmi2OK;
 	memset(fi->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);
 	fmi2Boolean b_temp_out[2];
 
 	printf("%s in fmiDoStep(), ct:%f, h:%f\n",fi->instanceName,currentCommPoint,commStepSize);
 	fi->aux_obj_detected = 0;
 	fi->step_size = commStepSize;
-	if(!(! is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE) && fi->previous_arm_current < fi->CROSSING)
-			&& (!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE) && fi->stored_arm_current > fi->CROSSING)){
+	if( (
+			(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
+			&& fi->previous_arm_current < fi->CROSSING
+		)
+		&&
+		(
+			(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
+			&& fi->stored_arm_current > fi->CROSSING
+		)
+	   ){
 		double negative_value = fi->previous_arm_current - fi->CROSSING;
 		double positive_value = fi->stored_arm_current - fi->CROSSING;
 		fi->step_size = (commStepSize * (-negative_value)) / (positive_value - negative_value);
-		simStatus = fmi2Discard;
+		fi->currentTime = currentCommPoint + fi->step_size;
+		externalSimStatus = fmi2Discard;
+		printf("%s: crossed too far, rejecting step size %f and proposing %f... \n",fi->instanceName, commStepSize, fi->step_size);
+		printf("%s: fi->previous_arm_current = %f \n",fi->instanceName, fi->previous_arm_current);
+		printf("%s: fi->stored_arm_current = %f \n",fi->instanceName, fi->stored_arm_current);
 	}else{
-		if(!(! is_close(fi->previous_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE) && fi->previous_arm_current < fi->CROSSING)
-				&& is_close(fi->stored_arm_current,fi->CROSSING, fi->REL_TOLERANCE, fi->ABS_TOLERANCE)){
+		if((
+				(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
+				&& fi->previous_arm_current < fi->CROSSING
+			)
+			&&
+			(
+				is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE)
+			)
+		  ){
 			fi->aux_obj_detected = 1;
+			printf("%s: crossed just right... \n",fi->instanceName);
 		}
-		fi->step_size = commStepSize;
 	}
 
-	if(fi->aux_obj_detected || (fi->next_time_step != -1 && currentCommPoint > fi->next_time_step ) ||1){ //this is not correct. It also has to work when new values are given to all of the bools
-		fmi2ValueReference vr_in_star[8] = {1,2,3,4,5,6,7,8};
-		fi->fmu[0].setBoolean(fi->c_fmu[0], vr_in_star,8, &(fi->b[0]));
-		fmi2ValueReference vr_aux_obj_detected[1] = {0};
-		fi->fmu[0].setBoolean(fi->c_fmu[0], vr_aux_obj_detected,1, &(fi->aux_obj_detected));
-		simStatus = fi->fmu[0].doStep(fi->c_fmu[0], currentCommPoint, commStepSize, fmi2True);
-		fmi2ValueReference vr_out_star[2]={9,10};
-		fi->fmu[0].getBoolean(fi->c_fmu[0],vr_out_star,2,&b_temp_out[0]);
-		fi->get_next_step = 1;
-	}else{
-		fi->get_next_step = 0;
-	}
-	if(is_close(fi->step_size, commStepSize, fi->REL_TOLERANCE,fi->ABS_TOLERANCE)){
-		fi->previous_arm_current = fi->stored_arm_current;
-	}
+	if (externalSimStatus == fmi2OK){ // only do the internal step if the current step is OK
+		if (((fi->next_time_step != -1 && currentCommPoint > fi->next_time_step ) || 1)){
+			fmi2ValueReference vr_in_star[8] = {1,2,3,4,5,6,7,8};
+			fi->fmu[0].setBoolean(fi->c_fmu[0], vr_in_star,8, &(fi->b[0]));
+			fmi2ValueReference vr_aux_obj_detected[1] = {0};
+			fi->fmu[0].setBoolean(fi->c_fmu[0], vr_aux_obj_detected,1, &(fi->aux_obj_detected));
+			internalSimStatus = fi->fmu[0].doStep(fi->c_fmu[0], currentCommPoint, commStepSize, fmi2True);
+			fmi2ValueReference vr_out_star[2]={9,10};
+			fi->fmu[0].getBoolean(fi->c_fmu[0],vr_out_star,2,&b_temp_out[0]);
+			fi->get_next_step = 1;
+		} else {
+			fi->get_next_step = 0;
+		}
 
-	if(simStatus == fmi2Discard){
-		fmi2Real theNextTime = currentCommPoint + fi->step_size;
-		for(int i=0; i<1; i++){
-			fmi2Real theFMUtime;
-			fi->fmu[i].getRealStatus(fi->c_fmu[i], fmi2LastSuccessfulTime, &theFMUtime);
-			if(theFMUtime<theNextTime){
-				theNextTime = theFMUtime;
+		if(internalSimStatus == fmi2Discard){
+			externalSimStatus = fmi2Discard;
+			fmi2Real theNextTime = currentCommPoint + fi->step_size;
+			for(int i=0; i<1; i++){
+				fmi2Real theFMUtime;
+				fi->fmu[i].getRealStatus(fi->c_fmu[i], fmi2LastSuccessfulTime, &theFMUtime);
+				if(theFMUtime<theNextTime){
+					theNextTime = theFMUtime;
+				}
 			}
+			fi->currentTime = theNextTime;
 		}
-		fi->currentTime = theNextTime;
-	}else if(simStatus == fmi2OK){
+	}
+
+
+
+	if(externalSimStatus == fmi2OK){
+		printf("%s: Step accepted, committing arm current... \n",fi->instanceName);
 		fi->currentTime = currentCommPoint + commStepSize;
 		fi->time_last_fmu[0] = currentCommPoint + commStepSize;
+		fi->previous_arm_current = fi->stored_arm_current;
 	}
 
 	/* do out functions*/
@@ -405,7 +434,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	}
 
 	memset(fi->in_condition_executed, 0, sizeof(fmi2Boolean)*_NR_OF_IN_CONDITIONS);
-	return simStatus;
+	return externalSimStatus;
 }
 
 fmi2Status fmi2Terminate(fmi2Component fc)

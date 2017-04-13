@@ -47,3 +47,4 @@ xtend-gen/
 /SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_power_sa/log.txt
 /SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_loop_sa/log.txt
 /SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_controller/log.txt
+/SemanticAdaptationForFMI/Experiments/power_window_case_study/fmus/FMI_controller_sa/log.txt
