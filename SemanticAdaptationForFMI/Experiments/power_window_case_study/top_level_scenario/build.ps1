@@ -3,13 +3,11 @@ mingw32-make exe makefile
 
 pause
 
-
-
 $LibAbsolutionPath = (Get-Item -Path ".\lib" -Verbose).FullName
 
 Echo "Building FMUs and getting their dlls..."
 
-Push-Location .\fmus
+Push-Location ..\fmus
     $FMUSources = Get-ChildItem -Filter FMI_*
     ForEach ($fmu In $FMUSources){
         Push-Location $fmu
@@ -25,7 +23,7 @@ Pop-location
 Echo "Building FMUs and getting their dlls... DONE."
 
 Echo "Gettings dlls from third party FMUs..."
-Push-Location .\fmus\ThirdParty
+Push-Location ..\fmus\ThirdParty
     $FMUSources = Get-ChildItem -dir -Filter FMI_*
     ForEach ($fmu In $FMUSources){
         Push-Location $fmu\binaries\win32

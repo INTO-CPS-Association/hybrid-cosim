@@ -13,8 +13,8 @@
 #include "sim_support.h"
 
 #define START_TIME 0.0
-#define STOP_TIME 3.0
-#define STEP_SIZE 0.00001
+#define STOP_TIME 9.0
+#define STEP_SIZE 0.001
 
 FMU fmu_env, fmu_control_sa, fmu_power_sa, fmu_loop_sa;
 
@@ -223,17 +223,19 @@ int main(void) {
     	//r_in_power_from_loop[0] = -7000;
 
     	int redoStep  = 0;
-    	for(int i=0; i<2; i++)
-    	if (fmi2Flag[i] == fmi2Discard){
-    		redoStep = 1;
-    		fmi2Real newtime;
+    	for(int i=0; i<2; i++){
+    		if (fmi2Flag[i] == fmi2Discard){
+				redoStep = 1;
+				fmi2Real newtime;
 
-    		fmu_control_sa.getRealStatus(c_control_sa, lst, &newtime);
-    		fmi2Real the_FMU_new_step = newtime - currentTime;
-    		if(the_FMU_new_step < next_step_size){
-    			next_step_size = the_FMU_new_step;
-    		}
+				fmu_control_sa.getRealStatus(c_control_sa, lst, &newtime);
+				fmi2Real the_FMU_new_step = newtime - currentTime;
+				if(the_FMU_new_step < next_step_size){
+					next_step_size = the_FMU_new_step;
+				}
+			}
     	}
+
 
     	if(redoStep){ // should be a while loop!
     		// Recover all FMUs and do step again
