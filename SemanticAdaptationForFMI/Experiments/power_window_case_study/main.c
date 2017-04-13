@@ -9,8 +9,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "sim_support.h"
 #include "fmi2.h"
+#include "sim_support.h"
 
 #define START_TIME 0.0
 #define STOP_TIME 3.0
@@ -19,7 +19,6 @@
 FMU fmu_env, fmu_control_sa, fmu_power_sa, fmu_loop_sa;
 
 int main(void) {
-
 	FILE *fp_fmu_env;
 	fp_fmu_env = fopen("result_ENV.csv", "w");
 	FILE *fp_fmu_control_sa;
@@ -29,9 +28,8 @@ int main(void) {
 	FILE *fp_fmu_loop_sa;
 	fp_fmu_loop_sa = fopen("result_loop_sa.csv", "w");
 
-
 	puts("Loading Dlls\n");
-	/* loading */
+
     loadDll("libFMI_Environment.dll", &fmu_env, "PW_ENV");
     loadDll("libFMI_controller_sa.dll", &fmu_control_sa, "PW_CONTROLLER_SA");
     loadDll("libFMI_power_sa.dll", &fmu_power_sa, "POWER_SA");
@@ -135,10 +133,10 @@ int main(void) {
     	printf("\n----master new loop, ct:%f, h:%f\n",currentTime,STEP_SIZE);
     	double next_step_size = STEP_SIZE;
     	fmi2Component ctemp_env, ctemp_control_sa;
-    	/* Make backup*/
+    	// Make backup
     	fmu_env.getFMUstate(c_env,&ctemp_env);
     	fmu_control_sa.getFMUstate(c_control_sa, &ctemp_control_sa);
-    	/* do step*/
+    	// do step
 
     	fmi2Flag[2] = fmu_power_sa.setReal(c_power_sa,vr_in_power_sa_u_d,2, &r_in_power_from_control[0]);
     	if(fmi2Flag[1] != fmi2OK){
@@ -250,5 +248,7 @@ int main(void) {
     fclose(fp_fmu_env);
     fclose(fp_fmu_power_sa);
     fclose(fp_fmu_control_sa);
+
+
 	return EXIT_SUCCESS;
 }

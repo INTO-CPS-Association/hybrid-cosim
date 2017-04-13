@@ -1,3 +1,10 @@
+mingw32-make clean makefile
+mingw32-make exe makefile
+
+pause
+
+
+
 $LibAbsolutionPath = (Get-Item -Path ".\lib" -Verbose).FullName
 
 Echo "Building FMUs and getting their dlls..."
@@ -27,3 +34,5 @@ Push-Location .\fmus\ThirdParty
     }
 Pop-location
 Echo "Gettings dlls from third party FMUs... DONE."
+
+pause
