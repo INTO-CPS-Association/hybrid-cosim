@@ -351,7 +351,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	fi->step_size = commStepSize;
 
 	if (fi->toleranceDefined){
-		printf("%s: Checking for threshold crossing...\n",fi->instanceName);
+		printf("%s: Accurate checking for threshold crossing...\n",fi->instanceName);
 		if( (
 					(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
 					&& fi->previous_arm_current < fi->CROSSING
@@ -382,6 +382,21 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 					fi->aux_obj_detected = 1;
 					printf("%s: crossed just right... \n",fi->instanceName);
 			}
+	} else {
+		printf("%s: Non-accurate checking for threshold crossing...\n",fi->instanceName);
+		if( (
+				(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
+				&& fi->previous_arm_current < fi->CROSSING
+			)
+			&&
+			(
+				(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
+				&& fi->stored_arm_current > fi->CROSSING
+			)
+		   ){
+			fi->aux_obj_detected = 1;
+			printf("%s: crossed just right... \n",fi->instanceName);
+		}
 	}
 
 	if (externalSimStatus == fmi2OK){ // only do the internal step if the current step is OK
