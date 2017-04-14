@@ -307,7 +307,7 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
     	fi->b[_out_driver_up] = 0;
     	fi->b[_out_driver_up_stop] = 0;
 		fi->b[_out_driver_down] = 0;
-		fi->b[_out_driver_down_stop] = 0;
+		fi->b[_out_driver_down_stop] = 1;
 		fi->b[_out_passenger_up] = 0;
 		fi->b[_out_passenger_up_stop] = 0;
 		fi->b[_out_passenger_down] = 0;
