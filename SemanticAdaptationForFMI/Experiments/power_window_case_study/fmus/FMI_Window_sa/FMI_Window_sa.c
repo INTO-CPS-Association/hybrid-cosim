@@ -349,7 +349,7 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 	}
 
 	if (1){
-		fmi2ValueReference vr_fromWindow[2] = {1,2};
+		fmi2ValueReference vr_fromWindow[2] = {5,2};
 		fmi2Real out_values[2];
 		fi->fmu[index].getReal(fi->c_fmu[index],vr_fromWindow, 2, &out_values[0]);
 		fi->stored_window_reaction_torque = out_values[0];
