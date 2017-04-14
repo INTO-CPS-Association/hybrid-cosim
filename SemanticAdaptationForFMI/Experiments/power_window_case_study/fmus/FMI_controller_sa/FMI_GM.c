@@ -20,8 +20,6 @@ Template for a  FMU
 #include "fmi2.h"
 #include "sim_support.h"
 
-
-
 #define NUMBER_OF_REALS 1
 #define NUMBER_OF_STRINGS 0
 #define NUMBER_OF_BOOLEANS 11

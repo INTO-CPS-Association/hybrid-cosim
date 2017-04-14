@@ -9,7 +9,6 @@ Template for a  FMU
 #define MODEL_GUID "{41f87101-edf2-4eef-90f3-42db56d4565f}"
 #define FMI2_FUNCTION_PREFIX POWER_SA_
 
-
 #include <stdio.h>
 #include "string.h"
 #include "fmi2Functions.h"
@@ -18,7 +17,6 @@ Template for a  FMU
 #include <math.h>
 #include "fmi2.h"
 #include "sim_support.h"
-
 
 #define MAX 100000
 
@@ -110,7 +108,6 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 
 fmi2Status fmi2GetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t nvr, fmi2Real value[])
 {
-
 	FMUInstance* comp = (FMUInstance *)fc;
 
 	int isEmpty = 1;

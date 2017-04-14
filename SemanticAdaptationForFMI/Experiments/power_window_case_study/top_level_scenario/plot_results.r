@@ -7,12 +7,13 @@ library(reshape)
 library(plotly)
 library(stringr)
 
-sizeAxisLabel <- 26
+sizeAxisLabel <- 22
 
 # Plot environment
   env <- read.csv("result_ENV.csv")
   
   # Drop columns that will not be plotted
+  env$dup_stop <- NULL
   env$ddown <- NULL
   env$ddown_stop <- NULL
   env$pup <- NULL
@@ -25,8 +26,7 @@ sizeAxisLabel <- 26
   
   pdf("results_Env.pdf", width=10, height=5)
   
-  pallete <- c("#89cbaf",
-               "#be5440")
+  pallete <- c("#89cbaf")
   penv <- ggplot(data=env_molten) +
             geom_line(aes(x=t, y=value, color=variable), size=2) +
             scale_x_continuous("Time (s)") +
@@ -99,11 +99,7 @@ sizeAxisLabel <- 26
   
   pdf("results_loop_sa.pdf", width=10, height=5)
   
-  pallete <- c("#89cbaf",
-               "#be5440",
-               "#9699c3",
-               "#cca956",
-               "#4f314e")
+  pallete <- c("#be5440")
   ploop <- ggplot(data=loop_molten) +
             geom_line(aes(x=t, y=value, color=variable), size=1) +
             scale_x_continuous("Time (s)") +
@@ -122,5 +118,5 @@ sizeAxisLabel <- 26
   
 # Make multi-grid plot
   row_plot <- plot_grid(penv, pcontrol, ppower, ploop, nrow = 4, ncol = 1, align = "v")
-  save_plot("vertical_plot.pdf", row_plot, nrow = 4, ncol = 1, base_aspect_ratio = 2)
+  save_plot("vertical_plot.pdf", row_plot, nrow = 4, ncol = 1, base_aspect_ratio = 3)
   
