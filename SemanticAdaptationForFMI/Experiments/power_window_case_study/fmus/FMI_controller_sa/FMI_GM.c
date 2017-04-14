@@ -350,18 +350,18 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 	fi->aux_obj_detected = 0;
 	fi->step_size = commStepSize;
 
+	fmi2Boolean crossedTooMuch = (
+									(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
+									&& fi->previous_arm_current < fi->CROSSING
+								) && (
+									(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
+									&& fi->stored_arm_current > fi->CROSSING
+								);
+
 	if (fi->toleranceDefined){
 		printf("%s: Accurate checking for threshold crossing...\n",fi->instanceName);
-		if( (
-					(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
-					&& fi->previous_arm_current < fi->CROSSING
-				)
-				&&
-				(
-					(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
-					&& fi->stored_arm_current > fi->CROSSING
-				)
-			   ){
+
+		if(crossedTooMuch){
 				double negative_value = fi->previous_arm_current - fi->CROSSING;
 				double positive_value = fi->stored_arm_current - fi->CROSSING;
 				fi->step_size = (commStepSize * (-negative_value)) / (positive_value - negative_value);
@@ -384,23 +384,14 @@ fmi2Status fmi2DoStep(fmi2Component fc , fmi2Real currentCommPoint, fmi2Real com
 			}
 	} else {
 		printf("%s: Non-accurate checking for threshold crossing...\n",fi->instanceName);
-		if( (
-				(!is_close(fi->previous_arm_current, fi->CROSSING , fi->REL_TOLERANCE, fi->ABS_TOLERANCE))
-				&& fi->previous_arm_current < fi->CROSSING
-			)
-			&&
-			(
-				(!is_close(fi->stored_arm_current,fi->CROSSING,fi->REL_TOLERANCE,fi->ABS_TOLERANCE))
-				&& fi->stored_arm_current > fi->CROSSING
-			)
-		   ){
+		if(crossedTooMuch){
 			fi->aux_obj_detected = 1;
-			printf("%s: crossed just right... \n",fi->instanceName);
+			printf("%s: crossed too much but since this is non accurate, it is fine... \n",fi->instanceName);
 		}
 	}
 
 	if (externalSimStatus == fmi2OK){ // only do the internal step if the current step is OK
-		if (((fi->next_time_step != -1 && currentCommPoint > fi->next_time_step ) || 1)){
+		if (((fi->next_time_step != -1 && currentCommPoint > fi->next_time_step ) || 1)){ // TODO: check for changes in the
 			fmi2ValueReference vr_in_star[8] = {1,2,3,4,5,6,7,8};
 			fi->fmu[0].setBoolean(fi->c_fmu[0], vr_in_star,8, &(fi->b[0]));
 			fmi2ValueReference vr_aux_obj_detected[1] = {0};

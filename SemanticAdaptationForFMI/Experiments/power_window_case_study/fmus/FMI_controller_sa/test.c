@@ -47,7 +47,7 @@ int main(void) {
 
     c_control_sa = fmu_control_sa.instantiate("control_sa", fmi2CoSimulation, "1", fmuResourceLocation_control_sa, &callbacks_control_sa, fmi2False, fmi2False);
 
-    fmi2Boolean toleranceDefined = fmi2True;  // Enables zero crossing location
+    fmi2Boolean toleranceDefined = fmi2True;  // Enables accurate zero crossing location. Set fmi2False to enable innaccurate crossing
     fmi2Real tolerance = 0;                    // used in setting up the experiment
 
     puts("FMU components instantiated, setting up experiments\n");
