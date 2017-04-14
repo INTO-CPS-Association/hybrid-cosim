@@ -49,8 +49,8 @@ int main(void) {
     	return -1;
     }
 
-    fmi2ValueReference vr_out_loop_sa[1] = {0};
-    fmi2Real r_out_loop_sa[1];
+    fmi2ValueReference vr_out_loop_sa[2] = {0,3};
+    fmi2Real r_out_loop_sa[2];
     fmi2ValueReference vr_toLoop[2] = {1,2}; // speed, displacement
 	fmi2Real toLoop[2];
 
@@ -67,13 +67,14 @@ int main(void) {
 		}
     	fmi2Flag = fmu_loop_sa.doStep(c_loop_sa, currentTime, STEP_SIZE, fmi2True);
     	fflush(stdout);
-    	if (fmu_loop_sa.getReal(c_loop_sa, vr_out_loop_sa, 1, &r_out_loop_sa[0]) != fmi2OK){
+    	if (fmu_loop_sa.getReal(c_loop_sa, vr_out_loop_sa, 2, &r_out_loop_sa[0]) != fmi2OK){
     		return 1;
 		}
 
-    	printf("%f,%f\n",
+    	printf("%f,%f,%f\n",
 						currentTime,
-						r_out_loop_sa[0]
+						r_out_loop_sa[0],
+						r_out_loop_sa[1]
 						);
 
     	currentTime += STEP_SIZE;

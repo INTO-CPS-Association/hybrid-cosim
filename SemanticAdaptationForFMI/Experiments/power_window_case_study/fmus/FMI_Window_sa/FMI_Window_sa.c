@@ -84,6 +84,11 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 	int isset[NUMBER_OF_REALS];
 	memset(isset, 0, sizeof(int)*NUMBER_OF_REALS);
 
+	printf("%s: setReal with vr: \n", comp->instanceName);
+	for (int i = 0; i < nvr; ++i) {
+		printf("vr[%d] = %d \n", i, vr[i]);
+	}
+
 	for (i = 0; i < nvr; i++)
 	{
 		comp->r[vr[i]] = value[i];
@@ -106,6 +111,21 @@ fmi2Status fmi2SetReal(fmi2Component fc, const fmi2ValueReference vr[], size_t n
 			comp->stored_windowsa_displacement = comp->r[_in_displacement];
 		}
 		/* If mealy do update_in and recursive call */
+
+		fmi2ValueReference vr_toWindow[3] = {3,4,0};
+		fmi2Real values[3];
+		values[0] = comp->stored_windowsa_reaction_force;
+		values[1] = comp->stored_windowsa_speed;
+		values[2] = comp->stored_windowsa_displacement;
+
+		comp->fmu[0].setReal(comp->c_fmu[0],vr_toWindow, 3, &values[0]);
+
+		fmi2ValueReference vr_fromWindow[2] = {5,2};
+		fmi2Real out_values[2];
+		comp->fmu[0].getReal(comp->c_fmu[0],vr_fromWindow, 2, &out_values[0]);
+		comp->stored_window_reaction_torque = out_values[0];
+		comp->stored_window_height = out_values[1];
+
 	}
 	//out_condition_executed := empty map
 	memset(comp->out_conditions_executed,0,sizeof(fmi2Boolean)*_NR_OF_OUT_CONDITIONS);

@@ -21,7 +21,7 @@ Template for a  FMU
 
 #define MAX 100000
 
-#define NUMBER_OF_REALS 3
+#define NUMBER_OF_REALS 4
 #define NUMBER_OF_STRINGS 0
 #define NUMBER_OF_BOOLEANS 0
 #define NUMBER_OF_INTEGERS 0
@@ -33,7 +33,7 @@ Template for a  FMU
 #define _out_tau 0
 #define _in_speed 1
 #define _in_displacement 2
-
+#define _out_window_height 3
 
 #define _window_sa 0
 #define _obstacle 1
@@ -344,7 +344,7 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 		toWindowSA[2] = fi->r[_in_speed];
 		printf("to window speed = %f\n", fi->r[_in_speed]);
 		fflush(stdout);
-		fi->fmu[_window_sa].setReal(fi->c_fmu[_window_sa], vr_to_window_sa, 3, &toWindowSA[0]);
+		fi->fmu[_window_sa].setReal(fi->c_fmu[_window_sa], vr_to_window_sa, 3, &toWindowSA[0]); // remember: this runs the new inputs by the internal FMU window.
 		fi->fmu[_window_sa].getReal(fi->c_fmu[_window_sa], vr_from_window, 2, &fromWindow[0]);
 
 		converged = is_close(fi->prev_disp, fromWindow[1], REL_TOL, ABS_TOL);
@@ -373,6 +373,7 @@ static fmi2Status DoInnerStep(fmi2Component fc, int index, fmi2Real currentCommP
 
 	if(1){
 		fi->r[_out_tau] = fromWindow[0];
+		fi->r[_out_window_height] = fromWindow[1];
 	}
 
 	return status;
