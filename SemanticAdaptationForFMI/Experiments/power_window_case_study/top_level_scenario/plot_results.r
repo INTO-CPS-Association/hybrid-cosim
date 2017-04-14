@@ -7,7 +7,7 @@ library(reshape)
 library(plotly)
 library(stringr)
 
-sizeAxisLabel <- 18
+sizeAxisLabel <- 26
 
 # Plot environment
   env <- read.csv("result_ENV.csv")
@@ -26,12 +26,20 @@ sizeAxisLabel <- 18
   pdf("results_Env.pdf", width=10, height=5)
   
   pallete <- c("#89cbaf",
-               "#be5440",
-               "#9699c3",
-               "#cca956",
-               "#4f314e")
+               "#be5440")
   penv <- ggplot(data=env_molten) +
-            geom_line(aes(x=t, y=value, color=variable), size=1)
+            geom_line(aes(x=t, y=value, color=variable), size=2) +
+            scale_x_continuous("Time (s)") +
+            scale_y_discrete("Value", limits=c(0, 1), labels=c("0"="False", "1"="True")) +
+            scale_color_manual("environment",
+                               labels=c("dup"="driver_up","dup_stop"="driver_stop"),
+                               values = pallete) +
+            theme(axis.title.y=element_blank(),
+                  axis.title=element_text(size=sizeAxisLabel,face="bold"),
+                  axis.text=element_text(size=sizeAxisLabel),
+                  legend.text=element_text(size=sizeAxisLabel),
+                  legend.title=element_text(size=sizeAxisLabel,face="bold"))
+  penv
   
   dev.off()
 
@@ -41,13 +49,21 @@ sizeAxisLabel <- 18
   
   pdf("results_Control_sa.pdf", width=10, height=5)
   
-  pallete <- c("#89cbaf",
-               "#be5440",
-               "#9699c3",
-               "#cca956",
-               "#4f314e")
+  pallete <- c("#9699c3",
+               "#cca956")
   pcontrol <- ggplot(data=control_molten) +
-                geom_line(aes(x=t, y=value, color=variable), size=1)
+                geom_line(aes(x=t, y=value, color=variable), size=1) +
+                scale_x_continuous("Time (s)") +
+                scale_y_continuous("Value", limits=c(0, 1)) +
+                scale_color_manual("controller_sa",
+                                   values = pallete) +
+                theme(axis.title.y=element_blank(),
+                      axis.title=element_text(size=sizeAxisLabel,face="bold"),
+                      axis.text=element_text(size=sizeAxisLabel),
+                      legend.text=element_text(size=sizeAxisLabel),
+                      legend.title=element_text(size=sizeAxisLabel,face="bold"))
+    
+  pcontrol
   
   dev.off()
   
@@ -59,13 +75,20 @@ sizeAxisLabel <- 18
   
   pdf("results_power_sa.pdf", width=10, height=5)
   
-  pallete <- c("#89cbaf",
-               "#be5440",
-               "#9699c3",
-               "#cca956",
-               "#4f314e")
+  pallete <- c("#4f314e")
   ppower <- ggplot(data=power_molten) +
-            geom_line(aes(x=t, y=value, color=variable), size=1)
+            geom_line(aes(x=t, y=value, color=variable), size=1) +
+            scale_x_continuous("Time (s)") +
+            scale_y_continuous("Value") +
+            scale_color_manual("power_sa",
+                               labels=c("i"="armature_current"),
+                               values = pallete) +
+            theme(axis.title.y=element_blank(),
+                  axis.title=element_text(size=sizeAxisLabel,face="bold"),
+                  axis.text=element_text(size=sizeAxisLabel),
+                  legend.text=element_text(size=sizeAxisLabel),
+                  legend.title=element_text(size=sizeAxisLabel,face="bold"))
+  ppower
   
   dev.off()
   
@@ -82,11 +105,22 @@ sizeAxisLabel <- 18
                "#cca956",
                "#4f314e")
   ploop <- ggplot(data=loop_molten) +
-            geom_line(aes(x=t, y=value, color=variable), size=1)
+            geom_line(aes(x=t, y=value, color=variable), size=1) +
+            scale_x_continuous("Time (s)") +
+            scale_y_continuous("Value") +
+            scale_color_manual("window_sa",
+                               labels=c("height"="disp"),
+                               values = pallete) +
+            theme(axis.title.y=element_blank(),
+                  axis.title=element_text(size=sizeAxisLabel,face="bold"),
+                  axis.text=element_text(size=sizeAxisLabel),
+                  legend.text=element_text(size=sizeAxisLabel),
+                  legend.title=element_text(size=sizeAxisLabel,face="bold"))
+  ploop
   
   dev.off()
   
 # Make multi-grid plot
   row_plot <- plot_grid(penv, pcontrol, ppower, ploop, nrow = 4, ncol = 1, align = "v")
-  save_plot("vertical_plot.pdf", row_plot, nrow = 4, ncol = 1, base_aspect_ratio = 1.0)
+  save_plot("vertical_plot.pdf", row_plot, nrow = 4, ncol = 1, base_aspect_ratio = 2)
   
