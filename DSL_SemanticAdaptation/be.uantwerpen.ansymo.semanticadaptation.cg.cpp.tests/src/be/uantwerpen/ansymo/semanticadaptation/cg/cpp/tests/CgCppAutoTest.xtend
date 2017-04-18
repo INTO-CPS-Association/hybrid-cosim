@@ -44,7 +44,7 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 	@Parameters(name = "{index}")
 	def static Collection<Object[]> data() {
 		val files = new ArrayList<List<File>>();
-		listf("input/single_folder_spec", files);
+		listf("test_input/single_folder_spec", files);
 		val test = new ArrayList();
 		test.add(files.get(0));
 		//val test2 = new ArrayList();
