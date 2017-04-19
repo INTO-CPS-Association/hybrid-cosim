@@ -20,7 +20,7 @@
 
 		<resources>
 			<resource>
-				<directory>src/resources/hybridCosimulation-framework</directory>
+				<directory>src/resources/hybridCosimulation-framework/semantic-adaptation</directory>
 				<targetPath>${project.build.directory}/classes/hybridCosimulation-framework</targetPath>
 				<filtering>false</filtering>
 				<includes>
