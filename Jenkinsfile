@@ -4,6 +4,7 @@ node {
     // Mark the code checkout 'stage'....
     stage 'Checkout'
     checkout scm
+		sh 'git submodule update --init --recursive' 
 
 
     stage ('Clean'){
@@ -20,7 +21,7 @@ node {
         sh "mvn install -f DSL_SemanticAdaptation/pom.xml"
         step([$class: 'ArtifactArchiver', artifacts: '**/target/*.jar', fingerprint: true])
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-//        step([$class: 'JacocoPublisher'])
+				//        step([$class: 'JacocoPublisher'])
 
         step([$class: 'TasksPublisher', canComputeNew: false, defaultEncoding: '', excludePattern: '', healthy: '', high: 'FIXME', ignoreCase: true, low: '', normal: 'TODO', pattern: '', unHealthy: ''])
       }}
@@ -34,10 +35,10 @@ node {
 
 
       // Notify on build failure using the Email-ext plugin
-            emailext(body: '${DEFAULT_CONTENT}', mimeType: 'text/html',
-                     replyTo: '$DEFAULT_REPLYTO', subject: '${DEFAULT_SUBJECT}',
-                     to: emailextrecipients([[$class: 'CulpritsRecipientProvider'],
-                                             [$class: 'RequesterRecipientProvider']]))
+			emailext(body: '${DEFAULT_CONTENT}', mimeType: 'text/html',
+							 replyTo: '$DEFAULT_REPLYTO', subject: '${DEFAULT_SUBJECT}',
+							 to: emailextrecipients([[$class: 'CulpritsRecipientProvider'],
+																			 [$class: 'RequesterRecipientProvider']]))
          
     }
   }
