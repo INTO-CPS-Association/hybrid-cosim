@@ -164,10 +164,20 @@ class StaticGenerators {
 		        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 		endif()
 		
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DFMI_COSIMULATION -g")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFMI_COSIMULATION -g")
+		add_definitions(-DFMI_COSIMULATION)
 		
+		if (WIN32)
+			#windows, becuase windows just cannot figure out to do it correct. 
+			# must be a bug in msys mingw gcc 6.3	
+			# it doesnt read the rsp files.
+			set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+			set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+			
+			set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
+			set(CMAKE_C_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
+		endif()
 		
+		add_subdirectory («frameworkPath»)
 		
 		include_directories(src)
 		
@@ -222,8 +232,6 @@ class StaticGenerators {
 		#message( INFO ${PTHREAD_LIBRARY})
 		#target_link_libraries(${PROJECT_NAME}_main ${PTHREAD_LIBRARY} /C/msys64/mingw64/x86_64-w64-mingw32/lib/libwinpthread.a)
 		#endif()
-		
-		add_subdirectory («frameworkPath»)
 		
 		#add_custom_command(${PROJECT_NAME}_main POST_BUILD COMMAND "find . -name *.exe -exec echo {} \; -exec bash -c \"objdump -p {} | grep 'DLL Name:'\" \;")		
 		
