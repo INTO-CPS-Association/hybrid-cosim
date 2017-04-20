@@ -24,6 +24,7 @@ import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import org.junit.Test
 import org.junit.runner.RunWith
 import be.uantwerpen.ansymo.semanticadaptation.testframework.StaticGenerators
+import org.junit.Ignore
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -33,6 +34,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
 
+	@Ignore
 	@Test def window_sa_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical.BASE.sa', 'generated', "powerwindow");
 //		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
@@ -51,7 +53,8 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 		val fsa = new InMemoryFileSystemAccess()
 		val IGeneratorContext ctxt = null;
-		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
+		val cppGen = new CppGenerator();
+		cppGen.doGenerate(model.eResource, fsa, ctxt);
 
 		for (files : fsa.allFiles.entrySet) {
 			val filename2 = files.key.substring(14);
@@ -91,66 +94,66 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 	}
 
-	def void deleteFolder(File folder) {
-		var	files = folder.listFiles();
-		if (files !== null) { // some JVMs return null for empty dirs
-			for (File f : files) {
-				if (f.isDirectory()) {
-					deleteFolder(f);
-				} else {
-					f.delete();
-				}
-			}
-		}
-		folder.delete();
-	}
-
-	def void writeToFile(File file, String content)
-	{
-		val FileWriter writer = new FileWriter(file);
-		writer.write(content);
-		writer.close;
-		System.out.println("Stored file at: " + file.absolutePath);
-	}
 
 	def __parseNoErrors(String filename, String directory, String projectName) {
-		val buildUtils = new BuildUtilities();
+		val saRootDir = new File(directory + File.separatorChar + projectName);
+		val srcGenPath = new File(saRootDir, "sources")
+		val resourcesPath = new File(saRootDir, "resources");
+		val saFrameworkPath = new File(saRootDir, "framework")
+
+		System.out.println("Rootdir: " + saRootDir.absolutePath)
+
 		val model = __parse(filename)
 		__assertNoParseErrors(model, filename)
 
-		val fsa = new InMemoryFileSystemAccess()
+		val fsa = new InMemoryFileSystemAccess();
 		val IGeneratorContext ctxt = null;
-		new CppGenerator().doGenerate(model.eResource, fsa, ctxt);
-
-		var genPath = new File(directory);
-		System.out.println(genPath.absolutePath)
-		if (genPath.exists) {
-			deleteFolder(genPath);
-		}
+		val cppGen = new CppGenerator();
+		cppGen.doGenerate(model.eResource, fsa, ctxt);
 		
-		val srcGenPath = new File(directory + File.separatorChar + "src")
-		srcGenPath.mkdirs();	
+		if (saRootDir.exists) {
+			BuildUtilities.deleteFolder(saRootDir);
+		}
+				
+		saRootDir.mkdirs();
+		srcGenPath.mkdirs();
+		resourcesPath.mkdirs();
+		saFrameworkPath.mkdirs();
 
 		for (files : fsa.allFiles.entrySet) {
-//			System.out.println("########################")
-//			System.out.println("Filename: " + files.key.substring(14))
-//			System.out.println(files.value)
-			val path = new File(srcGenPath, files.key.substring(14))
-
-			writeToFile(path, files.value.toString);
+			val fName = files.key.substring(14);
+			
+			var File fp;
+			if(fName.equals("modelDescription.xml"))
+			{
+				fp = new File(saRootDir, fName);
+			}
+			else
+			{
+				fp = new File(srcGenPath, fName);
+			}
+			
+			BuildUtilities.writeToFile(fp, files.value.toString);	
 		}
 		
-		val mainCpp = StaticGenerators.generateMainCppFile((new File(directory)).absolutePath.replace("\\","\\\\"));
-		writeToFile(new File(srcGenPath,"main.cpp"), mainCpp);
-		
-		var saFrameworkPath = new File(directory + File.separatorChar + "framework")
-		saFrameworkPath.mkdirs();
-		buildUtils.copyNativeLibFiles(saFrameworkPath);
-		System.out.println("Stored sa framework at: " + saFrameworkPath.absolutePath);
-		
-		writeToFile(new File(genPath,"CMakeLists.txt"), StaticGenerators.generateCMakeLists(projectName, "framework"));
+		val mainCpp = StaticGenerators.generateMainCppFile(saRootDir.absolutePath.replace("\\","\\\\"));
+		BuildUtilities.writeToFile(new File(srcGenPath,"main.cpp"), mainCpp);
 		
 		
+		for(rf : cppGen.resourcePaths)
+		{
+			val sinkFile = new File(resourcesPath, rf.name);
+			System.out.println("Copied file to: " + sinkFile);
+			BuildUtilities.copyFile(rf, sinkFile);	
+		}			
+		
+		
+		BuildUtilities.writeToFile(new File(saRootDir,"CMakeLists.txt"), StaticGenerators.generateCMakeLists(projectName, "framework"));
+		
+		(new BuildUtilities()).copyNativeLibFiles(saFrameworkPath);
+		System.out.println("Stored framework at: " + saFrameworkPath);
+		
+				
 	}
 
 	def __parseNoErrorsPrint(String filename) {

@@ -34,12 +34,17 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ParamDeclarati
 class CppGenerator extends SemanticAdaptationGenerator {
 	private var IFileSystemAccess2 fsa;
 
+	private List<File> resourcePaths = newArrayList();
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		this.fsa = fsa;
 		for (SemanticAdaptation type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
 			type.compile;
 
 		}
+	}
+
+	def List<File> getResourcePaths(){
+		return resourcePaths;		
 	}
 
 	// TODO: Verify adaptation.name is not a C++ keyword
@@ -79,7 +84,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			// TODO: Add support for multiple inner fmus
 			var ModelDescription md;
 			for (fmu : type.inner.eAllContents.toList.filter(InnerFMU)) {
-				md = new ModelDescription(fmu.name, fmu.type.name, new File(fmu.path.replace('\"', '')));
+				val fmuFile = new File(fmu.path.replace('\"', ''));
+				this.resourcePaths.add(fmuFile);
+				md = new ModelDescription(fmu.name, fmu.type.name, fmuFile);
 				fmus.add(fmu.name -> fmu.type.name);
 				val LinkedHashMap<String, MappedScalarVariable> mSV = newLinkedHashMap();
 				for (sv : md.sv.values) {
