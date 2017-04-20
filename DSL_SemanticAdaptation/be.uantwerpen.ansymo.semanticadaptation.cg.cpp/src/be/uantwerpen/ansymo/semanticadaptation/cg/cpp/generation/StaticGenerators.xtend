@@ -59,7 +59,7 @@ class StaticGenerators {
 			g_functions = functions;
 			fmiprintf("instantiating %s\n", instanceName);
 			auto resourceLoc = make_shared<std::string>(fmuResourceLocation);
-			g_adaptation = make_shared<adaptation::Window_SA>(resourceLoc, functions);
+			g_adaptation = make_shared<adaptation::«adapClassName»>(resourceLoc, functions);
 			try
 			{
 				g_adaptation->initialize();
@@ -157,7 +157,7 @@ class StaticGenerators {
 		
 		template<class T>
 		fmi2Status getX(const fmi2ValueReference vr[], size_t nvr, T value[],
-				T (adaptation::Window_SA::*getter)(fmi2ValueReference vr))
+				T (adaptation::«adapClassName»::*getter)(fmi2ValueReference vr))
 		{
 			try
 			{
@@ -187,20 +187,20 @@ class StaticGenerators {
 		
 		extern "C" fmi2Status fmi2GetReal(fmi2Component c, const fmi2ValueReference vr[], size_t nvr, fmi2Real value[])
 		{
-			return getX(vr, nvr, value, &adaptation::Window_SA::getFmiValueReal);
+			return getX(vr, nvr, value, &adaptation::«adapClassName»::getFmiValueReal);
 		}
 		
 		extern "C" fmi2Status fmi2GetInteger(fmi2Component c, const fmi2ValueReference vr[], size_t nvr, fmi2Integer value[])
 		{
-			return getX(vr, nvr, value, &adaptation::Window_SA::getFmiValueInteger);
+			return getX(vr, nvr, value, &adaptation::«adapClassName»::getFmiValueInteger);
 		}
 		
 		extern "C" fmi2Status fmi2GetBoolean(fmi2Component c, const fmi2ValueReference vr[], size_t nvr, fmi2Boolean value[])
 		{
-			typedef bool (adaptation::Window_SA::*GB)(fmi2ValueReference);
-			typedef int (adaptation::Window_SA::*GI)(fmi2ValueReference);
+			typedef bool (adaptation::«adapClassName»::*GB)(fmi2ValueReference);
+			typedef int (adaptation::«adapClassName»::*GI)(fmi2ValueReference);
 		
-			GB g = &adaptation::Window_SA::getFmiValueBoolean;
+			GB g = &adaptation::«adapClassName»::getFmiValueBoolean;
 			GI i = reinterpret_cast<GI>(g);
 		
 			return getX(vr, nvr, value, i);

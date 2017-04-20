@@ -41,7 +41,7 @@ class ControlConditionSwitch extends InOutRulesConditionSwitch {
 		tempDoSwitchCode += System.lineSeparator() + '''return «doSwitch(object.returnstatement).code»;
 			''';
 		
-		var functionPrefix = "void ";
+		var functionPrefix = "double ";
 		var functionNameArgs = "executeInternalControlFlow(double h, double dt)"
 		functionSignatures.add(functionPrefix + functionNameArgs);
 		retVal.code = 
