@@ -33,8 +33,8 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ParamDeclarati
 
 class CppGenerator extends SemanticAdaptationGenerator {
 	private var IFileSystemAccess2 fsa;
-
 	private List<File> resourcePaths = newArrayList();
+
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		this.fsa = fsa;
 		for (SemanticAdaptation type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
@@ -43,27 +43,23 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		}
 	}
 
-	def List<File> getResourcePaths(){
-		return resourcePaths;		
-	}
-
 	// TODO: Verify adaptation.name is not a C++ keyword
 	def void compile(SemanticAdaptation adaptation) {
-		for (Adaptation type : adaptation.elements.filter(Adaptation)) {
+		for (Adaptation adap : adaptation.elements.filter(Adaptation)) {
 			// Value used for scoping variables in the .sa file
-			val adapInteralRefName = type.name;
+			val adapInteralRefName = adap.name;
 
 			// The CPP class name
-			val adapClassName = type.name.toFirstUpper;
+			val adapClassName = adap.name.toFirstUpper;
 
 			// This is the external name used in the model description file for the semantic adaptation FMU.
-			val adapExternalName = type.type.name;
+			val adapExternalName = adap.type.name;
 
 			// List of FMUs with a pairing between its name and its type.name.
 			var ArrayList<Pair<String, String>> fmus = newArrayList();
 
 			// TODO: Currently only 1 inner fmu is supported
-			val innerFmus = type.inner.eAllContents.toList.filter(InnerFMU);
+			val innerFmus = adap.inner.eAllContents.toList.filter(InnerFMU);
 			if (innerFmus.size > 1) {
 				throw new IncorrectAmountOfElementsException("Only one InnerFmu is supported.")
 			}
@@ -83,7 +79,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			 */
 			// TODO: Add support for multiple inner fmus
 			var ModelDescription md;
-			for (fmu : type.inner.eAllContents.toList.filter(InnerFMU)) {
+			for (fmu : adap.inner.eAllContents.toList.filter(InnerFMU)) {
 				val fmuFile = new File(fmu.path.replace('\"', ''));
 				this.resourcePaths.add(fmuFile);
 				md = new ModelDescription(fmu.name, fmu.type.name, fmuFile);
@@ -102,17 +98,19 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 			// Compile Params
 			var LinkedHashMap<String, GlobalInOutVariable> params = newLinkedHashMap;
-			val String paramsConstructorSource = compileParams(params, type.params);
+			val String paramsConstructorSource = compileParams(params, adap.params);
 
 			/*
 			 * This map contains all the ScalarVariables for the semantic adaptation. 
 			 * The are not populated yet, but they will be during the compilation of the in and out rule blocks. 
 			 */
 			var LinkedHashMap<String, SAScalarVariable> SASVs = calcSASVsFromInportsOutports(adapInteralRefName,
-				type.inports, type.outports)
+				adap.inports, adap.outports)
 
 			// C++ defines for accessing semantic adaptation scalar variables 
 			val String SADefines = calcSADefines(SASVs.values);
+
+			// Compile the transparent in mappings
 
 			// Compile the in rules
 			val inRuleResult = compileInOutRuleBlocks(InputOutputType.Input, adaptation.eAllContents.toIterable.filter(
@@ -575,5 +573,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		}
 
 		return saSVs;
+	}
+
+	def List<File> getResourcePaths() {
+		return resourcePaths;
 	}
 }
