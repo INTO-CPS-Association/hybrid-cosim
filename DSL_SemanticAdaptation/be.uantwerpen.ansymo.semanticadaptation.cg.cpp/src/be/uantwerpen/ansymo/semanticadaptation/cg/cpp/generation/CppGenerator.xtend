@@ -349,8 +349,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			}
 			
 			void «adapClassName»::initialize()
-			{
-				auto path = Fmu::combinePath(resourceLocation, make_shared<string>("«fmuTypeName».fmu"));
+			{				
+				auto path = make_shared<string>(*resourceLocation);
+				path->append(string("«fmuTypeName».fmu"));
 				auto «fmuName»Fmu = make_shared<fmi2::Fmu>(*path);
 				«fmuName»Fmu->initialize();
 				this->«fmuName» = «fmuName»Fmu->instantiate("«fmuName»",fmi2CoSimulation, "«guid»", true, true, shared_from_this());

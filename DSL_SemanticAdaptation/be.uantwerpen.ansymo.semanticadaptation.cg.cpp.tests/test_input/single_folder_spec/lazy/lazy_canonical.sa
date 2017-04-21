@@ -22,7 +22,10 @@ param 	INIT_OBJ_DETECTED := false,
 		INIT_PASSENGER_STOP := false,
 		INIT_DRIVER_UP := false,
 		INIT_DRIVER_DOWN := false,
-		INIT_DRIVER_STOP := false;
+		INIT_DRIVER_STOP := false,
+		INIT_UP := false,
+		INIT_DOWN := false,
+		INIT_STOP := false;
 
 control var	tn := -1.0,
 			tl := -1.0,
@@ -67,5 +70,20 @@ control rules {
 	return step_size;
 }
 
-in var
+in var 
+	stored_sa_obj_detected := INIT_OBJ_DETECTED,
+	stored_sa_passenger_up := INIT_PASSENGER_UP,
+	stored_sa_passenger_down := INIT_PASSENGER_DOWN,
+	stored_sa_passenger_stop := INIT_PASSENGER_STOP,
+	stored_sa_driver_up := INIT_DRIVER_UP,
+	stored_sa_driver_down := INIT_DRIVER_DOWN,
+	stored_sa_driver_stop := INIT_DRIVER_STOP;
 
+in rules {
+	true 
+}
+	
+out var
+	stored_sa_up := INIT_UP,
+	stored_sa_down := INIT_DOWN,
+	stored_sa_stop := INIT_STOP;

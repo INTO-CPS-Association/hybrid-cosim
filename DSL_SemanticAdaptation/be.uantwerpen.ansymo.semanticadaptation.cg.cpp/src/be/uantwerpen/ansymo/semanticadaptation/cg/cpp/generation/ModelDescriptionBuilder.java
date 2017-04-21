@@ -16,6 +16,7 @@ import org.w3c.dom.Element;
 
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVCausality;
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType;
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVVariability;
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable;
 
 public class ModelDescriptionBuilder {
@@ -45,8 +46,10 @@ public class ModelDescriptionBuilder {
 		modelVariables = doc.createElement("ModelVariables");
 		rootElement.appendChild(modelVariables);
 
+		Element modelStructure = doc.createElement("ModelStructure");
+		rootElement.appendChild(modelStructure);
 		outputs = doc.createElement("Outputs");
-		rootElement.appendChild(outputs);
+		modelStructure.appendChild(outputs);
 	}
 
 	public String getNextValueReference() {
@@ -81,6 +84,13 @@ public class ModelDescriptionBuilder {
 			if (var.getStart() != null) {
 				svType.setAttribute("start", var.getStart());
 			}
+			else
+			{
+				if(var.getVariability() == SVVariability.continuous && var.getCausality() == SVCausality.input)
+				{
+					svType.setAttribute("start", "0.0");
+				}
+			}
 		}
 
 	}
@@ -88,6 +98,7 @@ public class ModelDescriptionBuilder {
 	private Element createUnknown(String index) {
 		Element e = doc.createElement("Unknown");
 		e.setAttribute("index", index);
+		e.setAttribute("dependencies", "");
 		return e;
 	}
 

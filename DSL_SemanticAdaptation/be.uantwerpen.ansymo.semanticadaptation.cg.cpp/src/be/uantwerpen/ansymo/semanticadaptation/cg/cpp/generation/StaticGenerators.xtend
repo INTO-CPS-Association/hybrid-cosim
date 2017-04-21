@@ -58,7 +58,7 @@ class StaticGenerators {
 			name = new std::string(instanceName);
 			g_functions = functions;
 			fmiprintf("instantiating %s\n", instanceName);
-			auto resourceLoc = make_shared<std::string>(fmuResourceLocation);
+			auto resourceLoc = make_shared<std::string>(URIToNativePath(fmuResourceLocation));
 			g_adaptation = make_shared<adaptation::«adapClassName»>(resourceLoc, functions);
 			try
 			{
