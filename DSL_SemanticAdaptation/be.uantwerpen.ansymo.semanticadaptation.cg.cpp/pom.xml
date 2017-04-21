@@ -20,13 +20,13 @@
 
 	<dependencies>
 
-		<dependency>
+		<!-- dependency>
 			<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
 			<artifactId>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</artifactId>
 			<type>jar</type>
 			<version>${project.version}</version>
 			<scope>compile</scope>
-		</dependency>
+		</dependency-->
 	</dependencies>
 
 	<build>
@@ -39,7 +39,7 @@
 
 
 
-			<plugin>
+			<!-- plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
@@ -61,7 +61,7 @@
 									<version>${project.version}</version>
 									
 									<overWrite>true</overWrite>
-									<!-- outputDirectory>${project.build.directory}/alternateLocation</outputDirectory> <destFileName>optional-new-name.jar</destFileName -->
+									
 									<destFileName>cppFramework.jar</destFileName>
 								</artifactItem>
 
@@ -75,7 +75,7 @@
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin-->
 
 
 			

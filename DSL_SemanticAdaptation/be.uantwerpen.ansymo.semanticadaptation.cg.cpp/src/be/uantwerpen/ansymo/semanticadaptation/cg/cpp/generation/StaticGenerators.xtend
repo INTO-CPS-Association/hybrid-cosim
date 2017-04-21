@@ -35,7 +35,7 @@ class StaticGenerators {
 			std::string m(message);
 			if (g_functions != NULL)
 			{
-				log(g_functions, (void*) 2, "", fmi2Error, "error", (base + m).c_str(), "");
+				log(g_functions, g_adaptation->getComponent(), "", fmi2Error, "error", (base + m).c_str(), "");
 			}
 		}
 		
@@ -44,7 +44,7 @@ class StaticGenerators {
 		{
 			if (g_functions != NULL)
 			{
-				log(g_functions, (void*) 2, name->c_str(), fmi2OK, "logAll", message, arg);
+				log(g_functions, g_adaptation->getComponent(), name->c_str(), fmi2OK, "logAll", message, arg);
 			}
 		}
 		
@@ -59,7 +59,8 @@ class StaticGenerators {
 			g_functions = functions;
 			fmiprintf("instantiating %s\n", instanceName);
 			auto resourceLoc = make_shared<std::string>(URIToNativePath(fmuResourceLocation));
-			g_adaptation = make_shared<adaptation::«adapClassName»>(resourceLoc, functions);
+			auto name  = make_shared<std::string>(instanceName);
+			g_adaptation = make_shared<adaptation::«adapClassName»>(name, resourceLoc, functions);
 			try
 			{
 				g_adaptation->initialize();

@@ -286,7 +286,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					class «adapClassName» : public SemanticAdaptation<«adapClassName»>, public enable_shared_from_this<«adapClassName»>
 					{
 						public:
-							«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions);
+							«adapClassName»(shared_ptr<std::string> fmiInstanceName, shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions);
 							void initialize();
 							virtual ~«adapClassName»();
 							
@@ -339,8 +339,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	def String compileDeAndConstructorAndInitialize(String adapClassName, String fmuName, String fmuTypeName,
 		String guid, String paramsCons, String inCons, String outCons) {
 		return '''
-			«adapClassName»::«adapClassName»(shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
-				SemanticAdaptation(resourceLocation, createInputRules(),createOutputRules(), functions)
+			«adapClassName»::«adapClassName»(shared_ptr<std::string> fmiInstanceName,shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
+				SemanticAdaptation(fmiInstanceName, resourceLocation, createInputRules(),createOutputRules(), functions)
 			{
 				
 				«paramsCons»
