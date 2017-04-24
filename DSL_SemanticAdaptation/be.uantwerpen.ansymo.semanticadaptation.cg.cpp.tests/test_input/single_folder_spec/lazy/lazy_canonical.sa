@@ -6,13 +6,13 @@ at "./path/to/LazySA.fmu"
 	with input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
 	with output ports up, down, stop
 
-input ports obj_detected -> controller.obj_detected,
-			passenger_up -> controller.passenger_up,
-			passenger_down -> controller.passenger_down,
-			passenger_stop -> controller.passenger_stop,
-			driver_up -> controller.driver_up,
-			driver_down -> controller.driver_down,
-			driver_stop -> controller.driver_stop
+input ports obj_detected,
+			passenger_up,
+			passenger_down,
+			passenger_stop,
+			driver_up,
+			driver_down,
+			driver_stop
 
 output ports up, down, stop
 
@@ -80,10 +80,38 @@ in var
 	stored_sa_driver_stop := INIT_DRIVER_STOP;
 
 in rules {
-	true 
+	true -> {
+		stored_sa_obj_detected := lazy_sa.obj_detected;
+		stored_sa_passenger_up := lazy_sa.passenger_up;
+		stored_sa_passenger_down := lazy_sa.passenger_down;
+		stored_sa_passenger_stop := lazy_sa.passenger_stop;
+		stored_sa_driver_up := lazy_sa.driver_up;
+		stored_sa_driver_down := lazy_sa.driver_down;
+		stored_sa_driver_stop := lazy_sa.driver_stop;
+	} --> {
+		controller.obj_detected := stored_sa_obj_detected;
+		controller.passenger_up := stored_sa_passenger_up;
+		controller.passenger_down := stored_sa_passenger_down;
+		controller.passenger_stop := stored_sa_passenger_stop;
+		controller.driver_up := stored_sa_driver_up;
+		controller.driver_down := stored_sa_driver_down;
+		controller.driver_stop := stored_sa_driver_stop;
+	};
 }
 	
 out var
 	stored_sa_up := INIT_UP,
 	stored_sa_down := INIT_DOWN,
 	stored_sa_stop := INIT_STOP;
+out rules {
+	true -> {
+		stored_sa_up := controller.up;
+		stored_sa_down := controller.down;
+		stored_sa_stop := controller.stop;
+	} --> {
+		up := stored_sa_up;
+		down := stored_sa_down;
+		stop := stored_sa_stop;
+	};
+	
+}

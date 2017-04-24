@@ -14,7 +14,6 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.IncorrectAmountOfElementsException
 import java.io.File
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InputOutputType
 import org.eclipse.emf.common.util.EList
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVCausality
@@ -30,6 +29,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
 import java.util.List
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ParamDeclarations
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InputOutputRuleType
 
 class CppGenerator extends SemanticAdaptationGenerator {
 	private var IFileSystemAccess2 fsa;
@@ -113,18 +113,18 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			// Compile the transparent in mappings
 
 			// Compile the in rules
-			val inRuleResult = compileInOutRuleBlocks(InputOutputType.Input, adaptation.eAllContents.toIterable.filter(
+			val inRuleResult = compileInOutRuleBlocks(InputOutputRuleType.Input, adaptation.eAllContents.toIterable.filter(
 				InRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables, SASVs,
 				params);
 
 			// Compile the out rules
-			val outRuleResult = compileInOutRuleBlocks(InputOutputType.Output, adaptation.eAllContents.toIterable.
+			val outRuleResult = compileInOutRuleBlocks(InputOutputRuleType.Output, adaptation.eAllContents.toIterable.
 				filter(OutRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables,
 				SASVs, params);
 
 			// Compile the Control Rules
 			val crtlRuleResult = compileControlRuleBlock(adaptation.eAllContents.toIterable.filter(ControlRuleBlock),
-				adapClassName, adapInteralRefName, SASVs);
+				adapClassName, adapInteralRefName, SASVs, params);
 
 			/*
 			 * Compile the constructor, destructor and initialize functions
@@ -136,7 +136,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				md.guid,
 				paramsConstructorSource,
 				inRuleResult.constructorInitialization,
-				outRuleResult.constructorInitialization
+				outRuleResult.constructorInitialization,
+				crtlRuleResult.constructorInitialization
 			);
 
 			/*
@@ -170,6 +171,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			allGVars.putAll(params);
 			allGVars.putAll(outRuleResult.gVars);
 			allGVars.putAll(inRuleResult.gVars);
+			allGVars.putAll(crtlRuleResult.gVars);
 
 			// Compile the header file
 			val headerFile = compileHeader(
@@ -337,7 +339,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 * Compiles the source file constructor, destructor and the initialize function
 	 */
 	def String compileDeAndConstructorAndInitialize(String adapClassName, String fmuName, String fmuTypeName,
-		String guid, String paramsCons, String inCons, String outCons) {
+		String guid, String paramsCons, String inCons, String outCons, String crtlCons) {
 		return '''
 			«adapClassName»::«adapClassName»(shared_ptr<std::string> fmiInstanceName,shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
 				SemanticAdaptation(fmiInstanceName, resourceLocation, createInputRules(),createOutputRules(), functions)
@@ -346,6 +348,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				«paramsCons»
 				«inCons»
 				«outCons»
+				«crtlCons»
 			}
 			
 			void «adapClassName»::initialize()
@@ -471,15 +474,15 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 * Compiles the source file function executeInternalControlFlow.
 	 * Calculates necessary information on function signatures necessary for generation of the header file.
 	 */
-	def RulesBlockResult compileControlRuleBlock(Iterable<ControlRuleBlock> crtlRuleBlocks, String adaptationClassName,
-		String adaptationName, LinkedHashMap<String, SAScalarVariable> SASVs) {
+	def InOutRulesBlockResult compileControlRuleBlock(Iterable<ControlRuleBlock> crtlRuleBlocks, String adaptationClassName,
+		String adaptationName, LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params) {
 		var cpp = "";
-		val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, SASVs);
+		val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, SASVs, params);
 		for (crtlRule : crtlRuleBlocks) {
 			cpp += visitor.doSwitch(crtlRule).code;
 		}
 
-		return new RulesBlockResult(cpp, visitor.functionSignatures);
+		return new InOutRulesBlockResult(cpp, visitor.functionSignatures, visitor.globalVars, visitor.constructorInitialization);
 	}
 
 	def String SplitAtSpaceAndRemoveFirst(String content) {
@@ -495,12 +498,12 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 * Calculates necessary information on global in/out variables necessary for generation of the header file.
 	 * Calculates necessary information on function signatures necessary for generation of the header file.
 	 */
-	def InOutRulesBlockResult compileInOutRuleBlocks(InputOutputType ioType, Iterable<InOutRules> rulesBlocks,
+	def InOutRulesBlockResult compileInOutRuleBlocks(InputOutputRuleType ioType, Iterable<InOutRules> rulesBlocks,
 		String adaptationClassName, String adaptationName,
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params) {
 
-		val visitor = if (ioType == InputOutputType.Input)
+		val visitor = if (ioType == InputOutputRuleType.Input)
 				new InRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params)
 			else
 				new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params);

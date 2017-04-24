@@ -1,6 +1,6 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data;
 
-public enum InputOutputType {
+public enum InputOutputRuleType {
 	Input,
 	Output
 }

@@ -84,10 +84,9 @@ public class ReturnInformation {
 	}
 
 	/*
-	 * This method automatically extracts information that should be passed on
+	 * This method automatically extracts type information
 	 */
 	public ReturnInformation(ReturnInformation information) throws InvalidConversionException {
-
 		this.conGlobVar = information.conGlobVar;
 		if (information.typeIsSet)
 			this.setType(information.type);
@@ -95,6 +94,10 @@ public class ReturnInformation {
 
 	}
 
+	/*
+	 * This method automatically extracts and compares type information
+	 */
+	
 	public ReturnInformation(ReturnInformation information, ReturnInformation information2) throws Exception {
 		if (information.conGlobVar != null) {
 			if (information2.conGlobVar != null) {

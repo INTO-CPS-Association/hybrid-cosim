@@ -7,7 +7,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import java.util.LinkedHashMap
 
-public class OutRulesConditionSwitch extends InOutRulesConditionSwitch {
+public class OutRulesConditionSwitch extends RulesConditionSwitch {
 	new(String adaptationClassName, String adaptationName,
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params) {

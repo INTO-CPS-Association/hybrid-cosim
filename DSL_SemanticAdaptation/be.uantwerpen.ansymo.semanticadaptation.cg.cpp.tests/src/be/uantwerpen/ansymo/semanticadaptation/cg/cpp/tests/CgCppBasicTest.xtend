@@ -46,7 +46,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	}
 	
 	@Test def lazy_sa_canonical() {
-		__parseNoErrors('test_input/single_folder_spec/lazy/lazy.sa', 'generated', "lazy");
+		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
@@ -153,6 +153,9 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		
 		
 		BuildUtilities.writeToFile(new File(saRootDir,"CMakeLists.txt"), StaticGenerators.generateCMakeLists(projectName, "framework"));
+		
+		val cMakeToolChain = StaticGenerators.generateToolChainCmake();
+		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
 		
 		(new BuildUtilities()).copyNativeLibFiles(saFrameworkPath);
 		System.out.println("Stored framework at: " + saFrameworkPath);

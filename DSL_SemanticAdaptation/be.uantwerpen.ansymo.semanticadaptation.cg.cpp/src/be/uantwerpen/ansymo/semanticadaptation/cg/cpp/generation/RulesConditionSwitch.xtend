@@ -31,8 +31,11 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Div
 import org.eclipse.emf.common.util.EList
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Min
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.TypeException
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Minus
 
-abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
+abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 	// Global in and out variables
 	protected var LinkedHashMap<String, GlobalInOutVariable> gVars = newLinkedHashMap();
 
@@ -314,6 +317,7 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		return retVal;
 	}
 
+
 	override ReturnInformation caseVariable(Variable object) {
 
 		var retVal = new ReturnInformation();
@@ -359,7 +363,7 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 			var String code = "";
 
 			if (globalDeclaration) {
-				// This is an in var or out var declaration	
+				// This is an in var, out var or crtl var declaration	
 				code = '''
 					this->«decl.name» = «doSwitchRes.code»;
 				'''
@@ -407,6 +411,30 @@ abstract class InOutRulesConditionSwitch extends SemanticAdaptationSwitch<Return
 		retInfo.code = '''«object.value»''';
 
 		return retInfo;
+	}
+
+	override ReturnInformation caseMin(Min object)
+	{
+		var retInfo = new ReturnInformation();
+		var doSwitchResCode = newArrayList();
+		for (expr : object.args) {
+			val doSwitchRes_ = this.doSwitch(expr);
+			doSwitchResCode.add(doSwitchRes_.code);
+			retInfo = new ReturnInformation(retInfo, doSwitchRes_);
+		} 
+		retInfo.code = 
+		'''
+		min(«doSwitchResCode.join(",")»)
+		'''
+		return retInfo;
+	}
+	
+	override ReturnInformation caseMinus(Minus object){
+		val doSwitchLeft = doSwitch(object.left);
+		val doSwitchRight = doSwitch(object.right);
+		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
+		retVal.code = '''«doSwitchLeft.code» - «doSwitchRight.code»''';
+		return retVal;		
 	}
 
 }
