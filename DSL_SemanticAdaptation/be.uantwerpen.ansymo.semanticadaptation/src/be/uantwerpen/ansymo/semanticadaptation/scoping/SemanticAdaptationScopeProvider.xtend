@@ -7,23 +7,39 @@
  *******************************************************************************/
 package be.uantwerpen.ansymo.semanticadaptation.scoping
 
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AlgebraicLoopSolution
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Component
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FMU
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.For
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FunctionDeclaration
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.If
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutputFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationPackage
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
+import com.google.common.base.Predicate
+import com.google.inject.Inject
+import java.util.LinkedList
+import java.util.List
+import org.eclipse.emf.common.util.BasicEList
+import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.EReference
+import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
+import org.eclipse.xtext.resource.IEObjectDescription
+import org.eclipse.xtext.scoping.IGlobalScopeProvider
 import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.*
-import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider
-import org.eclipse.emf.ecore.EObject
-import org.eclipse.xtext.scoping.IGlobalScopeProvider
-import com.google.inject.Inject
-import org.eclipse.emf.ecore.resource.Resource
-import com.google.common.base.Predicate
-import org.eclipse.xtext.resource.IEObjectDescription
 import org.eclipse.xtext.scoping.impl.IScopeWrapper
-import org.eclipse.emf.common.util.EList
-import java.util.List
-import java.util.LinkedList
 
 /**
  * This class contains custom scoping description.
@@ -75,9 +91,9 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 		//var scope = __getImportedScope(context, r)
 		var EList<EObject> elements = __getAllPorts(context)
 		val outputfunction = EcoreUtil2.getContainerOfType(context, OutputFunction)
-		if (outputfunction != null) {
+		if (outputfunction !== null) {
 			val rule = outputfunction.eContainer as DataRule
-			if (rule.statetransitionfunction != null) {
+			if (rule.statetransitionfunction !== null) {
 				elements += rule.statetransitionfunction.statements
 			}
 		}
@@ -186,16 +202,16 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 			if (containertype.isInstance(object)) {
 				val List<EObject> listOfElements = new LinkedList<EObject>()
 				val feature = object.eClass.EAllStructuralFeatures.findFirst(f | f.name.equals(featurename))
-				if (feature != null) {
+				if (feature !== null) {
 					val featurevalue = object.eGet(feature)
 					if (featurevalue instanceof EList) {
-						if (featuretype != null) {
+						if (featuretype !== null) {
 							listOfElements.addAll(featurevalue.filter(v | featuretype.isInstance(v)).map(v | v as EObject))
 						} else {
 							listOfElements.addAll(featurevalue)
 						}
 					} else if (featurevalue instanceof EObject) {
-						if (featuretype == null || featuretype.isInstance(featurevalue)) {
+						if (featuretype === null || featuretype.isInstance(featurevalue)) {
 							listOfElements.add(featurevalue)
 						}
 					} else {
@@ -242,7 +258,7 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 	}
 
 	def protected IScope wrap(IScope scope) {
-		if (scopeWrapper!=null){
+		if (scopeWrapper!==null){
 			return scopeWrapper.wrap(scope)
 		} else {
 			return scope

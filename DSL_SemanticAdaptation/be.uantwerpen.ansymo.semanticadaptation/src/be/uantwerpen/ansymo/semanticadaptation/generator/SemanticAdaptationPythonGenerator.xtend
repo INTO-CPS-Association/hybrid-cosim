@@ -3,12 +3,12 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.generator
 
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.*
-import org.eclipse.emf.ecore.EClass
 
 /**
  * Generates code from your model files on save.
@@ -31,12 +31,12 @@ import logging
 
 from abstract_units.AbstractSimulationUnit import AbstractSimulationUnit, \
     STEP_ACCEPT
-«/*FOR fmu:a.inner.instances.filter(AtomicFMU)»
-from case_study.units.ct_based.«fmu.name» import «fmu.name»
-«ENDFOR»
-«FOR i:a.inner.instances.filter(Adaptation)»
+ï¿½/*FOR fmu:a.inner.instances.filter(AtomicFMU)ï¿½
+from case_study.units.ct_based.ï¿½fmu.nameï¿½ import ï¿½fmu.nameï¿½
+ï¿½ENDFORï¿½
+ï¿½FOR i:a.inner.instances.filter(Adaptation)ï¿½
 NOT YET IMPLEMENTED
-«ENDFOR*/»
+ï¿½ENDFOR*/ï¿½
 
 l = logging.getLogger()
 

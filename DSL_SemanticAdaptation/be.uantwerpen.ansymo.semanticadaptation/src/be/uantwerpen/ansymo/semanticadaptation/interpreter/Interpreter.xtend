@@ -7,10 +7,10 @@
  *******************************************************************************/
 package be.uantwerpen.ansymo.semanticadaptation.interpreter
 
-import com.google.common.collect.ImmutableMap
-import com.google.common.collect.Maps
-import java.math.BigDecimal
-import java.math.RoundingMode
+//import com.google.common.collect.ImmutableMap
+//import com.google.common.collect.Maps
+//import java.math.BigDecimal
+//import java.math.RoundingMode
 
 /** 
  * an interpreter for instances of EClasses of the {@link ArithmeticsPackage}.

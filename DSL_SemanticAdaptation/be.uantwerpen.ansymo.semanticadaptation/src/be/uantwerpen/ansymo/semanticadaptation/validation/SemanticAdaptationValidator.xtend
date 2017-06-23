@@ -7,15 +7,6 @@
  *******************************************************************************/
 package be.uantwerpen.ansymo.semanticadaptation.validation
 
-import com.google.inject.Inject
-import org.eclipse.xtext.EcoreUtil2
-import be.uantwerpen.ansymo.semanticadaptation.interpreter.Interpreter
-import org.eclipse.xtext.validation.Check
-import org.eclipse.xtext.validation.ValidationMessageAcceptor
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.*
-
-import static be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationPackage.Literals.*
-
 /**
  * Custom validation rules. 
  *

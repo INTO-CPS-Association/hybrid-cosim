@@ -5,7 +5,7 @@ git clone <repo-url>
 git submodule update --init --recursive
 ```
 
-# Development environmant:
+# Development environment:
 
 Install instructions:
 - Download Eclipse NEON (64 bits) installer.

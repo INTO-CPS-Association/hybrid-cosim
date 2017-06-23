@@ -25,7 +25,7 @@ class GeneralConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation>
 		return retInfo;
 	}
 	
-		override ReturnInformation caseBoolLiteral(BoolLiteral object) {
+	override ReturnInformation caseBoolLiteral(BoolLiteral object) {
 		var retInfo = new ReturnInformation();
 		retInfo.type = SVType.Boolean;
 		retInfo.value = Conversions.convertTypeToObject(retInfo.type, object);
