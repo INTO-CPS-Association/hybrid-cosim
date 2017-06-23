@@ -3,14 +3,14 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.tests
 
-import org.junit.Test
 import com.google.inject.Inject
-import org.junit.runner.RunWith
-import java.io.File
-import org.eclipse.xtext.testing.XtextRunner
 import org.eclipse.xtext.testing.InjectWith
+import org.eclipse.xtext.testing.XtextRunner
+import org.eclipse.xtext.util.IAcceptor
 import org.eclipse.xtext.xbase.testing.CompilationTestHelper
-import org.junit.Ignore
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.eclipse.xtext.xbase.testing.CompilationTestHelper.Result
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -18,20 +18,14 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	
 	@Inject extension CompilationTestHelper
 	
-	@Ignore @Test def powerwindow_model_only() { __generate('input/powerwindow_model_only.sa') }
-	@Ignore @Test def powerwindow_algebraic_loop_delay_BASE() { __generate('input/powerwindow_algebraic_loop_delay_BASE.sa') }
-	@Ignore @Test def powerwindow_algebraic_loop_delay() { __generate('input/powerwindow_algebraic_loop_delay.sa') }
-	@Ignore @Test def powerwindow_algebraic_loop_iteration_BASE() { __generate('input/powerwindow_algebraic_loop_iteration_BASE.sa') }
-	@Ignore @Test def powerwindow_algebraic_loop_iteration() { __generate('input/powerwindow_algebraic_loop_iteration.sa') }
-	@Ignore @Test def powerwindow_controller_delay() { __generate('input/powerwindow_controller_delay.sa') }
-	@Ignore @Test def powerwindow_controller_delay_BASE() { __generate('input/powerwindow_controller_delay_BASE.sa') }
-	@Ignore @Test def powerwindow_multi_rate() { __generate('input/powerwindow_multi_rate.sa') }
-	@Ignore @Test def powerwindow_multi_rate_BASE() { __generate('input/powerwindow_multi_rate_BASE.sa') }
-	@Ignore @Test def powerwindow() { __generate('input/powerwindow.sa') }
+	@Test def powerwindow_model_only() { __generate('input/power_window_case_study/lazy.sa') }
 	
 	def void __generate(String filename) {
-		val f = new File(filename)
-		readFile(filename).assertCompilesTo('oracles/test1.txt'/*readFile('oracles/' + f.name)*/)
+		//readFile(filename).assertCompilesTo('oracles/power_window_case_study/lazy.BASE.sa')
+		
+		readFile(filename).compile(new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) { }
+		})
+		
 	}
-
 }

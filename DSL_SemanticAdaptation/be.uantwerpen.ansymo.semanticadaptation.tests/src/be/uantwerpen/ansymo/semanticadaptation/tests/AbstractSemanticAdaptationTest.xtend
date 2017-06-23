@@ -61,7 +61,7 @@ abstract class AbstractSemanticAdaptationTest {
 		visited.add(element.hashCode)
 		element.eClass.EAllStructuralFeatures.forEach[f | 
 			val feature = element.eGet(f)
-			if (feature != null) {
+			if (feature !== null) {
 				if (feature instanceof EList<?>) {
 					(feature as EObjectEList<?>).forEach[e | 
 						print(ind(indent+1) + f.name + "(" + feature.indexOf(e) + "): ")

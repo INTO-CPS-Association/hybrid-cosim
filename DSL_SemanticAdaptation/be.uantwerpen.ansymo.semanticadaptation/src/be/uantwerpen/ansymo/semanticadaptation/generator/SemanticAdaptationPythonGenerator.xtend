@@ -4,7 +4,6 @@
 package be.uantwerpen.ansymo.semanticadaptation.generator
 
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -20,10 +19,10 @@ class SemanticAdaptationPythonGenerator extends AbstractGenerator {
 	public final static String FILENAME = 'output.test.txt'
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		for (Adaptation a : resource.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation)) {
-			fsa.generateFile(FILENAME, a.compile)
-			println(fsa.readTextFile(FILENAME))
-		}
+//		for (Adaptation a : resource.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation)) {
+//			fsa.generateFile(FILENAME, a.compile)
+//			println(fsa.readTextFile(FILENAME))
+//		}
 	}
 	
 	def compile(Adaptation a) '''

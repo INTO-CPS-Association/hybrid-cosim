@@ -9,10 +9,8 @@ import org.eclipse.xtext.testing.validation.ValidationTestHelper
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import java.io.File
 import java.util.List
-import org.eclipse.xtext.util.Arrays
 import org.eclipse.xtext.validation.Issue
 import com.google.common.base.Predicate
-import static org.junit.Assert.fail
 import static com.google.common.collect.Iterables.isEmpty
 import static com.google.common.collect.Iterables.filter
 import org.eclipse.xtext.diagnostics.Severity

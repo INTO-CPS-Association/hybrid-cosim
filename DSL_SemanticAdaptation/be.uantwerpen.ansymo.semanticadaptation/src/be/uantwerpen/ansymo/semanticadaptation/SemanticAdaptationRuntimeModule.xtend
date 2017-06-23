@@ -5,7 +5,7 @@ package be.uantwerpen.ansymo.semanticadaptation
 
 import be.uantwerpen.ansymo.semanticadaptation.valueconverter.SemanticAdaptationValueConverters
 import be.uantwerpen.ansymo.semanticadaptation.scoping.SemanticAdaptationScopeProvider
-import be.uantwerpen.ansymo.semanticadaptation.generator.SemanticAdaptationPythonGenerator
+import be.uantwerpen.ansymo.semanticadaptation.generator.SemanticAdaptationCanonicalGenerator
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -19,6 +19,6 @@ class SemanticAdaptationRuntimeModule extends AbstractSemanticAdaptationRuntimeM
 		return SemanticAdaptationScopeProvider
 	}
 	override bindIGenerator2() {
-		return SemanticAdaptationPythonGenerator
+		return SemanticAdaptationCanonicalGenerator
 	}
 }
