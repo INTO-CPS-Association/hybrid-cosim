@@ -4,12 +4,12 @@ model Window
   input Real speed;
   input Real displacement;
   input Real reaction_force;
-  output Real tau;
+  output Real reaction_torque;
   output Real height;
   Real v;
   output Real friction;
 equation
-  tau = reaction_force * r + friction;
+  reaction_torque = reaction_force * r + friction;
   height = r * displacement;
   v = r * speed;
   friction = b * v;
