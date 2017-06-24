@@ -3,7 +3,7 @@ at "./path/to/WindowSA.fmu"
 
 	for inner fmu Window window
 		at "./path/to/Window.fmu"
-		with input ports displacement (rad), speed (rad/s), reaction_force (N)
+		with input ports displacement(rad), speed (rad/s), reaction_force (N)
 		with output ports height (cm), reaction_torque (N.m)
 
 output ports disp (m)  <- window.height, tau

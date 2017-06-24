@@ -185,14 +185,19 @@ Port:
 	// TODO: add initial values to ports (to do 1st, 2nd, ... order stuff)
 	// TODO: add internal destination/source of port
 	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
+	(TypeDefinition)?
 	name=ID 
 	(':=' initval=LiteralOrArray)? 
-	( multiplicity=Multiplicity )? 
+	( multiplicity=Multiplicity )?
 	( '(' unity=Unity ')' )? 
 	(('->' targetdependency+=SpecifiedPort)
 		| ('<-' sourcedependency+=SpecifiedPort)
 	)?;
 	// TODO: -> output port of wrapped FMU to output port of SA FMU (only used in SA!)
+
+TypeDefinition:
+	'Real' | 'Integer' | 'String' | 'Bool'
+;
 
 Multiplicity:
 	'[' (lower=INT '..')? upper=INT ']';
@@ -233,7 +238,7 @@ Declaration:
 	'var' declarations+=SingleVarDeclaration ("," declarations+=SingleVarDeclaration)* ';'
 ;
 SingleVarDeclaration:
-	name=ID (':=' expr=Expression)?
+	(TypeDefinition)? name=ID (':=' expr=Expression)?
 ;
 
 ParamDeclarations:
@@ -242,7 +247,7 @@ ParamDeclarations:
 ;
 
 SingleParamDeclaration:
-	name=ID ':=' expr=Expression
+	(TypeDefinition)? name=ID ':=' expr=Expression
 ;
 
 ReturnStatement:
