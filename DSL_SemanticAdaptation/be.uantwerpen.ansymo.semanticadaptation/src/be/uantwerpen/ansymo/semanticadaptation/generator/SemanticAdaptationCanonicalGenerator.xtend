@@ -4,8 +4,12 @@
 package be.uantwerpen.ansymo.semanticadaptation.generator
 
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationFactory
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleParamDeclaration
 import java.io.ByteArrayOutputStream
+import java.util.HashMap
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -77,5 +81,47 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def canonicalize(Adaptation sa){
 		
+		// TODO Add input ports
+		
+		addInParams(sa)
+		
 	}
+	
+	def addInParams(Adaptation adaptation) {
+		println("Adding input parameters...")
+		
+		val PARAM_PREFIX = "INIT_"
+		
+		var inputPort_to_parameterDeclaration_Map = new HashMap<Port, SingleParamDeclaration>(adaptation.inports.size)
+		
+		for (inputPortDeclaration : adaptation.inports) {
+			println("Generating parameter for port " + inputPortDeclaration.name)
+			var paramname = PARAM_PREFIX + inputPortDeclaration.name.toUpperCase()
+			var paramAlreadyDeclared = false
+			for(paramDeclarations : adaptation.params){
+				for(paramDeclaration : paramDeclarations.declarations){
+					if(paramDeclaration.name == paramname){
+						paramAlreadyDeclared = true
+					}
+				}
+			}
+			if (paramAlreadyDeclared){
+				println("Parameter " + paramname + " already declared for port " + inputPortDeclaration.name)
+			} else {
+				println("Declaring new parameter " + paramname + " for port " + inputPortDeclaration.name)
+				var factory = SemanticAdaptationFactory.eINSTANCE
+				if (adaptation.params.size == 0){
+					adaptation.params.add(factory.createParamDeclarations())
+				}
+				var paramDeclaration = factory.createSingleParamDeclaration()
+				
+				// TODO Continue here after solving problem with ports.
+				
+				//adaptation.params.head.declarations.add()
+			}
+		}
+		
+		println("Adding input parameters... DONE")
+	}
+	
 }
