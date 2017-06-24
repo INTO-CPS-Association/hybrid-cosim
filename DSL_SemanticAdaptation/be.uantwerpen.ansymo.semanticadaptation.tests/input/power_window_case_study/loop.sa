@@ -11,8 +11,8 @@ at "./path/to/LoopSA.fmu"
 		with input ports disp (m)
 		with output ports reaction_force (m)
 	
-	with window_sa.disp -> obstacle.disp
-	with obstacle.reaction_force -> window_sa.reaction_force
+	coupled as	window_sa.disp -> obstacle.disp,
+				obstacle.reaction_force -> window_sa.reaction_force
 
 output ports tau <- window_sa.tau
 

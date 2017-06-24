@@ -18,7 +18,7 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	
 	@Inject extension CompilationTestHelper
 	
-	@Test def powerwindow_model_only() { __generate('input/power_window_case_study/lazy.sa') }
+	@Test def lazy_SA() { __generate('input/power_window_case_study/lazy.sa') }
 	
 	def void __generate(String filename) {
 		//readFile(filename).assertCompilesTo('oracles/power_window_case_study/lazy.BASE.sa')

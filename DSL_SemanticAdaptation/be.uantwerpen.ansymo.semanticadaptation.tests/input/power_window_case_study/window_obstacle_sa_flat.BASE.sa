@@ -16,8 +16,8 @@ at "./path/to/WindowObstableLoopSA.fmu"
 	/*
 	This is the information that was missing before: how the semantic adaptation window_sa, which is an FMU, connects to the obstacle FMU.
 	*/
-	with window_sa.disp -> obstacle.disp
-	with obstacle.reaction_force -> window_sa.reaction_force
+	coupled as window_sa.disp -> obstacle.disp,	
+				obstacle.reaction_force -> window_sa.reaction_force
 
 /*
 Declares the external ports of the semantic adaptation

@@ -18,10 +18,12 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.For
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FunctionDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.If
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.LValueDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationPackage
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SpecifiedPort
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import com.google.common.base.Predicate
@@ -49,12 +51,77 @@ import org.eclipse.xtext.scoping.impl.IScopeWrapper
  */
  
 class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  {
-	// comment out getScope for per-type scope
 
 	/* provides a global scope for all elements!
 	 * overrides all the remainder of this class
 	 */
 	override getScope(EObject context, EReference reference) {
+		println("Getting scope for " + reference.name + " within context " + context.class)
+		
+		// TODO: This does not work for semantic adaptations on multiple files.
+		// There is incomplete code for that below.
+		
+		if (reference.name == "port" && context instanceof SpecifiedPort){
+			var portRef = context as SpecifiedPort
+			if (portRef.owner !== null){
+				println("Getting scope within FMU: " + portRef.owner.name)
+				val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(portRef.owner, Port))
+				println("Scope found:" + scopeFound)
+				return scopeFound
+			} else {
+				println("Getting all port declarations")
+				var rootContainner = EcoreUtil2.getRootContainer(context)
+				val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, Port))
+				println("Scope found:" + scopeFound)
+				return scopeFound
+			}
+		}
+		
+		if (reference.name == "port" && context instanceof Port){
+			println("Getting all port declarations")
+			var rootContainner = EcoreUtil2.getRootContainer(context)
+			val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, Port))
+			println("Scope found:" + scopeFound)
+			return scopeFound
+		}
+		
+		if (reference.name == "ref" && context instanceof Variable){
+			var rootContainner = EcoreUtil2.getRootContainer(context)
+			val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, LValueDeclaration))
+			println("Scope found:" + scopeFound)
+			return scopeFound
+		}
+		
+		/*
+		println("Getting broader scope...")
+		
+		if (reference === SemanticAdaptationPackage.Literals.IMPORT__MODULE) {
+			return getGlobalScope(context.eResource, reference)
+		}
+		
+		val module = EcoreUtil2.getContainerOfType(context, SemanticAdaptation)
+		var moduleScope = IScope.NULLSCOPE
+		for (import : module.imports) {
+			if (!import.module.eIsProxy)
+				moduleScope = getModuleScope(context, reference, import.module, moduleScope)
+		}
+		moduleScope = getModuleScope(context, reference, module, moduleScope)
+		val scopeFound = Scopes.scopeFor(context.eResource.allContents.toList, moduleScope)
+		println("Scope found:" + scopeFound)
+		return scopeFound
+		 */
+		
+		println("Delegating scope discovery to super class...")
+		val scopeFound = super.getScope(context, reference)
+		println("Scope found:" + scopeFound)
+		return scopeFound
+	}
+	
+	
+	
+	/*
+	override getScope(EObject context, EReference reference) {
+		println("Getting scope for " + reference + " within context " + context)
 		if (reference === SemanticAdaptationPackage.Literals.IMPORT__MODULE) {
 			return getGlobalScope(context.eResource, reference)
 		}
@@ -68,8 +135,9 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 		//println(Scopes.scopeFor(context.eResource.allContents.toList, result))
 		return Scopes.scopeFor(context.eResource.allContents.toList, result)
 	}
+	 */
 	
-	// todo: only correct src and tgt references
+	// TODO: only correct src and tgt references
 	def scope_Connection_src(Connection context, EReference r) {
 		return __getImportedScope(context, r).__addScope(__getAllPorts(context))
 	}

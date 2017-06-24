@@ -83,7 +83,7 @@ DT: 'DT' | 'dt' | 'DiscreteTime' | 'Discrete' 'Time' | 'discrete' 'time';
 
 InnerFMUDeclaration:
 	/*'for' type=ModelType*/ {InnerFMUDeclarationList} 'for' ('fmu' instances+=[FMU] (',' instances+=[FMU])* /*| 'signal' ports+=SpecifiedPort (',' ports+=SpecifiedPort)**/) | // only multiple instances in case of CT because we only have CT master?
-	{InnerFMUDeclarationFull} ( 'for' fmus+=InnerFMU )+ ('with' connection+=Connection)*
+	{InnerFMUDeclarationFull} ( 'for' fmus+=InnerFMU )+ ('coupled' 'as' connection+=Connection (',' connection+=Connection)* )?
 ;
 
 GeneraleRule:
@@ -185,13 +185,13 @@ Port:
 	// TODO: add initial values to ports (to do 1st, 2nd, ... order stuff)
 	// TODO: add internal destination/source of port
 	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
-	(TypeDefinition)?
+	(type=TypeDefinition)?
 	name=ID 
 	(':=' initval=LiteralOrArray)? 
 	( multiplicity=Multiplicity )?
 	( '(' unity=Unity ')' )? 
-	(('->' targetdependency+=SpecifiedPort)
-		| ('<-' sourcedependency+=SpecifiedPort)
+	(('->' targetdependency=SpecifiedPort)
+		| ('<-' sourcedependency=SpecifiedPort)
 	)?;
 	// TODO: -> output port of wrapped FMU to output port of SA FMU (only used in SA!)
 
@@ -238,7 +238,7 @@ Declaration:
 	'var' declarations+=SingleVarDeclaration ("," declarations+=SingleVarDeclaration)* ';'
 ;
 SingleVarDeclaration:
-	(TypeDefinition)? name=ID (':=' expr=Expression)?
+	(type=TypeDefinition)? name=ID (':=' expr=Expression)?
 ;
 
 ParamDeclarations:
@@ -247,7 +247,7 @@ ParamDeclarations:
 ;
 
 SingleParamDeclaration:
-	(TypeDefinition)? name=ID ':=' expr=Expression
+	(type=TypeDefinition)? name=ID ':=' expr=Expression
 ;
 
 ReturnStatement:
@@ -337,7 +337,7 @@ LiteralOrArray:
 	Literal;
 
 Literal:
-	IntLiteral | RealLiteral | StringLiteral | BoolLiteral | NullLiteral; //| StepLiteral;
+	IntLiteral | RealLiteral | StringLiteral | BoolLiteral; //| NullLiteral; //| StepLiteral;
 
 IntLiteral:
 	value=INTTYPE | value=INT;
@@ -394,6 +394,19 @@ Var:
 	FunctionCall; // add "directionalderivative"
 	
 Variable:
+	(owner=[FMU] '.' ref=[Port]) |
+	(ref=[LValueDeclaration])
+;
+
+/*
+Variable:
+	(owner=[FMU] '.' ref=[Port]) | 
+	(ref=[Port]) | 
+	(ref=[SingleParamDeclaration]) | 
+	(ref=[SingleVarDeclaration]) | 
+	(ref=[DeclaredParameter])
+	;
+Variable:
 	(owner=[FMU] '.' ref=[Port]) | (ref=[LValueDeclaration]) ('[' (
 		index=NOW | 
 		index=PREV | 
@@ -401,6 +414,7 @@ Variable:
 		index=INT  // TODO: int must be less than -1, TODO: expression
 		) ']')?; // TODO: NO RECURSION (must terminate)
 
+ */
 FunctionCall:
 	ref=[FunctionDeclaration] '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)* ')'; // TODO: NO RECURSION (must terminate)
 
