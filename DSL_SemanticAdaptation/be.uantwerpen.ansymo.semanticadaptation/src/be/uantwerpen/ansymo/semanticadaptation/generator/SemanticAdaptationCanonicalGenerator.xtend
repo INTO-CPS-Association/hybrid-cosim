@@ -20,16 +20,17 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdapta
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleParamDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleVarDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StringLiteral
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Unity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.io.ByteArrayOutputStream
 import java.util.HashMap
+import java.util.LinkedList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import java.util.LinkedList
 
 /**
  * Generates code from your model files on save.
@@ -97,11 +98,57 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def canonicalize(Adaptation sa){
 		
-		//inferUnits(sa)
+		// Unit inference
+		var unitlessElements = genericDeclarationInferenceAlgorithm(sa , 
+			[// getField
+				element | {
+					var DUMMY_UNIT = "Dips"
+					if (element instanceof SingleParamDeclaration) {
+						return DUMMY_UNIT
+					} else if (element instanceof Port){
+						return element.unity
+					} else if (element instanceof SingleVarDeclaration){
+						return DUMMY_UNIT
+					} else {
+						throw new Exception("Unexpected element type: " + element)
+					}
+				}
+			],
+			[// setField
+				element, value | {
+					if (element instanceof SingleParamDeclaration) {
+						
+					} else if (element instanceof Port){
+						element.unity = EcoreUtil2.copy(value as Unity)
+					} else if (element instanceof SingleVarDeclaration){
+						
+					} else {
+						throw new Exception("Unexpected element type: " + element)
+					}
+				}
+			],
+			[// inferField
+				element | {
+					var DUMMY_UNIT = "Dips"
+					if (element instanceof SingleParamDeclaration) {
+						return DUMMY_UNIT
+					} else if (element instanceof Port){
+						return getPortUnit(element)
+					} else if (element instanceof SingleVarDeclaration){
+						return DUMMY_UNIT
+					} else {
+						throw new Exception("Unexpected element type: " + element)
+					}
+				}
+			]
+		)
 		
+		if (unitlessElements > 0){
+			print("Could not infer all element units. There are " + unitlessElements + " unitless elements.")
+		}
 		
 		// Type inference
-		genericDeclarationInferenceAlgorithm(sa , 
+		var untypedElements = genericDeclarationInferenceAlgorithm(sa , 
 			[// getField
 				element | {
 					if (element instanceof SingleParamDeclaration) {
@@ -142,6 +189,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				}
 			]
 		)
+		
+		if (untypedElements > 0){
+			throw new Exception("Could not infer all fields. There are " + untypedElements + " unfielded elements.")
+		}
 		
 		// TODO Add input ports
 		
@@ -274,11 +325,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			println("Ended iteration with unfielded elements remaining: " + unfieldedElementsCounter)
 		} // while (! fixedPoint)
 		
-		if (unfieldedElementsCounter > 0){
-			throw new Exception("Could not infer all fields. There are " + unfieldedElementsCounter + " unfielded elements.")
-		}
 		
 		println("Running generic inference algorithm... DONE")
+		
+		return unfieldedElementsCounter
 	}
 	
 	def tryInferAndAssignField(EObject element, 
@@ -367,7 +417,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		if(getField.apply(port) === null){
 			println("Has no field to be pushed.")
-			// TODO Throw exception wrong usage
+			throw new Exception("Wrong way of using this function. It assumes field is already inferred.")
 		} else {
 			println("Pushing field: " + getField.apply(port))
 			if(port.sourcedependency !== null){
@@ -399,6 +449,50 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		}
 		
 		return fieldInferred
+	}
+	
+	def getPortUnit(Port port){
+		var unitInferred = false
+		
+		println("Computing unit for port " + port.name)
+		
+		var Unity returnUnit = null
+		
+		if(port.unity !== null){
+			throw new Exception("Wrong way of using this function. It assumes unit is not inferred yet.")
+		} else {
+			println("Has no unit.")
+			
+			println("Attempting to infer unit from bindings.")
+
+			if(port.sourcedependency !== null){
+				println("Has a source dependency: " + port.sourcedependency.port.name)
+				if(port.sourcedependency.port.unity === null){
+					println("Dependency has no unit yet.")
+				} else {
+					returnUnit = port.sourcedependency.port.unity
+					println("Got new unit: " + returnUnit)
+					unitInferred = true
+				}
+			} else {
+				println("Has no source dependency.")
+			}
+			
+			if (port.targetdependency !== null && !unitInferred) {
+				println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+				if(port.targetdependency.port.unity === null){
+					println("Dependency has no unit yet.")
+				} else {
+					returnUnit = port.targetdependency.port.unity
+					println("Got new unit: " + returnUnit)
+					unitInferred = true
+				}
+			} else {
+				println("Has no target dependency, or type has already been inferred from source dependency.")
+			}
+		}
+		
+		return returnUnit
 	}
 	
 	def getPortType(Port port){
@@ -441,7 +535,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 						println("Dependency has no type yet.")
 					} else {
 						returnType = port.targetdependency.port.type
-						println("Got new type: " + port.type)
+						println("Got new type: " + returnType)
 						typeInferred = true
 					}
 				} else {

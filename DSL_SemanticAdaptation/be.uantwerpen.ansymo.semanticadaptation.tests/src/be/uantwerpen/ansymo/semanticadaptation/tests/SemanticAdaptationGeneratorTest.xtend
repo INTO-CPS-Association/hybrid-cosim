@@ -20,6 +20,8 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	
 	@Test def window_SA() { __generate('input/power_window_case_study/window_sa.BASE.sa') }
 	
+	@Test def window_SA_compUnits() { __generate('input/power_window_case_study/window_sa_comp_units.sa') }
+	
 	@Test def lazy_SA() { __generate('input/power_window_case_study/lazy.sa') }
 	
 	
