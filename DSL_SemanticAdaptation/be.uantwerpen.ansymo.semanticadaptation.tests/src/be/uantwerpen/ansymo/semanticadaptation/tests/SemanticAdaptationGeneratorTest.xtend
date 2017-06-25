@@ -5,6 +5,7 @@ package be.uantwerpen.ansymo.semanticadaptation.tests
 
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AtomicUnity
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MultiplyUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
@@ -45,6 +46,14 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				sa.inports.filter[p | p.name=="innerFMU1__input_port2"].head.type == "Bool"
 				sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.owner.name == "innerFMU2"
 				sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.port.name == "input_port3"
+			}
+		}) }
+	
+	@Test def test_addParams_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.params.head.declarations.filter[p | p.name=="INIT_EXT_INPUT_PORT3"].head.type == "Real"
+				sa.params.head.declarations.filter[p | p.name=="INIT_INNERFMU1__INPUT_PORT2"].head.expr instanceof BoolLiteral
 			}
 		}) }
 	

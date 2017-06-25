@@ -209,7 +209,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		addInPorts(sa)
 		
 		// Add in params
-		//addInParams(sa)
+		addInParams(sa)
+		
 		Log.pop("Canonicalize")
 	}
 	
@@ -671,36 +672,78 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val PARAM_PREFIX = "INIT_"
 		
-		var inputPort_to_parameterDeclaration_Map = new HashMap<Port, SingleParamDeclaration>(sa.inports.size)
+		var inputPort2parameterDeclaration = new HashMap<Port, SingleParamDeclaration>(sa.inports.size)
 		
 		for (inputPortDeclaration : sa.inports) {
 			Log.println("Generating parameter for port " + inputPortDeclaration.name)
 			var paramname = PARAM_PREFIX + inputPortDeclaration.name.toUpperCase()
-			var paramAlreadyDeclared = false
-			for(paramDeclarations : sa.params){
-				for(paramDeclaration : paramDeclarations.declarations){
-					if(paramDeclaration.name == paramname){
-						paramAlreadyDeclared = true
-					}
-				}
-			}
-			if (paramAlreadyDeclared){
+			
+			if (paramAlreadyDeclared(paramname, sa)){
 				Log.println("Parameter " + paramname + " already declared for port " + inputPortDeclaration.name)
 			} else {
 				Log.println("Declaring new parameter " + paramname + " for port " + inputPortDeclaration.name)
-				var factory = SemanticAdaptationFactory.eINSTANCE
-				if (sa.params.size == 0){
-					sa.params.add(factory.createParamDeclarations())
-				}
-				var paramDeclaration = factory.createSingleParamDeclaration()
-				
-				// TODO Continue here after solving problem with ports.
-				
-				//adaptation.params.head.declarations.add()
+				var paramDeclaration = addNewParamDeclaration(paramname, inputPortDeclaration, sa)
+				inputPort2parameterDeclaration.put(inputPortDeclaration, paramDeclaration)
 			}
 		}
 		
 		Log.pop("Adding input parameters... DONE")
+		return inputPort2parameterDeclaration
+	}
+	
+	def addNewParamDeclaration(String name, Port fromPort, Adaptation sa) {
+		var factory = SemanticAdaptationFactory.eINSTANCE
+		var paramDeclaration = factory.createSingleParamDeclaration()
+		
+		paramDeclaration.name = name
+		paramDeclaration.type = fromPort.type
+		paramDeclaration.expr = getDefaultTypeExpression(paramDeclaration.type)
+		
+		if (sa.params.size == 0){
+			sa.params.add(factory.createParamDeclarations())
+		}
+		
+		sa.params.head.declarations.add(paramDeclaration)
+		return paramDeclaration
+	}
+	
+	def getDefaultTypeExpression(String type) {
+		switch (type) {
+			case "Integer": {
+				val result = SemanticAdaptationFactory.eINSTANCE.createIntLiteral
+				result.value = 0
+				return result
+			}
+			case "Real": {
+				val result = SemanticAdaptationFactory.eINSTANCE.createRealLiteral
+				result.value = 0.0f
+				return result
+			}
+			case "Bool": {
+				val result = SemanticAdaptationFactory.eINSTANCE.createBoolLiteral
+				result.value = "false"
+				return result
+			}
+			case "String": {
+				val result = SemanticAdaptationFactory.eINSTANCE.createStringLiteral
+				result.value = ""
+				return result
+			}
+			default: {
+				throw new Exception("Unexpected type.")
+			}
+		}
+	}
+	
+	def paramAlreadyDeclared(String name, Adaptation sa) {
+		for(paramDeclarations : sa.params){
+			for(paramDeclaration : paramDeclarations.declarations){
+				if(paramDeclaration.name == name){
+					return true
+				}
+			}
+		}
+		return false
 	}
 	
 }
