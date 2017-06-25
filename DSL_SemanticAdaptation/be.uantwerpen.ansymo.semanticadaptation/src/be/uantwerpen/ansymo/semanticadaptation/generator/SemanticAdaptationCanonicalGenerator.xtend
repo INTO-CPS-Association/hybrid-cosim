@@ -10,6 +10,9 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Expression
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FMU
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclarationFull
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
@@ -43,23 +46,11 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	String NAME_SUFFIX = "_BASE"
 	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		println("Generating canonical semantic adaptation for file " + resource.URI.toFileString() + "...")
+		Log.push("Generating canonical semantic adaptation for file " + resource.URI.toFileString() + "...")
 		
-		println("Resource URI information:")
-		println("\t resource.URI.lastSegment = " + resource.URI.lastSegment())
-		println("\t resource.URI.trimFileExtension = " + resource.URI.trimFileExtension())
-		
-		println("______________________________File Read______________________________")
-		var outputByteArray = new ByteArrayOutputStream()
-		resource.save(outputByteArray, null)
-		println(outputByteArray.toString())
-		outputByteArray.close()
-		println("__________________________________________________________________________")
-		
-		// Create file name for the canonical sa file
-		var fileNameWithoutExt = resource.URI.trimFileExtension().lastSegment()
-		var canonicalFileName = fileNameWithoutExt + CANONICAL_EXT
-		println("canonicalFileName = " + canonicalFileName)
+		Log.println("Resource URI information:")
+		Log.println("\t resource.URI.lastSegment = " + resource.URI.lastSegment())
+		Log.println("\t resource.URI.trimFileExtension = " + resource.URI.trimFileExtension())
 		
 		// Create in memory representation of canonical SA file
 		var adaptations = resource.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation);
@@ -68,36 +59,51 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		}
 		var adaptation = adaptations.head
 		
-		println("Checking if file is already a canonical version...")
+		Log.println(prettyprint_model(adaptation, "File Read"))
+		
+		// Create file name for the canonical sa file
+		var fileNameWithoutExt = resource.URI.trimFileExtension().lastSegment()
+		var canonicalFileName = fileNameWithoutExt + CANONICAL_EXT
+		Log.println("canonicalFileName = " + canonicalFileName)
+		
+		Log.println("Checking if file is already a canonical version...")
 		if (adaptation.name.indexOf(NAME_SUFFIX) == -1){
-			println("It is not.")
+			Log.println("It is not.")
 			
 			adaptation.name = adaptation.name + NAME_SUFFIX
 			
-			adaptation.canonicalize
-						
-			outputByteArray = new ByteArrayOutputStream()
-			adaptation.eResource.save(outputByteArray,null)
+			canonicalize(adaptation)
 			
-			println("______________________________Generated file______________________________")
-			println(outputByteArray.toString())
-			println("__________________________________________________________________________")
+			Log.println(prettyprint_model(adaptation, "Generated File"))			
 			
-			fsa.generateFile(canonicalFileName, outputByteArray.toString())
-			println("File " + canonicalFileName + " written.")
-			outputByteArray.close()
+			fsa.generateFile(canonicalFileName, adaptation.serialize_model)
+			Log.println("File " + canonicalFileName + " written.")
 			
-			println("Generating canonical semantic adaptation for file " + resource.URI + "... DONE.")
 			
 		} else {
-			println("It is already a canonical version.")
-			println("Nothing to do.")
+			Log.println("It is already a canonical version.")
+			Log.println("Nothing to do.")
 		}
-
+		
+		Log.pop("Generating canonical semantic adaptation for file " + resource.URI.toFileString() + "... DONE.")
+	}
+	
+	def prettyprint_model(Adaptation sa, String title){
+		var outputByteArray = new ByteArrayOutputStream()
+		sa.eResource.save(outputByteArray,null)
+		return "______________________________" + title + "______________________________\n" +
+				sa.serialize_model +
+				"\n__________________________________________________________________________"
+	}
+	
+	def serialize_model(Adaptation sa){
+		var outputByteArray = new ByteArrayOutputStream()
+		sa.eResource.save(outputByteArray,null)
+		return outputByteArray.toString()
 	}
 	
 	def canonicalize(Adaptation sa){
-		
+		Log.push("Canonicalize")
 		// Unit inference
 		var unitlessElements = genericDeclarationInferenceAlgorithm(sa , 
 			[// getField
@@ -144,7 +150,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		)
 		
 		if (unitlessElements > 0){
-			print("Could not infer all element units. There are " + unitlessElements + " unitless elements.")
+			Log.println("Could not infer all element units. There are " + unitlessElements + " unitless elements.")
 		}
 		
 		// Type inference
@@ -191,14 +197,20 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		)
 		
 		if (untypedElements > 0){
-			throw new Exception("Could not infer all fields. There are " + untypedElements + " unfielded elements.")
+			
+			Log.println("Error: Could not infer all types. There are " + untypedElements + " untyped elements.")
+			
+			Log.println(prettyprint_model(sa, "Current File"))
+			
+			throw new Exception("Could not infer all types. There are " + untypedElements + " untyped elements.")
 		}
 		
-		// TODO Add input ports
+		// Add input ports
+		addInPorts(sa)
 		
 		// Add in params
-		addInParams(sa)
-		
+		//addInParams(sa)
+		Log.pop("Canonicalize")
 	}
 	
 	def genericDeclarationInferenceAlgorithm(Adaptation sa, 
@@ -206,7 +218,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 												(EObject, Object)=>void setField,
 												(EObject)=>Object inferField
 	){
-		println("Running generic inference algorithm...")
+		Log.push("Running generic inference algorithm...")
 		
 		/*
 		 * Dumbest (and simplest) algorithm for this is a fixed point computation:
@@ -227,15 +239,15 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			fixedPoint = true
 			unfieldedElementsCounter = 0
 			
-			println("Inferring parameter fields...")
+			Log.println("Inferring parameter fields...")
 			
 			for (paramDeclarations : sa.params) {
 				for (paramDeclaration : paramDeclarations.declarations) {
-					println("Computing field for param " + paramDeclaration.name)
+					Log.println("Computing field for param " + paramDeclaration.name)
 					if(getField.apply(paramDeclaration) !== null){
-						println("Already has been inferred: " + getField.apply(paramDeclaration))
+						Log.println("Already has been inferred: " + getField.apply(paramDeclaration))
 					} else {
-						println("Has not been inferred yet.")
+						Log.println("Has not been inferred yet.")
 						if (tryInferAndAssignField(paramDeclaration, getField, setField, inferField)){
 							fixedPoint = false
 						} else {
@@ -249,10 +261,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				if(sa.inner instanceof InnerFMUDeclarationFull){
 					var innerFMUFull = sa.inner as InnerFMUDeclarationFull
 					for(fmu : innerFMUFull.fmus){
-						println("Inferring port fields of FMU " + fmu.name)
+						Log.println("Inferring port fields of FMU " + fmu.name)
 						for (port : EcoreUtil2.getAllContentsOfType(fmu, Port)) {
 							if(getField.apply(port) !== null){
-								println("Already has a field: " + getField.apply(port))
+								Log.println("Already has a field: " + getField.apply(port))
 							} else {
 								if (tryInferAndAssignField(port, getField, setField, inferField)){
 									fixedPoint = false
@@ -264,19 +276,23 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 					}
 					
 					if (innerFMUFull.connection.size > 0){
-						println("Inferring port fields using internal scenario bindings.")
+						Log.println("Inferring port fields using internal scenario bindings.")
 						for (binding : innerFMUFull.connection){
 							if (getField.apply(binding.src.port) !== null && getField.apply(binding.tgt.port) !== null){
-								println("Both ports have fields already.")
+								Log.println("Both ports have fields already.")
 							} else {
 								var inferredFieldAttempt = inferPortFieldViaConnection(binding, getField, setField, inferField)
 								if (inferredFieldAttempt !== null){
-									setField.apply(binding, inferredFieldAttempt)
+									if (getField.apply(binding.src.port) === null){
+										setField.apply(binding.src.port, inferredFieldAttempt)
+									} else if (getField.apply(binding.tgt.port) === null){
+										setField.apply(binding.tgt.port, inferredFieldAttempt)
+									}
 									fixedPoint = false
 									unfieldedElementsCounter--
-									println("Got new field: " + inferredFieldAttempt)
+									Log.println("Got new field: " + inferredFieldAttempt)
 								} else {
-									println("Cannot infer field from binding now.")
+									Log.println("Cannot infer field from binding now.")
 								}
 							}
 						}
@@ -286,14 +302,14 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				}
 			}
 			
-			println("Inferring external port fields...")
+			Log.println("Inferring external port fields...")
 			
 			var externalPorts = new LinkedList(sa.inports)
 			externalPorts.addAll(sa.outports)
 			
 			for (port : externalPorts) {
 				if (getField.apply(port) !== null){
-					println("Already has a field: " + getField.apply(port))
+					Log.println("Already has a field: " + getField.apply(port))
 					if (pushPortField(port, getField, setField, inferField)){
 						fixedPoint = false
 						unfieldedElementsCounter--
@@ -307,12 +323,12 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				}
 			}
 			
-			println("Inferring all other declaration fields...")
+			Log.println("Inferring all other declaration fields...")
 			
 			for (varDeclaration : EcoreUtil2.getAllContentsOfType(sa, SingleVarDeclaration)) {
-				println("Computing field for declaration " + varDeclaration.name)
+				Log.println("Computing field for declaration " + varDeclaration.name)
 				if(getField.apply(varDeclaration) !== null){
-					println("Already has a field: " + getField.apply(varDeclaration))
+					Log.println("Already has a field: " + getField.apply(varDeclaration))
 				} else {
 					if (tryInferAndAssignField(varDeclaration, getField, setField, inferField)){
 						fixedPoint = false
@@ -322,11 +338,11 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				}
 			}
 			
-			println("Ended iteration with unfielded elements remaining: " + unfieldedElementsCounter)
+			Log.println("Ended iteration with unfielded elements remaining: " + unfieldedElementsCounter)
 		} // while (! fixedPoint)
 		
 		
-		println("Running generic inference algorithm... DONE")
+		Log.pop("Running generic inference algorithm... DONE")
 		
 		return unfieldedElementsCounter
 	}
@@ -338,10 +354,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		var inferredFieldAttempt = inferField.apply(element)
 		if (inferredFieldAttempt !== null){
 			setField.apply(element, inferredFieldAttempt)
-			println("Got new field: " + inferredFieldAttempt)
+			Log.println("Got new field: " + inferredFieldAttempt)
 			return true
 		} else {
-			println("Cannot infer field now.")
+			Log.println("Cannot infer field now.")
 			return false
 		}
 	}
@@ -399,10 +415,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
 		} else if (getField.apply(binding.src.port) !== null){
 			resultField = getField.apply(binding.src.port)
-			println("Target port "+ binding.tgt.port.name +" got new type: " + resultField)
+			Log.println("Target port "+ binding.tgt.port.name +" got new type: " + resultField)
 		} else if (getField.apply(binding.tgt.port) !== null){
 			resultField = getField.apply(binding.tgt.port)
-			println("Target port "+ binding.src.port.name +" got new type: " + resultField)
+			Log.println("Target port "+ binding.src.port.name +" got new type: " + resultField)
 		}
 		
 		return resultField
@@ -413,38 +429,38 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 							(EObject, Object)=>void setField,
 							(EObject)=>Object inferField){
 		var fieldInferred = false
-		println("Pushing field of port " + port.name + " to its bindings.")
+		Log.println("Pushing field of port " + port.name + " to its bindings.")
 		
 		if(getField.apply(port) === null){
-			println("Has no field to be pushed.")
+			Log.println("Has no field to be pushed.")
 			throw new Exception("Wrong way of using this function. It assumes field is already inferred.")
 		} else {
-			println("Pushing field: " + getField.apply(port))
+			Log.println("Pushing field: " + getField.apply(port))
 			if(port.sourcedependency !== null){
-				println("Has a source dependency: " + port.sourcedependency.port.name)
+				Log.println("Has a source dependency: " + port.sourcedependency.port.name)
 				if(getField.apply(port.sourcedependency.port) === null){
 					setField.apply(port.sourcedependency.port, getField.apply(port))
-					println("Port " + port.sourcedependency.port.name + " got new type: " + getField.apply(port.sourcedependency.port))
+					Log.println("Port " + port.sourcedependency.port.name + " got new type: " + getField.apply(port.sourcedependency.port))
 					fieldInferred = true
 				} else {
-					println("Source port already has field.")
+					Log.println("Source port already has field.")
 				}
 			} else {
-				println("Has no source dependency.")
+				Log.println("Has no source dependency.")
 			}
 			
 			if (port.targetdependency !== null) {
-				println("Has a target dependency: " + port.targetdependency.port.name)
+				Log.println("Has a target dependency: " + port.targetdependency.port.name)
 				if(getField.apply(port.targetdependency.port) === null){
-					println("Dependency has no field yet.")
+					Log.println("Dependency has no field yet.")
 					setField.apply(port.targetdependency.port, getField.apply(port))
-					println("Port " + port.targetdependency.port.name + " got new type: " + getField.apply(port.targetdependency.port))
+					Log.println("Port " + port.targetdependency.port.name + " got new type: " + getField.apply(port.targetdependency.port))
 					fieldInferred = true
 				} else {
-					println("Target port already has field.")
+					Log.println("Target port already has field.")
 				}
 			} else {
-				println("Has no target dependency.")
+				Log.println("Has no target dependency.")
 			}
 		}
 		
@@ -454,41 +470,41 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def getPortUnit(Port port){
 		var unitInferred = false
 		
-		println("Computing unit for port " + port.name)
+		Log.println("Computing unit for port " + port.name)
 		
 		var Unity returnUnit = null
 		
 		if(port.unity !== null){
 			throw new Exception("Wrong way of using this function. It assumes unit is not inferred yet.")
 		} else {
-			println("Has no unit.")
+			Log.println("Has no unit.")
 			
-			println("Attempting to infer unit from bindings.")
+			Log.println("Attempting to infer unit from bindings.")
 
 			if(port.sourcedependency !== null){
-				println("Has a source dependency: " + port.sourcedependency.port.name)
+				Log.println("Has a source dependency: " + port.sourcedependency.port.name)
 				if(port.sourcedependency.port.unity === null){
-					println("Dependency has no unit yet.")
+					Log.println("Dependency has no unit yet.")
 				} else {
 					returnUnit = port.sourcedependency.port.unity
-					println("Got new unit: " + returnUnit)
+					Log.println("Got new unit: " + returnUnit)
 					unitInferred = true
 				}
 			} else {
-				println("Has no source dependency.")
+				Log.println("Has no source dependency.")
 			}
 			
 			if (port.targetdependency !== null && !unitInferred) {
-				println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+				Log.println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
 				if(port.targetdependency.port.unity === null){
-					println("Dependency has no unit yet.")
+					Log.println("Dependency has no unit yet.")
 				} else {
 					returnUnit = port.targetdependency.port.unity
-					println("Got new unit: " + returnUnit)
+					Log.println("Got new unit: " + returnUnit)
 					unitInferred = true
 				}
 			} else {
-				println("Has no target dependency, or type has already been inferred from source dependency.")
+				Log.println("Has no target dependency, or unit has already been inferred from source dependency.")
 			}
 		}
 		
@@ -498,48 +514,48 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def getPortType(Port port){
 		var typeInferred = false
 		
-		println("Computing type for port " + port.name)
+		Log.println("Computing type for port " + port.name)
 		
 		var String returnType = null
 		
 		if(port.type !== null){
 			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
 		} else {
-			println("Has no type.")
+			Log.println("Has no type.")
 			
-			println("Attempting to infer type from units.")
+			Log.println("Attempting to infer type from units.")
 			if (port.unity !== null){
 				returnType = "Real"
-				println("Got new type: " + returnType)
+				Log.println("Got new type: " + returnType)
 				typeInferred = true
 			} else {
-				println("Attempting to infer type from bindings.")
+				Log.println("Attempting to infer type from bindings.")
 
 				if(port.sourcedependency !== null){
-					println("Has a source dependency: " + port.sourcedependency.port.name)
+					Log.println("Has a source dependency: " + port.sourcedependency.port.name)
 					if(port.sourcedependency.port.type === null){
-						println("Dependency has no type yet.")
+						Log.println("Dependency has no type yet.")
 					} else {
 						returnType = port.sourcedependency.port.type
-						println("Got new type: " + returnType)
+						Log.println("Got new type: " + returnType)
 						typeInferred = true
 					}
 				} else {
-					println("Has no source dependency.")
+					Log.println("Has no source dependency.")
 				}
 				
 				if (port.targetdependency !== null && !typeInferred) {
-					println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+					Log.println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
 					if(port.targetdependency.port.type === null){
 						//println("Port object: " + port.targetdependency.port)
-						println("Dependency has no type yet.")
+						Log.println("Dependency has no type yet.")
 					} else {
 						returnType = port.targetdependency.port.type
-						println("Got new type: " + returnType)
+						Log.println("Got new type: " + returnType)
 						typeInferred = true
 					}
 				} else {
-					println("Has no target dependency, or type has already been inferred from source dependency.")
+					Log.println("Has no target dependency, or type has already been inferred from source dependency.")
 				}
 			}
 		}
@@ -547,18 +563,121 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return returnType
 	}
 	
-	def addInParams(Adaptation adaptation) {
-		println("Adding input parameters...")
+	def addInPorts(Adaptation sa) {
+		Log.push("Adding input ports...")
+		
+		for (port : getAllInnerFMUInputPortDeclarations(sa)){
+			var parentFMU = port.eContainer as InnerFMU
+			Log.println("Checking if port " + parentFMU.name + "." + port.name + " has incoming connections")
+			if (! hasIncomingConnection(port, sa)){
+				Log.println("Port " + parentFMU.name + "." + port.name + " has no incoming connections.")
+				if (findExternalPortByName(sa, port.name) === null){
+					var newExternalPort = createExternalInputPortDeclarationFromInnerPort(port, parentFMU, sa)
+					Log.println("External port " + newExternalPort.name + " created.")
+					newExternalPort.bindExternalInputPortTo(parentFMU, port)
+					Log.println("External port " + newExternalPort.name + " bound to port " + parentFMU.name + "." + port.name)
+				} else {
+					Log.println("External port " + port.name + " already declared.")
+				}
+			} else {
+				Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection.")
+			}
+		}
+		
+		Log.pop("Adding input ports... DONE")
+	}
+	
+	def bindExternalInputPortTo(Port externalInputPort, InnerFMU internalPortParent, Port internalPort) {
+		externalInputPort.targetdependency = SemanticAdaptationFactory.eINSTANCE.createSpecifiedPort()
+		externalInputPort.targetdependency.owner = internalPortParent
+		externalInputPort.targetdependency.port = internalPort
+	}
+	
+	def createExternalInputPortDeclarationFromInnerPort(Port port, FMU parent, Adaptation sa) {
+		var externalInputPort = SemanticAdaptationFactory.eINSTANCE.createPort()
+		externalInputPort.name = parent.name + "__" + port.name
+		externalInputPort.type = port.type
+		externalInputPort.unity = EcoreUtil2.copy(port.unity)
+		sa.inports.add(externalInputPort)
+		return externalInputPort
+	}
+	
+	def findExternalPortByName(Adaptation adaptation, String name) {
+		for (externalInputPort : adaptation.inports){
+			if (externalInputPort.name == name){
+				return externalInputPort
+			}
+		}
+		return null
+	}
+	
+	def hasIncomingConnection(Port port, Adaptation adaptation) {
+		
+		var result = false
+		
+		if (port.sourcedependency !== null){
+			result = true
+		} else {
+			if (port.eContainer instanceof InnerFMU){
+				
+				var innerScenarioDeclaration = EcoreUtil2.getContainerOfType(port, InnerFMUDeclaration)
+				
+				if (innerScenarioDeclaration instanceof InnerFMUDeclarationFull){
+					var innerScenarioWithCoupling = innerScenarioDeclaration as InnerFMUDeclarationFull
+					if (innerScenarioWithCoupling.connection.size > 0){
+						for (connection : innerScenarioWithCoupling.connection ){
+							if (connection.tgt.port == port){
+								var parentFMU = port.eContainer as InnerFMU
+								var sourceFMU = connection.src.port.eContainer as InnerFMU
+								Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection from internal port " + sourceFMU.name + "." + connection.src.port.name)
+								result = true
+							}
+						}
+					}
+				}
+				
+				for (externalInputPort : adaptation.inports.filter[p | p.targetdependency !== null]){
+					if (externalInputPort.targetdependency.port == port){
+						var parentFMU = port.eContainer as InnerFMU
+						Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection from external port " + externalInputPort.name)
+						result = true
+					}
+				}
+			}
+		}
+		
+		return result
+	}
+	
+	def getAllInnerFMUInputPortDeclarations(Adaptation sa){
+		var result = new LinkedList()
+		
+		if(sa.inner !== null){
+			if(sa.inner instanceof InnerFMUDeclarationFull){
+				var innerFMUFull = sa.inner as InnerFMUDeclarationFull
+				for(fmu : innerFMUFull.fmus){
+					result.addAll(fmu.inports)
+				}
+			} else {
+				throw new Exception("Only support for InnerFMUDeclarationFull.")
+			}
+		}
+		
+		return result;
+	}
+	
+	def addInParams(Adaptation sa) {
+		Log.push("Adding input parameters...")
 		
 		val PARAM_PREFIX = "INIT_"
 		
-		var inputPort_to_parameterDeclaration_Map = new HashMap<Port, SingleParamDeclaration>(adaptation.inports.size)
+		var inputPort_to_parameterDeclaration_Map = new HashMap<Port, SingleParamDeclaration>(sa.inports.size)
 		
-		for (inputPortDeclaration : adaptation.inports) {
-			println("Generating parameter for port " + inputPortDeclaration.name)
+		for (inputPortDeclaration : sa.inports) {
+			Log.println("Generating parameter for port " + inputPortDeclaration.name)
 			var paramname = PARAM_PREFIX + inputPortDeclaration.name.toUpperCase()
 			var paramAlreadyDeclared = false
-			for(paramDeclarations : adaptation.params){
+			for(paramDeclarations : sa.params){
 				for(paramDeclaration : paramDeclarations.declarations){
 					if(paramDeclaration.name == paramname){
 						paramAlreadyDeclared = true
@@ -566,12 +685,12 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				}
 			}
 			if (paramAlreadyDeclared){
-				println("Parameter " + paramname + " already declared for port " + inputPortDeclaration.name)
+				Log.println("Parameter " + paramname + " already declared for port " + inputPortDeclaration.name)
 			} else {
-				println("Declaring new parameter " + paramname + " for port " + inputPortDeclaration.name)
+				Log.println("Declaring new parameter " + paramname + " for port " + inputPortDeclaration.name)
 				var factory = SemanticAdaptationFactory.eINSTANCE
-				if (adaptation.params.size == 0){
-					adaptation.params.add(factory.createParamDeclarations())
+				if (sa.params.size == 0){
+					sa.params.add(factory.createParamDeclarations())
 				}
 				var paramDeclaration = factory.createSingleParamDeclaration()
 				
@@ -581,7 +700,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			}
 		}
 		
-		println("Adding input parameters... DONE")
+		Log.pop("Adding input parameters... DONE")
 	}
 	
 }

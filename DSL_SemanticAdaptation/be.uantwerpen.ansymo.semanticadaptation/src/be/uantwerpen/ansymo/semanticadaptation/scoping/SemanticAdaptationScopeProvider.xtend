@@ -7,6 +7,7 @@
  *******************************************************************************/
 package be.uantwerpen.ansymo.semanticadaptation.scoping
 
+import be.uantwerpen.ansymo.semanticadaptation.generator.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AlgebraicLoopSolution
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Component
@@ -56,7 +57,7 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 	 * overrides all the remainder of this class
 	 */
 	override getScope(EObject context, EReference reference) {
-		println("Getting scope for " + reference.name + " within context " + context.class)
+		Log.push("Getting scope for " + reference.name + " within context " + context.class)
 		
 		// TODO: This does not work for semantic adaptations on multiple files.
 		// There is incomplete code for that below.
@@ -64,32 +65,35 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 		if (reference.name == "port" && context instanceof SpecifiedPort){
 			var portRef = context as SpecifiedPort
 			if (portRef.owner !== null){
-				println("Getting scope within FMU: " + portRef.owner.name)
-				val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(portRef.owner, Port))
-				println("Scope found:" + scopeFound)
+				val scopeFound = getFMUScope(portRef.owner)
+				Log.pop("Scope found:" + scopeFound)
 				return scopeFound
 			} else {
-				println("Getting all port declarations")
-				var rootContainner = EcoreUtil2.getRootContainer(context)
-				val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, Port))
-				println("Scope found:" + scopeFound)
+				val scopeFound = getGenericScopePort(context)
+				Log.pop("Scope found:" + scopeFound)
 				return scopeFound
 			}
 		}
 		
 		if (reference.name == "port" && context instanceof Port){
-			println("Getting all port declarations")
-			var rootContainner = EcoreUtil2.getRootContainer(context)
-			val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, Port))
-			println("Scope found:" + scopeFound)
+			val scopeFound = getGenericScopePort(context)
+			Log.pop("Scope found:" + scopeFound)
 			return scopeFound
 		}
 		
 		if (reference.name == "ref" && context instanceof Variable){
-			var rootContainner = EcoreUtil2.getRootContainer(context)
-			val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, LValueDeclaration))
-			println("Scope found:" + scopeFound)
-			return scopeFound
+			var variable = context as Variable
+			
+			if(variable.owner !== null){
+				val scopeFound = getFMUScope(variable.owner)
+				Log.pop("Scope found:" + scopeFound)
+				return scopeFound
+			} else {
+				var rootContainner = EcoreUtil2.getRootContainer(context)
+				val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, LValueDeclaration))
+				Log.pop("Scope found:" + scopeFound)
+				return scopeFound
+			}
 		}
 		
 		/*
@@ -111,9 +115,22 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 		return scopeFound
 		 */
 		
-		println("Delegating scope discovery to super class...")
+		Log.println("Delegating scope discovery to super class...")
 		val scopeFound = super.getScope(context, reference)
-		println("Scope found:" + scopeFound)
+		Log.pop("Scope found:" + scopeFound)
+		return scopeFound
+	}
+	
+	def getGenericScopePort(EObject context) {
+		Log.println("Getting all port declarations")
+		var rootContainner = EcoreUtil2.getRootContainer(context)
+		val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(rootContainner, Port))
+		return scopeFound
+	}
+	
+	def getFMUScope(FMU fmu) {
+		Log.println("Getting scope within FMU: " + fmu.name)
+		val scopeFound = Scopes.scopeFor(EcoreUtil2.getAllContentsOfType(fmu, Port))
 		return scopeFound
 	}
 	

@@ -92,7 +92,7 @@ GeneraleRule:
 AlgebraicLoopSolution:
 	{AlgebraicLoopSolutionFixPointIteration} 'successive' 'substitution' 'starts' 'at' signals+=SpecifiedPort (('and'|',') signals+=SpecifiedPort)? 'with' params+=SettingAssignment ('and' params+=SettingAssignment)* | 
 	{AlgebraicLoopSolutionDelayIntroduction} 'delay' 'at' signals+=SpecifiedPort (('and'|',') signals+=SpecifiedPort)?; // TODO: must be in in or out rule
-	
+
 MultiRate:
 	'multiply' 'rate' rate=INT 'times' ('with' interpolation=Interpolation)?; // default first order interpolation
 
