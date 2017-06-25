@@ -23,6 +23,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StringLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.io.ByteArrayOutputStream
 import java.util.HashMap
+import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
@@ -95,14 +96,235 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def canonicalize(Adaptation sa){
 		
+		//inferUnits(sa)
+		
+		
 		// Type inference
-		inferTypes(sa)
+		genericDeclarationInferenceAlgorithm(sa , 
+			[// getField
+				element | {
+					if (element instanceof SingleParamDeclaration) {
+						return element.type
+					} else if (element instanceof Port){
+						return element.type
+					} else if (element instanceof SingleVarDeclaration){
+						return element.type
+					} else {
+						throw new Exception("Unexpected element type: " + element)
+					}
+				}
+			],
+			[// setField
+				element, value | {
+					if (element instanceof SingleParamDeclaration) {
+						element.type = value as String
+					} else if (element instanceof Port){
+						element.type = value as String
+					} else if (element instanceof SingleVarDeclaration){
+						element.type = value as String
+					} else {
+						throw new Exception("Unexpected element type: " + element)
+					}
+				}
+			],
+			[// inferField
+				element | {
+					if (element instanceof SingleParamDeclaration) {
+						return extractTypeFromExpression(element.expr, element.name)
+					} else if (element instanceof Port){
+						return getPortType(element)
+					} else if (element instanceof SingleVarDeclaration){
+						return extractTypeFromExpression(element.expr, element.name)
+					} else {
+						throw new Exception("Unexpected element type: " + element)
+					}
+				}
+			]
+		)
 		
 		// TODO Add input ports
 		
 		// Add in params
 		addInParams(sa)
 		
+	}
+	
+	def genericDeclarationInferenceAlgorithm(Adaptation sa, 
+												(EObject)=>Object getField, 
+												(EObject, Object)=>void setField,
+												(EObject)=>Object inferField
+	){
+		println("Running generic inference algorithm...")
+		
+		/*
+		 * Dumbest (and simplest) algorithm for this is a fixed point computation:
+		 * 1. Look for every var/port declaration
+		 * 2. If that var has a XXX already, nothing else to be done.
+		 * 3. If that var has no XXX declared, then
+		 * 3.1 If var/port has an initial value or connection, then
+		 * 3.1.1 If the initial_value/connection has a XXX declared, then var gets that XXX.
+		 * 3.1.2 Otherwise, nothing else to be done.
+		 * 3.2 If var/port has no initial value or connection then this either is a missing feature, or an error.
+		 * 3.3 If something has changed, go to 1. Otherwise, end.
+		 */
+		var fixedPoint = false
+		var untypedElementsCounter = 0
+		while (! fixedPoint){
+			fixedPoint = true
+			untypedElementsCounter = 0
+			
+			println("Inferring parameter fields...")
+			
+			for (paramDeclarations : sa.params) {
+				for (paramDeclaration : paramDeclarations.declarations) {
+					println("Computing field for param " + paramDeclaration.name)
+					if(getField.apply(paramDeclaration) !== null){
+						println("Already has been inferred: " + getField.apply(paramDeclaration))
+					} else {
+						println("Has not been inferred yet.")
+						//var inferredTypeAttempt = extractTypeFromExpression(paramDeclaration.expr, paramDeclaration.name)
+						var inferredTypeAttempt = inferField.apply(paramDeclaration)
+						if (inferredTypeAttempt !== null){
+							//paramDeclaration.type = inferredTypeAttempt
+							setField.apply(paramDeclaration, inferredTypeAttempt)
+							fixedPoint = false
+							println("Got new field: " + inferredTypeAttempt)
+						} else {
+							untypedElementsCounter++
+							println("Cannot infer field now.")
+						}
+					}
+				}
+			}
+			
+			if(sa.inner !== null){
+				if(sa.inner instanceof InnerFMUDeclarationFull){
+					var innerFMUFull = sa.inner as InnerFMUDeclarationFull
+					for(fmu : innerFMUFull.fmus){
+						println("Inferring port fields of FMU " + fmu.name)
+						for (port : EcoreUtil2.getAllContentsOfType(fmu, Port)) {
+							if(getField.apply(port) !== null){
+								println("Already has a type: " + port.type)
+							//} else if(inferPortType(port)) {
+							} else {
+								// TODO Refactor this with the above code, to check and infer field of generic type.
+								var inferredTypeAttempt = inferField.apply(port)
+								if (inferredTypeAttempt !== null){
+									setField.apply(port, inferredTypeAttempt)
+									fixedPoint = false
+									println("Got new field: " + inferredTypeAttempt)
+								} else {
+									untypedElementsCounter++
+									println("Cannot infer field now.")
+								}
+							}
+						}
+					}
+					
+					if (innerFMUFull.connection.size > 0){
+						println("Inferring port fields using internal scenario bindings.")
+						for (binding : innerFMUFull.connection){
+							if (getField.apply(binding.src.port) !== null && getField.apply(binding.tgt.port) !== null){
+								println("Both ports have fields already.")
+							//} else if (inferPortTypeViaConnection(binding)){
+							} else {
+								var inferredTypeAttempt = inferPortFieldViaConnection(binding, getField, setField, inferField)
+								if (inferredTypeAttempt !== null){
+									setField.apply(binding, inferredTypeAttempt)
+									fixedPoint = false
+									untypedElementsCounter--
+									println("Got new field: " + inferredTypeAttempt)
+								} else {
+									println("Cannot infer field from binding now.")
+								}
+							}
+						}
+					}
+				} else {
+					throw new Exception("Field inference only supported for InnerFMUDeclarationFull.")
+				}
+			}
+			
+			println("Inferring external port fields...")
+			
+			for (port : sa.inports) {
+				//if (port.type !== null){
+				if (getField.apply(port) !== null){
+					println("Already has a field: " + getField.apply(port))
+					//if (pushPortType(port)){
+					if (pushPortField(port, getField, setField, inferField)){
+						fixedPoint = false
+						untypedElementsCounter--
+					} 
+				//} else if (inferPortType(port)){
+				} else {
+					// TODO Refactor this with the above code, to check and infer field of generic type.
+					var inferredTypeAttempt = inferField.apply(port)
+					if (inferredTypeAttempt !== null){
+						setField.apply(port, inferredTypeAttempt)
+						fixedPoint = false
+						println("Got new field: " + inferredTypeAttempt)
+					} else {
+						untypedElementsCounter++
+						println("Cannot infer field now.")
+					}
+				}
+			}
+			for (port : sa.outports) {
+				//if (port.type !== null){
+				// TODO Refactor this with the above code, the treatment to external output ports is the exact same as for external input ports.
+				if (getField.apply(port) !== null){
+					println("Already has a field: " + getField.apply(port))
+					//if (pushPortType(port)){
+					if (pushPortField(port, getField, setField, inferField)){
+						fixedPoint = false
+						untypedElementsCounter--
+					} 
+				//} else if (inferPortType(port)){
+				} else {
+					// TODO Refactor this with the above code, to check and infer field of generic type.
+					var inferredTypeAttempt = inferField.apply(port)
+					if (inferredTypeAttempt !== null){
+						setField.apply(port, inferredTypeAttempt)
+						fixedPoint = false
+						println("Got new field: " + inferredTypeAttempt)
+					} else {
+						untypedElementsCounter++
+						println("Cannot infer field now.")
+					}	
+				}
+			}
+			
+			println("Inferring all other declaration fields...")
+			
+			for (varDeclaration : EcoreUtil2.getAllContentsOfType(sa, SingleVarDeclaration)) {
+				println("Computing type for declaration " + varDeclaration.name)
+				//if(varDeclaration.type !== null){
+				if(getField.apply(varDeclaration) !== null){
+					println("Already has a field: " + getField.apply(varDeclaration))
+				} else {
+					//var inferredTypeAttempt = extractTypeFromExpression(varDeclaration.expr, varDeclaration.name)
+					var inferredTypeAttempt = inferField.apply(varDeclaration)
+					if (inferredTypeAttempt !== null){
+						//varDeclaration.type = inferredTypeAttempt
+						setField.apply(varDeclaration, inferredTypeAttempt)
+						fixedPoint = false
+						println("Got new type: " + inferredTypeAttempt)
+					} else {
+						untypedElementsCounter++
+						println("Cannot infer field now.")
+					}
+				}
+			}
+			
+			println("Ended iteration with unfielded elements remaining: " + untypedElementsCounter)
+		} // while (! fixedPoint)
+		
+		if (untypedElementsCounter > 0){
+			throw new Exception("Could not infer all fields. There are " + untypedElementsCounter + " unfielded elements.")
+		}
+		
+		println("Running generic inference algorithm... DONE")
 	}
 	
 	def inferTypes(Adaptation sa){
@@ -280,11 +502,31 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return null
 	}
 	
+	def inferPortFieldViaConnection(Connection binding, 
+										(EObject)=>Object getField, 
+										(EObject, Object)=>void setField,
+										(EObject)=>Object inferField
+	){
+		var Object resultField = null
+		if (getField.apply(binding.src.port) !== null && getField.apply(binding.tgt.port) !== null){
+			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
+		} else if (getField.apply(binding.src.port) !== null){
+			//binding.tgt.port.type = binding.src.port.type
+			resultField = getField.apply(binding.src.port)
+			println("Target port "+ binding.tgt.port.name +" got new type: " + resultField)
+		} else if (getField.apply(binding.tgt.port) !== null){
+			//binding.src.port.type = binding.tgt.port.type
+			resultField = getField.apply(binding.tgt.port)
+			println("Target port "+ binding.src.port.name +" got new type: " + resultField)
+		}
+		
+		return resultField
+	}
+	
 	def inferPortTypeViaConnection(Connection binding){
 		var typeInferred = false
 		
 		if (binding.src.port.type !== null && binding.tgt.port.type !== null){
-			println("Both ports have types already.")
 			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
 		} else if (binding.src.port.type !== null){
 			binding.tgt.port.type = binding.src.port.type
@@ -297,34 +539,48 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return typeInferred
 	}
 	
-	def inferPortTypeFromBindings(Port port){
+	def pushPortField(Port port, 
+							(EObject)=>Object getField, 
+							(EObject, Object)=>void setField,
+							(EObject)=>Object inferField){
 		var typeInferred = false
-		if(port.sourcedependency !== null){
-			println("Has a source dependency: " + port.sourcedependency.port.name)
-			if(port.sourcedependency.port.type === null){
-				println("Dependency has no type yet.")
-			} else {
-				port.type = port.sourcedependency.port.type
-				println("Got new type: " + port.type)
-				typeInferred = true
-			}
+		println("Pushing field of port " + port.name + " to its bindings.")
+		
+		if(getField.apply(port) === null){
+			println("Has no field to be pushed.")
+			// TODO Throw exception wrong usage
 		} else {
-			println("Has no source dependency.")
+			println("Pushing field: " + getField.apply(port))
+			if(port.sourcedependency !== null){
+				println("Has a source dependency: " + port.sourcedependency.port.name)
+				if(getField.apply(port.sourcedependency.port) === null){
+					//port.sourcedependency.port.type = port.type
+					setField.apply(port.sourcedependency.port, getField.apply(port))
+					println("Port " + port.sourcedependency.port.name + " got new type: " + getField.apply(port.sourcedependency.port))
+					typeInferred = true
+				} else {
+					println("Source port already has field.")
+				}
+			} else {
+				println("Has no source dependency.")
+			}
+			
+			if (port.targetdependency !== null) {
+				println("Has a target dependency: " + port.targetdependency.port.name)
+				if(getField.apply(port.targetdependency.port) === null){
+					println("Dependency has no field yet.")
+					//port.targetdependency.port.type = port.type
+					setField.apply(port.targetdependency.port, getField.apply(port))
+					println("Port " + port.targetdependency.port.name + " got new type: " + getField.apply(port.targetdependency.port))
+					typeInferred = true
+				} else {
+					println("Target port already has field.")
+				}
+			} else {
+				println("Has no target dependency.")
+			}
 		}
 		
-		if (port.targetdependency !== null && !typeInferred) {
-			println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
-			if(port.targetdependency.port.type === null){
-				//println("Port object: " + port.targetdependency.port)
-				println("Dependency has no type yet.")
-			} else {
-				port.type = port.targetdependency.port.type
-				println("Got new type: " + port.type)
-				typeInferred = true
-			}
-		} else {
-			println("Has no target dependency, or type has already been inferred from source dependency.")
-		}
 		return typeInferred
 	}
 	
@@ -367,17 +623,105 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return typeInferred
 	}
 	
+	def getPortType(Port port){
+		var typeInferred = false
+		
+		println("Computing type for port " + port.name)
+		//println("Object: " + port)
+		
+		var String returnType = null
+		
+		if(port.type !== null){
+			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
+		} else {
+			println("Has no type.")
+			
+			println("Attempting to infer type from units.")
+			if (port.unity !== null){
+				returnType = "Real"
+				println("Got new type: " + returnType)
+				typeInferred = true
+			} else {
+				println("Attempting to infer type from bindings.")
+
+				if(port.sourcedependency !== null){
+					println("Has a source dependency: " + port.sourcedependency.port.name)
+					if(port.sourcedependency.port.type === null){
+						println("Dependency has no type yet.")
+					} else {
+						returnType = port.sourcedependency.port.type
+						println("Got new type: " + returnType)
+						typeInferred = true
+					}
+				} else {
+					println("Has no source dependency.")
+				}
+				
+				if (port.targetdependency !== null && !typeInferred) {
+					println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+					if(port.targetdependency.port.type === null){
+						//println("Port object: " + port.targetdependency.port)
+						println("Dependency has no type yet.")
+					} else {
+						returnType = port.targetdependency.port.type
+						println("Got new type: " + port.type)
+						typeInferred = true
+					}
+				} else {
+					println("Has no target dependency, or type has already been inferred from source dependency.")
+				}
+			}
+		}
+		
+		return returnType
+	}
+	
 	def inferPortType(Port port){
 		var typeInferred = false
 		println("Computing type for port " + port.name)
 		//println("Object: " + port)
 			
 		if(port.type !== null){
-			println("Already has a type: " + port.type)
 			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
 		} else {
 			println("Has no type.")
-			typeInferred = inferPortTypeFromBindings(port)
+			
+			println("Attempting to infer type from units.")
+			if (port.unity !== null){
+				port.type = "Real"
+				println("Got new type: " + port.type)
+				typeInferred = true
+			} else {
+				println("Attempting to infer type from bindings.")
+
+				if(port.sourcedependency !== null){
+					println("Has a source dependency: " + port.sourcedependency.port.name)
+					if(port.sourcedependency.port.type === null){
+						println("Dependency has no type yet.")
+					} else {
+						port.type = port.sourcedependency.port.type
+						println("Got new type: " + port.type)
+						typeInferred = true
+					}
+				} else {
+					println("Has no source dependency.")
+				}
+				
+				if (port.targetdependency !== null && !typeInferred) {
+					println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+					if(port.targetdependency.port.type === null){
+						//println("Port object: " + port.targetdependency.port)
+						println("Dependency has no type yet.")
+					} else {
+						port.type = port.targetdependency.port.type
+						println("Got new type: " + port.type)
+						typeInferred = true
+					}
+				} else {
+					println("Has no target dependency, or type has already been inferred from source dependency.")
+				}
+				
+			}
 		}
 		
 		return typeInferred

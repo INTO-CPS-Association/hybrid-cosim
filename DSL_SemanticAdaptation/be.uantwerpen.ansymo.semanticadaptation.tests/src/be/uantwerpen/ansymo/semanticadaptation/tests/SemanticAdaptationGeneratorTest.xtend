@@ -18,13 +18,18 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	
 	@Inject extension CompilationTestHelper
 	
+	@Test def window_SA() { __generate('input/power_window_case_study/window_sa.BASE.sa') }
+	
 	@Test def lazy_SA() { __generate('input/power_window_case_study/lazy.sa') }
+	
 	
 	def void __generate(String filename) {
 		//readFile(filename).assertCompilesTo('oracles/power_window_case_study/lazy.BASE.sa')
 		
 		readFile(filename).compile(new IAcceptor<CompilationTestHelper.Result>(){
-			override accept(Result t) { }
+			override accept(Result t) {
+				// TODO: What kind of acceptance for generated text files? File comparison is very very brittle.
+			}
 		})
 		
 	}
