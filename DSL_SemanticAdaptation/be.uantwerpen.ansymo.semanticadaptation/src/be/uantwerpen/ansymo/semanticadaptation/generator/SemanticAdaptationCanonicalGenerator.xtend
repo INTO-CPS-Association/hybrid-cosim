@@ -7,6 +7,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BuiltinFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
@@ -17,12 +18,14 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclar
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclarationFull
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RealLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationFactory
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleParamDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleVarDeclaration
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StringLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Unity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
@@ -36,7 +39,6 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
 
 /**
  * Generates code from your model files on save.
@@ -225,9 +227,73 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		addInRules_External2Stored_Assignments(sa, inputPort2InVarDeclaration)
 		
+		val internalPort2ExternalPortBindings = findAllExternalPort2InputPort_Bindings(sa)
 		
+		addInRules_External2Internal_Assignments(sa, internalPort2ExternalPortBindings)
 		
 		Log.pop("Canonicalize")
+	}
+	
+	def findAllExternalPort2InputPort_Bindings(Adaptation sa) {
+		Log.push("findAllExternalPort2InputPort_Bindings")
+		
+		val internalPort2ExternalPortBindings = new HashMap<Port, Port>()
+		
+		for (port : getAllInnerFMUInputPortDeclarations(sa)){
+			var parentFMU = port.eContainer as InnerFMU
+			Log.println("Checking if port " + parentFMU.name + "." + port.name + " is bound to an external port.")
+			val externalPort = findExternalPortByName(sa, createExternalPortNameFromInternalPort(parentFMU.name,port.name))
+			if (externalPort !== null){
+				Log.println("Port " + parentFMU.name + "." + port.name + " is bound to an external port: " + externalPort.name)
+				internalPort2ExternalPortBindings.put(port, externalPort)
+			} else {
+				Log.println("Port " + parentFMU.name + "." + port.name + " is not bound to an external port.")
+			}
+		}
+		
+		Log.pop("findAllExternalPort2InputPort_Bindings")
+		
+		return internalPort2ExternalPortBindings
+	}
+	
+	def createExternalPortNameFromInternalPort(String parentFMUName, String internalPortName) {
+		return parentFMUName + "__" + internalPortName
+	}
+	
+	def addInRules_External2Internal_Assignments(Adaptation sa, HashMap<Port, Port> internalPort2ExternalPort) {
+		Log.push("addInRules_External2Internal_Assignments")
+		
+		val dataRule  = getOrPrependTrueInRule(sa)
+		
+		for(internalPort : internalPort2ExternalPort.keySet){
+			val externalPort = internalPort2ExternalPort.get(internalPort)
+			addAssignmentToInternalPort(dataRule.outputfunction, internalPort, externalPort)
+		}
+		
+		Log.pop("addInRules_External2Internal_Assignments")
+	}
+	
+	def addAssignmentToInternalPort(OutputFunction function, Port internalPort, Port externalPort) {
+		Log.push("addAssignmentToInternalPort")
+		
+		if(! (function instanceof CompositeOutputFunction) ){
+			throw new Exception("Only CompositeOutputFunction is supported for now.")
+		}
+		
+		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
+		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
+		(assignment.lvalue as Variable).owner = internalPort.eContainer as InnerFMU
+		(assignment.lvalue as Variable).ref = internalPort
+		assignment.expr = SemanticAdaptationFactory.eINSTANCE.createVariable()
+		(assignment.expr as Variable).owner = externalPort.eContainer as Adaptation
+		(assignment.expr as Variable).ref = externalPort
+		
+		val outFunction = function as CompositeOutputFunction
+		outFunction.statements.add(0, assignment)
+		
+		Log.println("Assignment " + internalPort.name + " := " + externalPort.name + " created.")
+		
+		Log.pop("addAssignmentToInternalPort")
 	}
 	
 	def addInRules_External2Stored_Assignments(Adaptation sa, HashMap<Port, SingleVarDeclaration> inputPort2InVarDeclaration) {
@@ -282,6 +348,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			trueRule.condition.condition = trueExpr
 			
 			trueRule.statetransitionfunction = SemanticAdaptationFactory.eINSTANCE.createStateTransitionFunction()
+			
+			trueRule.outputfunction = SemanticAdaptationFactory.eINSTANCE.createCompositeOutputFunction()
 			
 			sa.in.rules.add(0, trueRule)
 			rule = trueRule
@@ -715,7 +783,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def addInPorts(Adaptation sa) {
 		Log.push("Adding input ports...")
-		
+
 		for (port : getAllInnerFMUInputPortDeclarations(sa)){
 			var parentFMU = port.eContainer as InnerFMU
 			Log.println("Checking if port " + parentFMU.name + "." + port.name + " has incoming connections")
@@ -745,7 +813,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def createExternalInputPortDeclarationFromInnerPort(Port port, FMU parent, Adaptation sa) {
 		var externalInputPort = SemanticAdaptationFactory.eINSTANCE.createPort()
-		externalInputPort.name = parent.name + "__" + port.name
+		externalInputPort.name = createExternalPortNameFromInternalPort(parent.name, port.name)
 		externalInputPort.type = port.type
 		externalInputPort.unity = EcoreUtil2.copy(port.unity)
 		sa.inports.add(externalInputPort)

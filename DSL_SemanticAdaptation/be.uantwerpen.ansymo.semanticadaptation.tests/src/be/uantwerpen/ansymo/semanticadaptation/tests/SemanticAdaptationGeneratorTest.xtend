@@ -20,6 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -73,6 +74,16 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				sa.in.rules.head.statetransitionfunction.statements.head instanceof Assignment
 				(sa.in.rules.head.statetransitionfunction.statements.head as Assignment).lvalue.ref.name == "stored__innerFMU2__input_port3"
 				((sa.in.rules.head.statetransitionfunction.statements.head as Assignment).expr as Variable).ref.name == "innerFMU2__input_port3"
+			}
+		}) }
+	
+	@Test def test_addInRules_External2Internal_Assignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				val outFunction = sa.in.rules.head.outputfunction as CompositeOutputFunction
+				val firstAssignment = outFunction.statements.head as Assignment
+				firstAssignment.lvalue.ref.name == "input_port3"
+				(firstAssignment.expr as Variable).ref.name == "innerFMU2__input_port3"
 			}
 		}) }
 	
