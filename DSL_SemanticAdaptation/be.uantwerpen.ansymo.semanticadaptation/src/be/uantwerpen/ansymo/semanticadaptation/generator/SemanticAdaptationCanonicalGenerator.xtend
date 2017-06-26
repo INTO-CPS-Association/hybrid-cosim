@@ -8,6 +8,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BuiltinFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Expression
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FMU
@@ -35,7 +36,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
 
 /**
  * Generates code from your model files on save.
@@ -222,7 +223,80 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val inputPort2InVarDeclaration = addInVars(sa, inputPort2parameterDeclaration)
 		
+		addInRules_External2Stored_Assignments(sa, inputPort2InVarDeclaration)
+		
+		
+		
 		Log.pop("Canonicalize")
+	}
+	
+	def addInRules_External2Stored_Assignments(Adaptation sa, HashMap<Port, SingleVarDeclaration> inputPort2InVarDeclaration) {
+		Log.push("addInRules_External2Stored_Assignments")
+		
+		val dataRule  = getOrPrependTrueInRule(sa)
+		
+		for(inPort : inputPort2InVarDeclaration.keySet){
+			val storedVarDecl = inputPort2InVarDeclaration.get(inPort)
+			addAssignmentToStoredVar(dataRule.statetransitionfunction, inPort, storedVarDecl)
+		}
+		
+		Log.pop("addInRules_External2Stored_Assignments")
+	}
+	
+	def addAssignmentToStoredVar(StateTransitionFunction function, Port inPort, SingleVarDeclaration storedVarDecl) {
+		Log.push("addAssignmentToStoredVar")
+		
+		if (function.expression !== null){
+			throw new Exception("Expressions in rules are not supported yet.")
+			// This and the one below are asily solved with a syntactic sugar substitution.
+		}
+		if (function.assignment !== null){
+			throw new Exception("Assignment in rules are not supported yet.")
+		}
+		
+		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
+		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
+		assignment.lvalue.ref = storedVarDecl
+		assignment.expr = SemanticAdaptationFactory.eINSTANCE.createVariable()
+		(assignment.expr as Variable).owner = inPort.eContainer as Adaptation
+		(assignment.expr as Variable).ref = inPort
+		
+		function.statements.add(0, assignment)
+		
+		Log.println("Assignment " + storedVarDecl.name + " := " + inPort.name + " created.")
+		
+		Log.pop("addAssignmentToStoredVar")
+	}
+	
+	def getOrPrependTrueInRule(Adaptation sa) {
+		if (sa.in === null){
+			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
+		}
+		var DataRule rule = null
+		if (sa.in.rules.size == 0 || !isTrueRule(sa.in.rules.head)){
+			Log.println("No existing rule found with true condition. Creating one.")
+			val trueRule = SemanticAdaptationFactory.eINSTANCE.createDataRule()
+			trueRule.condition = SemanticAdaptationFactory.eINSTANCE.createRuleCondition()
+			val trueExpr = SemanticAdaptationFactory.eINSTANCE.createBoolLiteral()
+			trueExpr.value = "true"
+			trueRule.condition.condition = trueExpr
+			
+			trueRule.statetransitionfunction = SemanticAdaptationFactory.eINSTANCE.createStateTransitionFunction()
+			
+			sa.in.rules.add(0, trueRule)
+			rule = trueRule
+		} else {
+			Log.println("Existing rule with true condition found.")
+			rule = sa.in.rules.head
+		}
+		return rule
+	}
+	
+	def isTrueRule(DataRule rule){
+		if (rule.condition.condition instanceof BoolLiteral){
+			return (rule.condition.condition as BoolLiteral).value == "true"
+		}
+		return false
 	}
 	
 	def addInVars(Adaptation sa, Map<Port, SingleParamDeclaration> inputPort2parameterDeclaration){

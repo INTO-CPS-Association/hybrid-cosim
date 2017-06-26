@@ -5,10 +5,14 @@ package be.uantwerpen.ansymo.semanticadaptation.formatting2
 
 import be.uantwerpen.ansymo.semanticadaptation.generator.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationPackage
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Statement
 import org.eclipse.xtext.formatting2.AbstractFormatter2
 import org.eclipse.xtext.formatting2.IFormattableDocument
-import org.eclipse.xtext.util.Strings
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 
 class SemanticAdaptationFormatter extends AbstractFormatter2 {
 	
@@ -40,7 +44,11 @@ class SemanticAdaptationFormatter extends AbstractFormatter2 {
 		sa.regionFor.keyword('param').prepend[newLine]
 		
 		if (sa.in !== null){
-			sa.in.allRegionsFor.keyword('in').prepend[newLine]
+			sa.in.regionFor.keyword('in').prepend[newLine]
+			
+			for (rule : sa.in.rules){
+				rule.format
+			}
 		}
 		
 		
@@ -57,4 +65,43 @@ class SemanticAdaptationFormatter extends AbstractFormatter2 {
 		Log.pop("Formatting adaptation")	
 	}
 	
+	def dispatch void format(DataRule rule, extension IFormattableDocument document){
+		Log.push("Formatting DataRule")
+		
+		rule.prepend[newLine]
+		
+		rule.statetransitionfunction.format
+		
+		rule.outputfunction.format
+		
+		Log.pop("Formatting DataRule")	
+	}
+	
+	def dispatch void format(StateTransitionFunction function, extension IFormattableDocument document){
+		Log.push("Formatting StateTransitionFunction")
+		
+		for (statement : function.statements){
+			statement.format
+		}
+		
+		Log.pop("Formatting StateTransitionFunction")	
+	}
+	
+	def dispatch void format(CompositeOutputFunction function, extension IFormattableDocument document){
+		Log.push("Formatting CompositeOutputFunction")
+		
+		for (statement : function.statements){
+			statement.format
+		}
+		
+		Log.pop("Formatting CompositeOutputFunction")	
+	}
+	
+	def dispatch void format(Statement statement, extension IFormattableDocument document){
+		Log.push("Formatting Statement")
+		
+		statement.prepend[newLine]
+		
+		Log.pop("Formatting Statement")	
+	}
 }

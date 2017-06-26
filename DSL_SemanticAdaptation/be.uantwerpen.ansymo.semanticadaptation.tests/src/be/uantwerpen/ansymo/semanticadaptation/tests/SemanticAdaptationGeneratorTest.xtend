@@ -19,6 +19,7 @@ import org.eclipse.xtext.xbase.testing.CompilationTestHelper.Result
 import org.junit.Test
 import org.junit.runner.RunWith
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -63,6 +64,15 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
 				sa.in.globalInVars.head.declarations.filter[p | p.name=="stored__innerFMU2__input_port2"].head.type == "Bool"
 				sa.in.globalInVars.head.declarations.filter[p | p.name=="stored__innerFMU2__input_port3"].head.expr instanceof Variable
+			}
+		}) }
+	
+	@Test def test_addExternal2StoredAssignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.in.rules.head.statetransitionfunction.statements.head instanceof Assignment
+				(sa.in.rules.head.statetransitionfunction.statements.head as Assignment).lvalue.ref.name == "stored__innerFMU2__input_port3"
+				((sa.in.rules.head.statetransitionfunction.statements.head as Assignment).expr as Variable).ref.name == "innerFMU2__input_port3"
 			}
 		}) }
 	
