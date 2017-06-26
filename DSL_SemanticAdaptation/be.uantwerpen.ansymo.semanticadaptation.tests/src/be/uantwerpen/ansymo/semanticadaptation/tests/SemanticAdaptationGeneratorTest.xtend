@@ -47,8 +47,8 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
 				sa.inports.filter[p | p.name=="innerFMU1__input_port2"].head.type == "Bool"
-				sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.owner.name == "innerFMU2"
-				sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.port.name == "input_port3"
+				//sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.owner.name == "innerFMU2"
+				//sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.port.name == "input_port3"
 			}
 		}) }
 	
@@ -86,6 +86,15 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				(firstAssignment.expr as Variable).ref.name == "innerFMU2__input_port3"
 			}
 		}) }
+	
+	
+	@Test def test_removeInBindings_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.inports.forall[p | p.targetdependency === null]
+			}
+		}) }
+	
 	
 	@Test def window_SA_parseNoExceptions() { __generate('input/power_window_case_study/window_sa.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }

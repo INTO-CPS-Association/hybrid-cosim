@@ -231,7 +231,21 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		addInRules_External2Internal_Assignments(sa, internalPort2ExternalPortBindings)
 		
+		removeInBindings(internalPort2ExternalPortBindings, sa)
+		
 		Log.pop("Canonicalize")
+	}
+	
+	def removeInBindings(HashMap<Port, Port> internalPort2ExternalPortBindings, Adaptation sa) {
+		Log.push("removeInBindings")
+		
+		for (internalPort : internalPort2ExternalPortBindings.keySet){
+			val externalPort = internalPort2ExternalPortBindings.get(internalPort)
+			Log.println("Removing binding " + externalPort.name + "->" + internalPort.name)
+			externalPort.targetdependency = null
+		}
+		
+		Log.pop("removeInBindings")
 	}
 	
 	def findAllExternalPort2InputPort_Bindings(Adaptation sa) {
@@ -242,7 +256,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		for (port : getAllInnerFMUInputPortDeclarations(sa)){
 			var parentFMU = port.eContainer as InnerFMU
 			Log.println("Checking if port " + parentFMU.name + "." + port.name + " is bound to an external port.")
-			val externalPort = findExternalPortByName(sa, createExternalPortNameFromInternalPort(parentFMU.name,port.name))
+			val externalPort = findExternalPortByTargetDependency(sa, port)
 			if (externalPort !== null){
 				Log.println("Port " + parentFMU.name + "." + port.name + " is bound to an external port: " + externalPort.name)
 				internalPort2ExternalPortBindings.put(port, externalPort)
@@ -828,6 +842,17 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		}
 		return null
 	}
+	
+	
+	def findExternalPortByTargetDependency(Adaptation sa, Port targetDependency) {
+		for (externalInputPort : sa.inports){
+			if (externalInputPort.targetdependency !== null && externalInputPort.targetdependency.port == targetDependency){
+				return externalInputPort
+			}
+		}
+		return null
+	}
+	
 	
 	def hasIncomingConnection(Port port, Adaptation adaptation) {
 		
