@@ -39,6 +39,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import java.util.List
 
 /**
  * Generates code from your model files on save.
@@ -233,6 +234,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		removeInBindings(internalPort2ExternalPortBindings, sa)
 		
+		//addOutPorts(sa)
+		
 		Log.pop("Canonicalize")
 	}
 	
@@ -271,7 +274,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	}
 	
 	def createExternalPortNameFromInternalPort(String parentFMUName, String internalPortName) {
-		return parentFMUName + "__" + internalPortName
+		//return parentFMUName + "__" + internalPortName // Violates transparency
+		return internalPortName
 	}
 	
 	def addInRules_External2Internal_Assignments(Adaptation sa, HashMap<Port, Port> internalPort2ExternalPort) {
@@ -801,15 +805,17 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		for (port : getAllInnerFMUInputPortDeclarations(sa)){
 			var parentFMU = port.eContainer as InnerFMU
 			Log.println("Checking if port " + parentFMU.name + "." + port.name + " has incoming connections")
-			if (! hasIncomingConnection(port, sa)){
+			if (! hasConnection(port, sa, true)){
 				Log.println("Port " + parentFMU.name + "." + port.name + " has no incoming connections.")
-				if (findExternalPortByName(sa, port.name) === null){
+				val externalPortName = createExternalPortNameFromInternalPort(parentFMU.name, port.name)
+				if (findExternalPortByName(sa, externalPortName) === null){
 					var newExternalPort = createExternalInputPortDeclarationFromInnerPort(port, parentFMU, sa)
 					Log.println("External port " + newExternalPort.name + " created.")
 					newExternalPort.bindExternalInputPortTo(parentFMU, port)
 					Log.println("External port " + newExternalPort.name + " bound to port " + parentFMU.name + "." + port.name)
 				} else {
-					Log.println("External port " + port.name + " already declared.")
+					Log.println("Error: External port " + externalPortName + " already declared.")
+					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it to avoid clashes.")
 				}
 			} else {
 				Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection.")
@@ -854,11 +860,13 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	}
 	
 	
-	def hasIncomingConnection(Port port, Adaptation adaptation) {
+	def hasConnection(Port port, Adaptation adaptation, Boolean checkForIncomming) {
 		
 		var result = false
 		
-		if (port.sourcedependency !== null){
+		if ( (checkForIncomming && port.sourcedependency !== null) ||
+			 (! checkForIncomming && port.targetdependency !== null)
+		){
 			result = true
 		} else {
 			if (port.eContainer instanceof InnerFMU){
@@ -869,20 +877,29 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 					var innerScenarioWithCoupling = innerScenarioDeclaration as InnerFMUDeclarationFull
 					if (innerScenarioWithCoupling.connection.size > 0){
 						for (connection : innerScenarioWithCoupling.connection ){
-							if (connection.tgt.port == port){
+							if ( (checkForIncomming && connection.tgt.port == port)){
 								var parentFMU = port.eContainer as InnerFMU
 								var sourceFMU = connection.src.port.eContainer as InnerFMU
 								Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection from internal port " + sourceFMU.name + "." + connection.src.port.name)
+								result = true
+							} else if (!checkForIncomming && connection.src.port == port) {
+								var parentFMU = port.eContainer as InnerFMU
+								var targetFMU = connection.tgt.port.eContainer as InnerFMU
+								Log.println("Port " + parentFMU.name + "." + port.name + " has an outgoing connection to internal port " + targetFMU.name + "." + connection.tgt.port.name)
 								result = true
 							}
 						}
 					}
 				}
 				
-				for (externalInputPort : adaptation.inports.filter[p | p.targetdependency !== null]){
-					if (externalInputPort.targetdependency.port == port){
+				for (externalInputPort : adaptation.inports.filter[p | (checkForIncomming && p.targetdependency !== null) || (!checkForIncomming && p.sourcedependency !== null) ]){
+					if (checkForIncomming && externalInputPort.targetdependency.port == port){
 						var parentFMU = port.eContainer as InnerFMU
 						Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection from external port " + externalInputPort.name)
+						result = true
+					} else if ( !checkForIncomming &&  externalInputPort.sourcedependency.port == port){
+						var parentFMU = port.eContainer as InnerFMU
+						Log.println("Port " + parentFMU.name + "." + port.name + " has an outgoing connection to external port " + externalInputPort.name)
 						result = true
 					}
 				}
@@ -893,13 +910,21 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	}
 	
 	def getAllInnerFMUInputPortDeclarations(Adaptation sa){
+		return mapAllInnerFMUs(sa, [fmu | fmu.inports]);
+	}
+	
+	def getAllInnerFMUOutputPortDeclarations(Adaptation sa){
+		return mapAllInnerFMUs(sa, [fmu | fmu.outports]);
+	}
+	
+	def <T> List<T> mapAllInnerFMUs(Adaptation sa, (InnerFMU)=>List<T> map){
 		var result = new LinkedList()
 		
 		if(sa.inner !== null){
 			if(sa.inner instanceof InnerFMUDeclarationFull){
 				var innerFMUFull = sa.inner as InnerFMUDeclarationFull
 				for(fmu : innerFMUFull.fmus){
-					result.addAll(fmu.inports)
+					result.addAll(map.apply(fmu))
 				}
 			} else {
 				throw new Exception("Only support for InnerFMUDeclarationFull.")
@@ -908,6 +933,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		return result;
 	}
+	
 	
 	def addInParams(Adaptation sa) {
 		Log.push("Adding input parameters...")
@@ -986,6 +1012,36 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			}
 		}
 		return false
+	}
+	
+	
+	def addOutPorts(Adaptation sa) {
+		Log.push("Adding output ports...")
+
+		for (port : getAllInnerFMUOutputPortDeclarations(sa)){
+			var parentFMU = port.eContainer as InnerFMU
+			Log.println("Checking if port " + parentFMU.name + "." + port.name + " has outgoing connections")
+			if (! hasConnection(port, sa, false)){
+				Log.println("Port " + parentFMU.name + "." + port.name + " has no outgoing connections.")
+				
+				// TODO Continue here.
+				
+				val externalPortName = createExternalPortNameFromInternalPort(parentFMU.name, port.name)
+				if (findExternalPortByName(sa, externalPortName) === null){
+					var newExternalPort = createExternalInputPortDeclarationFromInnerPort(port, parentFMU, sa)
+					Log.println("External port " + newExternalPort.name + " created.")
+					newExternalPort.bindExternalInputPortTo(parentFMU, port)
+					Log.println("External port " + newExternalPort.name + " bound to port " + parentFMU.name + "." + port.name)
+				} else {
+					Log.println("Error: External port " + externalPortName + " already declared.")
+					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it to avoid clashes.")
+				}
+			} else {
+				Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection.")
+			}
+		}
+		
+		Log.pop("Adding output ports... DONE")
 	}
 	
 }

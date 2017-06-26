@@ -34,11 +34,11 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				sa.name == "outerFMU"
 				sa.eAllContents.filter(Port).filter[p | p.name=="ext_input_port3"].head.unity instanceof MultiplyUnity
 				sa.eAllContents.filter(InnerFMU).filter[f | f.name=="innerFMU2"].head
-							.eAllContents.filter(Port).filter[p | p.name=="input_port1"].head.type == "Real"
+							.eAllContents.filter(Port).filter[p | p.name=="innerFMU2__input_port1"].head.type == "Real"
 				sa.eAllContents.filter(InnerFMU).filter[f | f.name=="innerFMU2"].head
-							.eAllContents.filter(Port).filter[p | p.name=="outout_port1"].head.type == "Real"
+							.eAllContents.filter(Port).filter[p | p.name=="innerFMU2__outout_port1"].head.type == "Real"
 				sa.eAllContents.filter(InnerFMU).filter[f | f.name=="innerFMU2"].head
-							.eAllContents.filter(Port).filter[p | p.name=="outout_port1"].head.unity instanceof AtomicUnity
+							.eAllContents.filter(Port).filter[p | p.name=="innerFMU2__outout_port1"].head.unity instanceof AtomicUnity
 				
 			}
 		}) }
@@ -47,6 +47,9 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
 				sa.inports.filter[p | p.name=="innerFMU1__input_port2"].head.type == "Bool"
+				
+				sa.inports.filter[p | p.name=="innerFMU1__input_port1"].size == 0
+				
 				//sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.owner.name == "innerFMU2"
 				//sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.port.name == "input_port3"
 			}
@@ -86,7 +89,6 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				(firstAssignment.expr as Variable).ref.name == "innerFMU2__input_port3"
 			}
 		}) }
-	
 	
 	@Test def test_removeInBindings_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
