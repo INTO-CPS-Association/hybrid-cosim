@@ -25,5 +25,6 @@ Export-Package: be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.util,
  be.uantwerpen.ansymo.semanticadaptation.serializer,
  be.uantwerpen.ansymo.semanticadaptation.validation,
  be.uantwerpen.ansymo.semanticadaptation.parser.antlr,
- be.uantwerpen.ansymo.semanticadaptation.generator
+ be.uantwerpen.ansymo.semanticadaptation.generator,
+ be.uantwerpen.ansymo.semanticadaptation.formatting2
 Import-Package: org.apache.log4j

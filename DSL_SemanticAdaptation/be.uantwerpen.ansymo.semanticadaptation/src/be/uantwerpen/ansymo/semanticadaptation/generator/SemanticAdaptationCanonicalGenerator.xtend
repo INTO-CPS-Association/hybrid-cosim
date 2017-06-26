@@ -28,12 +28,14 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.io.ByteArrayOutputStream
 import java.util.HashMap
 import java.util.LinkedList
+import java.util.Map
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 
 /**
  * Generates code from your model files on save.
@@ -102,8 +104,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return outputByteArray.toString()
 	}
 	
-	def canonicalize(Adaptation sa){
-		Log.push("Canonicalize")
+	def inferUnits(Adaptation sa){
 		// Unit inference
 		var unitlessElements = genericDeclarationInferenceAlgorithm(sa , 
 			[// getField
@@ -152,7 +153,9 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		if (unitlessElements > 0){
 			Log.println("Could not infer all element units. There are " + unitlessElements + " unitless elements.")
 		}
-		
+	}
+	
+	def inferTypes(Adaptation sa){
 		// Type inference
 		var untypedElements = genericDeclarationInferenceAlgorithm(sa , 
 			[// getField
@@ -204,14 +207,86 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			
 			throw new Exception("Could not infer all types. There are " + untypedElements + " untyped elements.")
 		}
+	}
+	
+	def canonicalize(Adaptation sa){
+		Log.push("Canonicalize")
 		
-		// Add input ports
+		inferUnits(sa)
+		
+		inferTypes(sa)
+		
 		addInPorts(sa)
 		
-		// Add in params
-		addInParams(sa)
+		val inputPort2parameterDeclaration = addInParams(sa)
+		
+		val inputPort2InVarDeclaration = addInVars(sa, inputPort2parameterDeclaration)
 		
 		Log.pop("Canonicalize")
+	}
+	
+	def addInVars(Adaptation sa, Map<Port, SingleParamDeclaration> inputPort2parameterDeclaration){
+		Log.push("addInVars")
+		
+		var inputPort2InVarDeclaration = new HashMap<Port, SingleVarDeclaration>()
+		
+		for(inputPort : inputPort2parameterDeclaration.keySet){
+			Log.println("Processing port " + inputPort.name)
+			val paramDecl = inputPort2parameterDeclaration.get(inputPort)
+			
+			val varDeclarationName = getGeneratedInVarDeclarationName(inputPort)			
+			
+			if (!varDeclarationExists(varDeclarationName, sa)){
+				Log.println("Creating new input variable declaration " + varDeclarationName)
+				
+				val varDeclaration = addNewInputVarDeclaration(inputPort, paramDecl, sa)
+				
+				inputPort2InVarDeclaration.put(inputPort, varDeclaration)
+			} else {
+				Log.println("Input variable declaration " + varDeclarationName + " already exists.")
+			}
+		}
+		
+		Log.pop("addInVars")
+		return inputPort2InVarDeclaration
+	}
+	
+	def addNewInputVarDeclaration(Port externalInputPort, SingleParamDeclaration paramDecl, Adaptation sa) {
+		if (sa.in === null){
+			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
+		}
+		if (sa.in.globalInVars.size == 0){
+			sa.in.globalInVars.add(SemanticAdaptationFactory.eINSTANCE.createDeclaration())
+		}
+		
+		val newSingleVarDecl = SemanticAdaptationFactory.eINSTANCE.createSingleVarDeclaration()
+		newSingleVarDecl.name = getGeneratedInVarDeclarationName(externalInputPort)
+		newSingleVarDecl.type = externalInputPort.type
+		val initValue = SemanticAdaptationFactory.eINSTANCE.createVariable()
+		initValue.ref = paramDecl
+		newSingleVarDecl.expr = initValue
+		
+		sa.in.globalInVars.head.declarations.add(newSingleVarDecl)
+		
+		Log.println("New input variable declaration created: " + newSingleVarDecl.name + " := " + paramDecl.name)
+		return newSingleVarDecl
+	}
+	
+	def varDeclarationExists(String invarName, Adaptation sa) {
+		if (sa.in !== null){
+			for (declarations : sa.in.globalInVars){
+				for (decl : declarations.declarations){
+					if (decl.name == invarName){
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}
+	
+	def getGeneratedInVarDeclarationName(Port externalInputPort) {
+		return "stored__" + externalInputPort.name;
 	}
 	
 	def genericDeclarationInferenceAlgorithm(Adaptation sa, 
