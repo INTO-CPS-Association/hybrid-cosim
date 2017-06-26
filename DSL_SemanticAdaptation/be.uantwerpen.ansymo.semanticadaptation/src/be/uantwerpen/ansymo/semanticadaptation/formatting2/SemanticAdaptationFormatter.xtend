@@ -55,6 +55,14 @@ class SemanticAdaptationFormatter extends AbstractFormatter2 {
 			}
 		}
 		
+		if (sa.out !== null){
+			sa.out.regionFor.keyword('out').prepend[newLine]
+			
+			for (rule : sa.out.rules){
+				rule.format
+			}
+		}
+		
 		
 		/*
 		for (inPort : sa.inports){

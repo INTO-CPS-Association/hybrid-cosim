@@ -10,6 +10,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Expression
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FMU
@@ -32,6 +33,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.io.ByteArrayOutputStream
 import java.util.HashMap
 import java.util.LinkedList
+import java.util.List
 import java.util.Map
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
@@ -39,7 +41,6 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import java.util.List
 
 /**
  * Generates code from your model files on save.
@@ -238,6 +239,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val outputPort2parameterDeclaration = addOutParams(sa)
 		
+		val outputPort2OutVarDeclaration = addOutVars(sa, outputPort2parameterDeclaration)
+		
 		
 		
 		Log.pop("Canonicalize")
@@ -392,64 +395,89 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def addInVars(Adaptation sa, Map<Port, SingleParamDeclaration> inputPort2parameterDeclaration){
 		Log.push("addInVars")
 		
-		var inputPort2InVarDeclaration = new HashMap<Port, SingleVarDeclaration>()
-		
-		for(inputPort : inputPort2parameterDeclaration.keySet){
-			Log.println("Processing port " + inputPort.name)
-			val paramDecl = inputPort2parameterDeclaration.get(inputPort)
-			
-			val varDeclarationName = getGeneratedInVarDeclarationName(inputPort)			
-			
-			if (!varDeclarationExists(varDeclarationName, sa)){
-				Log.println("Creating new input variable declaration " + varDeclarationName)
-				
-				val varDeclaration = addNewInputVarDeclaration(inputPort, paramDecl, sa)
-				
-				inputPort2InVarDeclaration.put(inputPort, varDeclaration)
-			} else {
-				Log.println("Input variable declaration " + varDeclarationName + " already exists.")
-			}
+		if (sa.in === null){
+			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
 		}
+		
+		val inputPort2InVarDeclaration = addStorageVars(sa.in.globalInVars, inputPort2parameterDeclaration)
 		
 		Log.pop("addInVars")
 		return inputPort2InVarDeclaration
 	}
 	
-	def addNewInputVarDeclaration(Port externalInputPort, SingleParamDeclaration paramDecl, Adaptation sa) {
+	def addOutVars(Adaptation sa, Map<Port, SingleParamDeclaration> outputPort2parameterDeclaration){
+		Log.push("addOutVars")
+		
+		if (sa.out === null){
+			sa.out = SemanticAdaptationFactory.eINSTANCE.createOutRulesBlock()
+		}
+		
+		val outputPort2InVarDeclaration = addStorageVars(sa.out.globalOutVars, outputPort2parameterDeclaration)
+		
+		Log.pop("addOutVars")
+		return outputPort2InVarDeclaration
+	}
+	
+	def addStorageVars(List<Declaration> varDeclarations, Map<Port, SingleParamDeclaration> port2parameterDeclaration){
+		Log.push("addStorageVars")
+		
+		var port2VarDeclaration = new HashMap<Port, SingleVarDeclaration>()
+		
+		for(port : port2parameterDeclaration.keySet){
+			Log.println("Processing port " + port.name)
+			val paramDecl = port2parameterDeclaration.get(port)
+			
+			val varDeclarationName = getStorageVarDeclarationName(port)			
+			if (!varDeclarationExists(varDeclarationName, varDeclarations) ){
+				Log.println("Creating new variable declaration " + varDeclarationName)
+				
+				val varDeclaration = addNewInputVarDeclaration(port, paramDecl, varDeclarations)
+				
+				port2VarDeclaration.put(port, varDeclaration)
+			} else {
+				Log.println("Input variable declaration " + varDeclarationName + " already exists.")
+			}
+		}
+		
+		Log.pop("addStorageVars")
+		return port2VarDeclaration
+	}
+	
+	def addNewInputVarDeclaration(Port externalInputPort, SingleParamDeclaration paramDecl, List<Declaration> varDeclarations) {
+		/*
 		if (sa.in === null){
 			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
 		}
-		if (sa.in.globalInVars.size == 0){
-			sa.in.globalInVars.add(SemanticAdaptationFactory.eINSTANCE.createDeclaration())
+		 */
+		if (varDeclarations.size == 0){
+			varDeclarations.add(SemanticAdaptationFactory.eINSTANCE.createDeclaration())
 		}
 		
 		val newSingleVarDecl = SemanticAdaptationFactory.eINSTANCE.createSingleVarDeclaration()
-		newSingleVarDecl.name = getGeneratedInVarDeclarationName(externalInputPort)
+		newSingleVarDecl.name = getStorageVarDeclarationName(externalInputPort)
 		newSingleVarDecl.type = externalInputPort.type
 		val initValue = SemanticAdaptationFactory.eINSTANCE.createVariable()
 		initValue.ref = paramDecl
 		newSingleVarDecl.expr = initValue
 		
-		sa.in.globalInVars.head.declarations.add(newSingleVarDecl)
+		varDeclarations.head.declarations.add(newSingleVarDecl)
 		
-		Log.println("New input variable declaration created: " + newSingleVarDecl.name + " := " + paramDecl.name)
+		Log.println("New variable declaration created: " + newSingleVarDecl.name + " := " + paramDecl.name)
 		return newSingleVarDecl
 	}
 	
-	def varDeclarationExists(String invarName, Adaptation sa) {
-		if (sa.in !== null){
-			for (declarations : sa.in.globalInVars){
-				for (decl : declarations.declarations){
-					if (decl.name == invarName){
-						return true
-					}
+	def varDeclarationExists(String invarName, List<Declaration> varDeclarations) {
+		for (declarations : varDeclarations){ // sa.in.globalInVars
+			for (decl : declarations.declarations){
+				if (decl.name == invarName){
+					return true
 				}
 			}
 		}
 		return false
 	}
 	
-	def getGeneratedInVarDeclarationName(Port externalInputPort) {
+	def getStorageVarDeclarationName(Port externalInputPort) {
 		return "stored__" + externalInputPort.name;
 	}
 	

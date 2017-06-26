@@ -71,6 +71,13 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
+	@Test def test_addOutVars_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.out.globalOutVars.head.declarations.filter[p | p.name=="stored__innerFMU1__output_port2"].head.type == "Integer"
+			}
+		}) }
+	
 	@Test def test_addExternal2StoredAssignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
