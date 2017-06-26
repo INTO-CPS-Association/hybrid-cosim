@@ -234,7 +234,11 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		removeInBindings(internalPort2ExternalPortBindings, sa)
 		
-		//addOutPorts(sa)
+		addOutPorts(sa)
+		
+		val outputPort2parameterDeclaration = addOutParams(sa)
+		
+		
 		
 		Log.pop("Canonicalize")
 	}
@@ -831,12 +835,29 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		externalInputPort.targetdependency.port = internalPort
 	}
 	
+	def bindExternalOutputPortTo(Port externalOutputPort, InnerFMU internalPortParent, Port internalPort) {
+		externalOutputPort.sourcedependency = SemanticAdaptationFactory.eINSTANCE.createSpecifiedPort()
+		externalOutputPort.sourcedependency.owner = internalPortParent
+		externalOutputPort.sourcedependency.port = internalPort
+	}
+	
 	def createExternalInputPortDeclarationFromInnerPort(Port port, FMU parent, Adaptation sa) {
+		var externalInputPort = createExternalPortDeclarationFromInnerPort(port, parent)
+		sa.inports.add(externalInputPort)
+		return externalInputPort
+	}
+	
+	def createExternalOutputPortDeclarationFromInnerPort(Port port, FMU parent, Adaptation sa) {
+		var externalOutputPort = createExternalPortDeclarationFromInnerPort(port, parent)
+		sa.outports.add(externalOutputPort)
+		return externalOutputPort
+	}
+	
+	def createExternalPortDeclarationFromInnerPort(Port port, FMU parent) {
 		var externalInputPort = SemanticAdaptationFactory.eINSTANCE.createPort()
 		externalInputPort.name = createExternalPortNameFromInternalPort(parent.name, port.name)
 		externalInputPort.type = port.type
 		externalInputPort.unity = EcoreUtil2.copy(port.unity)
-		sa.inports.add(externalInputPort)
 		return externalInputPort
 	}
 	
@@ -937,26 +958,40 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def addInParams(Adaptation sa) {
 		Log.push("Adding input parameters...")
+		val result = addParamForExternalPortDeclarations(sa, sa.inports)
+		Log.pop("Adding input parameters... DONE")
+		return result
+	}
+	
+	def addOutParams(Adaptation sa) {
+		Log.push("Adding output parameters...")
+		val result = addParamForExternalPortDeclarations(sa, sa.outports)
+		Log.pop("Adding output parameters... DONE")
+		return result
+	}
+	
+	def addParamForExternalPortDeclarations(Adaptation sa, List<Port> externalPortList){
+		Log.push("addParamForExternalPortDeclarations")
 		
 		val PARAM_PREFIX = "INIT_"
 		
-		var inputPort2parameterDeclaration = new HashMap<Port, SingleParamDeclaration>(sa.inports.size)
+		var externalPort2parameterDeclaration = new HashMap<Port, SingleParamDeclaration>(externalPortList.size)
 		
-		for (inputPortDeclaration : sa.inports) {
-			Log.println("Generating parameter for port " + inputPortDeclaration.name)
-			var paramname = PARAM_PREFIX + inputPortDeclaration.name.toUpperCase()
+		for (externalPortDecl : externalPortList) {
+			Log.println("Generating parameter for port " + externalPortDecl.name)
+			var paramname = PARAM_PREFIX + externalPortDecl.name.toUpperCase()
 			
 			if (paramAlreadyDeclared(paramname, sa)){
-				Log.println("Parameter " + paramname + " already declared for port " + inputPortDeclaration.name)
+				Log.println("Parameter " + paramname + " already declared for port " + externalPortDecl.name)
 			} else {
-				Log.println("Declaring new parameter " + paramname + " for port " + inputPortDeclaration.name)
-				var paramDeclaration = addNewParamDeclaration(paramname, inputPortDeclaration, sa)
-				inputPort2parameterDeclaration.put(inputPortDeclaration, paramDeclaration)
+				Log.println("Declaring new parameter " + paramname + " for port " + externalPortDecl.name)
+				var paramDeclaration = addNewParamDeclaration(paramname, externalPortDecl, sa)
+				externalPort2parameterDeclaration.put(externalPortDecl, paramDeclaration)
 			}
 		}
 		
-		Log.pop("Adding input parameters... DONE")
-		return inputPort2parameterDeclaration
+		Log.pop("addParamForExternalPortDeclarations")
+		return externalPort2parameterDeclaration
 	}
 	
 	def addNewParamDeclaration(String name, Port fromPort, Adaptation sa) {
@@ -994,7 +1029,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			}
 			case "String": {
 				val result = SemanticAdaptationFactory.eINSTANCE.createStringLiteral
-				result.value = ""
+				result.value = " "
 				return result
 			}
 			default: {
@@ -1024,13 +1059,11 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			if (! hasConnection(port, sa, false)){
 				Log.println("Port " + parentFMU.name + "." + port.name + " has no outgoing connections.")
 				
-				// TODO Continue here.
-				
 				val externalPortName = createExternalPortNameFromInternalPort(parentFMU.name, port.name)
 				if (findExternalPortByName(sa, externalPortName) === null){
-					var newExternalPort = createExternalInputPortDeclarationFromInnerPort(port, parentFMU, sa)
+					var newExternalPort = createExternalOutputPortDeclarationFromInnerPort(port, parentFMU, sa)
 					Log.println("External port " + newExternalPort.name + " created.")
-					newExternalPort.bindExternalInputPortTo(parentFMU, port)
+					newExternalPort.bindExternalOutputPortTo(parentFMU, port)
 					Log.println("External port " + newExternalPort.name + " bound to port " + parentFMU.name + "." + port.name)
 				} else {
 					Log.println("Error: External port " + externalPortName + " already declared.")

@@ -33,6 +33,15 @@ class SemanticAdaptationValueConverters extends AbstractDeclarativeValueConverte
 		};
 	}
 	
+	@ValueConverter(rule = "STRING")
+	def STRING() {
+		return new AbstractLexerBasedConverter<String> {    
+		    override toValue(String string, INode node) {
+				return string
+		    }
+		};
+	}
+	
 	/*@ValueConverter(rule = "AtomicUnity")
 	def AtomicUnity() {
 		return new AbstractLexerBasedConverter<Integer> {    

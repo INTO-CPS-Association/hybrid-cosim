@@ -40,8 +40,12 @@ class SemanticAdaptationFormatter extends AbstractFormatter2 {
 		
 		sa.regionFor.keyword('input').prepend[newLine]
 		sa.regionFor.keyword('output').prepend[newLine]
-		sa.regionFor.keyword('param').prepend[newLine]
-		sa.regionFor.keyword('param').prepend[newLine]
+		
+		if (sa.params.size > 0){
+			for (paramDecls : sa.params){
+				paramDecls.prepend[newLine]
+			}
+		}
 		
 		if (sa.in !== null){
 			sa.in.regionFor.keyword('in').prepend[newLine]

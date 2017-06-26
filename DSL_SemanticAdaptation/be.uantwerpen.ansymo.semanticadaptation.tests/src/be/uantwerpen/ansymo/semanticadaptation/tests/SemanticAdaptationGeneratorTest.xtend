@@ -97,6 +97,12 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
+	@Test def test_addOutParams_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.params.head.declarations.filter[p | p.name == "INIT_INNERFMU2__OUTPUT_PORT2"].size == 1
+			}
+		}) }
 	
 	@Test def window_SA_parseNoExceptions() { __generate('input/power_window_case_study/window_sa.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
