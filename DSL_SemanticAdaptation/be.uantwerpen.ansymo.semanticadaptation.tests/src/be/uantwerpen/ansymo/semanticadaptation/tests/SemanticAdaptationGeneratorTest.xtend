@@ -4,12 +4,15 @@
 package be.uantwerpen.ansymo.semanticadaptation.tests
 
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AtomicUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MultiplyUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import com.google.inject.Inject
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
@@ -18,9 +21,7 @@ import org.eclipse.xtext.xbase.testing.CompilationTestHelper
 import org.eclipse.xtext.xbase.testing.CompilationTestHelper.Result
 import org.junit.Test
 import org.junit.runner.RunWith
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
+import org.junit.Assert
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -78,12 +79,21 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
-	@Test def test_addExternal2StoredAssignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+	@Test def test_addExternal2InputPortStoredAssignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
 				sa.in.rules.head.statetransitionfunction.statements.head instanceof Assignment
 				(sa.in.rules.head.statetransitionfunction.statements.head as Assignment).lvalue.ref.name == "stored__innerFMU2__input_port3"
 				((sa.in.rules.head.statetransitionfunction.statements.head as Assignment).expr as Variable).ref.name == "innerFMU2__input_port3"
+			}
+		}) }
+	
+	
+	@Test def test_addInternal2OutputPortStoredAssignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				var firstAssignment = sa.out.rules.head.statetransitionfunction.statements.head as Assignment
+				Assert.assertNotEquals((firstAssignment.expr as Variable).owner.name, "outerFMU_BASE")
 			}
 		}) }
 	

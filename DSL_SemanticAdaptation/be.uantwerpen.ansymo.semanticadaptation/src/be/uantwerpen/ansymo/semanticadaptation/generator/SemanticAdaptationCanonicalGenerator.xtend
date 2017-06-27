@@ -41,6 +41,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Statement
 
 /**
  * Generates code from your model files on save.
@@ -225,9 +226,9 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val inputPort2parameterDeclaration = addInParams(sa)
 		
-		val inputPort2InVarDeclaration = addInVars(sa, inputPort2parameterDeclaration)
+		val externalInputPort2InVarDeclaration = addInVars(sa, inputPort2parameterDeclaration)
 		
-		addInRules_External2Stored_Assignments(sa, inputPort2InVarDeclaration)
+		addInRules_External2Stored_Assignments(sa, externalInputPort2InVarDeclaration)
 		
 		val internalPort2ExternalPortBindings = findAllExternalPort2InputPort_Bindings(sa)
 		
@@ -239,11 +240,40 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val outputPort2parameterDeclaration = addOutParams(sa)
 		
-		val outputPort2OutVarDeclaration = addOutVars(sa, outputPort2parameterDeclaration)
+		val externalOutputPort2OutVarDeclaration = addOutVars(sa, outputPort2parameterDeclaration)
 		
+		val internalOutputPort2ExternalPortBindings = findAllInternalPort2ExternalOutputPort_Bindings(sa)
 		
+		val internalOutputPort2OutVarDeclaration = transitiveStep(internalOutputPort2ExternalPortBindings, externalOutputPort2OutVarDeclaration)
+		
+		addOutRules_Internal2Stored_Assignments(sa, internalOutputPort2OutVarDeclaration)
 		
 		Log.pop("Canonicalize")
+	}
+	
+	def transitiveStep(HashMap<Port, Port> internalOutputPort2ExternalPortBindings, HashMap<Port, SingleVarDeclaration> externalOutputPort2OutVarDeclaration) {
+		Log.push("transitiveStep")
+		
+		val internalOutputPort2OutVarDeclaration = new HashMap<Port, SingleVarDeclaration>()
+		
+		for(internalOutputPort : internalOutputPort2ExternalPortBindings.keySet){
+			val externalOutputPort =  internalOutputPort2ExternalPortBindings.get(internalOutputPort)
+			if (externalOutputPort2OutVarDeclaration.containsKey(externalOutputPort)){
+				val outVar = externalOutputPort2OutVarDeclaration.get(externalOutputPort)
+				Log.println("Found binding: " + internalOutputPort.qualifiedName + "->" + externalOutputPort.qualifiedName + " to be stored in " + outVar.name)
+				internalOutputPort2OutVarDeclaration.put(internalOutputPort, outVar)
+			}
+		}
+		
+		Log.pop("transitiveStep")
+		return internalOutputPort2OutVarDeclaration
+	}
+	
+	def String qualifiedName(Port port){
+		if (port.eContainer instanceof FMU){
+			return (port.eContainer as FMU).name + "." + port.name
+		}
+		return port.name
 	}
 	
 	def removeInBindings(HashMap<Port, Port> internalPort2ExternalPortBindings, Adaptation sa) {
@@ -251,7 +281,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		for (internalPort : internalPort2ExternalPortBindings.keySet){
 			val externalPort = internalPort2ExternalPortBindings.get(internalPort)
-			Log.println("Removing binding " + externalPort.name + "->" + internalPort.name)
+			Log.println("Removing binding " + externalPort.qualifiedName + "->" + internalPort.qualifiedName)
 			externalPort.targetdependency = null
 		}
 		
@@ -265,17 +295,40 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		for (port : getAllInnerFMUInputPortDeclarations(sa)){
 			var parentFMU = port.eContainer as InnerFMU
-			Log.println("Checking if port " + parentFMU.name + "." + port.name + " is bound to an external port.")
-			val externalPort = findExternalPortByTargetDependency(sa, port)
+			Log.println("Checking if port " + port.qualifiedName + " is bound to an external port.")
+			val externalPort = findExternalPortByTargetDependency(sa.inports, port)
 			if (externalPort !== null){
-				Log.println("Port " + parentFMU.name + "." + port.name + " is bound to an external port: " + externalPort.name)
+				Log.println("Port " + port.qualifiedName + " is bound to an external port: " + externalPort.qualifiedName)
 				internalPort2ExternalPortBindings.put(port, externalPort)
 			} else {
-				Log.println("Port " + parentFMU.name + "." + port.name + " is not bound to an external port.")
+				Log.println("Port " + port.qualifiedName + " is not bound to an external port.")
 			}
 		}
 		
 		Log.pop("findAllExternalPort2InputPort_Bindings")
+		
+		return internalPort2ExternalPortBindings
+	}
+	
+	def findAllInternalPort2ExternalOutputPort_Bindings(Adaptation sa) {
+		Log.push("findAllInternalPort2ExternalOutputPort_Bindings")
+		
+		val internalPort2ExternalPortBindings = new HashMap<Port, Port>()
+		
+		for (port : getAllInnerFMUOutputPortDeclarations(sa)){
+			Log.println("Checking if port " + port.qualifiedName + " is bound to an external port.")
+			val externalPort = findExternalPortBySourceDependency(sa.outports, port)
+			if (externalPort !== null){
+				Log.println("Port " + externalPort.qualifiedName + " is bound to an internal port: " + port.qualifiedName
+				)
+				internalPort2ExternalPortBindings.put(port, externalPort)
+			} else {
+				Log.println("Port " + port.qualifiedName + " is not bound to an external port.")
+			}
+		}
+		
+		
+		Log.pop("findAllInternalPort2ExternalOutputPort_Bindings")
 		
 		return internalPort2ExternalPortBindings
 	}
@@ -288,7 +341,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def addInRules_External2Internal_Assignments(Adaptation sa, HashMap<Port, Port> internalPort2ExternalPort) {
 		Log.push("addInRules_External2Internal_Assignments")
 		
-		val dataRule  = getOrPrependTrueInRule(sa)
+		val dataRule  = getOrPrependTrueRule(sa.in.rules)
 		
 		for(internalPort : internalPort2ExternalPort.keySet){
 			val externalPort = internalPort2ExternalPort.get(internalPort)
@@ -316,7 +369,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		val outFunction = function as CompositeOutputFunction
 		outFunction.statements.add(0, assignment)
 		
-		Log.println("Assignment " + internalPort.name + " := " + externalPort.name + " created.")
+		Log.println("Assignment " + internalPort.qualifiedName + " := " + externalPort.qualifiedName + " created.")
 		
 		Log.pop("addAssignmentToInternalPort")
 	}
@@ -324,47 +377,68 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def addInRules_External2Stored_Assignments(Adaptation sa, HashMap<Port, SingleVarDeclaration> inputPort2InVarDeclaration) {
 		Log.push("addInRules_External2Stored_Assignments")
 		
-		val dataRule  = getOrPrependTrueInRule(sa)
-		
-		for(inPort : inputPort2InVarDeclaration.keySet){
-			val storedVarDecl = inputPort2InVarDeclaration.get(inPort)
-			addAssignmentToStoredVar(dataRule.statetransitionfunction, inPort, storedVarDecl)
+		if (sa.in === null){
+			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
 		}
+		
+		addRules_Port2Stored_Assignments(sa.in.rules, inputPort2InVarDeclaration)
 		
 		Log.pop("addInRules_External2Stored_Assignments")
 	}
 	
-	def addAssignmentToStoredVar(StateTransitionFunction function, Port inPort, SingleVarDeclaration storedVarDecl) {
-		Log.push("addAssignmentToStoredVar")
+	def addOutRules_Internal2Stored_Assignments(Adaptation sa, HashMap<Port, SingleVarDeclaration> internalOutputPort2OutVarDeclaration) {
+		Log.push("addOutRules_Internal2Stored_Assignments")
 		
-		if (function.expression !== null){
+		if (sa.out === null){
+			sa.out = SemanticAdaptationFactory.eINSTANCE.createOutRulesBlock()
+		}
+		
+		addRules_Port2Stored_Assignments(sa.out.rules, internalOutputPort2OutVarDeclaration)
+		
+		Log.pop("addOutRules_Internal2Stored_Assignments")
+	}
+	
+	def addRules_Port2Stored_Assignments(List<DataRule> rules, HashMap<Port, SingleVarDeclaration> port2VarDeclaration) {
+		Log.push("addRules_External2Stored_Assignments")
+		
+		val dataRule  = getOrPrependTrueRule(rules)
+		
+		if (dataRule.statetransitionfunction.expression !== null){
 			throw new Exception("Expressions in rules are not supported yet.")
 			// This and the one below are asily solved with a syntactic sugar substitution.
 		}
-		if (function.assignment !== null){
+		if (dataRule.statetransitionfunction.assignment !== null){
 			throw new Exception("Assignment in rules are not supported yet.")
 		}
+		
+		for(port : port2VarDeclaration.keySet){
+			val storedVarDecl = port2VarDeclaration.get(port)
+			addAssignmentToStoredVar(dataRule.statetransitionfunction.statements, port, storedVarDecl)
+		}
+		
+		Log.pop("addRules_External2Stored_Assignments")
+	}
+	
+	def addAssignmentToStoredVar(List<Statement> statements, Port internalPort, SingleVarDeclaration storedVarDecl) {
+		Log.push("addAssignmentToStoredVar")
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
 		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
 		assignment.lvalue.ref = storedVarDecl
 		assignment.expr = SemanticAdaptationFactory.eINSTANCE.createVariable()
-		(assignment.expr as Variable).owner = inPort.eContainer as Adaptation
-		(assignment.expr as Variable).ref = inPort
+		(assignment.expr as Variable).owner = internalPort.eContainer as FMU
+		(assignment.expr as Variable).ref = internalPort
 		
-		function.statements.add(0, assignment)
+		statements.add(0, assignment)
 		
-		Log.println("Assignment " + storedVarDecl.name + " := " + inPort.name + " created.")
+		Log.println("Assignment " + storedVarDecl.name + " := " + internalPort.qualifiedName + " created.")
 		
 		Log.pop("addAssignmentToStoredVar")
 	}
 	
-	def getOrPrependTrueInRule(Adaptation sa) {
-		if (sa.in === null){
-			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
-		}
+	def getOrPrependTrueRule(List<DataRule> rules) {
 		var DataRule rule = null
-		if (sa.in.rules.size == 0 || !isTrueRule(sa.in.rules.head)){
+		if (rules.size == 0 || !isTrueRule(rules.head)){
 			Log.println("No existing rule found with true condition. Creating one.")
 			val trueRule = SemanticAdaptationFactory.eINSTANCE.createDataRule()
 			trueRule.condition = SemanticAdaptationFactory.eINSTANCE.createRuleCondition()
@@ -376,11 +450,11 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			
 			trueRule.outputfunction = SemanticAdaptationFactory.eINSTANCE.createCompositeOutputFunction()
 			
-			sa.in.rules.add(0, trueRule)
+			rules.add(0, trueRule)
 			rule = trueRule
 		} else {
 			Log.println("Existing rule with true condition found.")
-			rule = sa.in.rules.head
+			rule = rules.head
 		}
 		return rule
 	}
@@ -424,7 +498,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		var port2VarDeclaration = new HashMap<Port, SingleVarDeclaration>()
 		
 		for(port : port2parameterDeclaration.keySet){
-			Log.println("Processing port " + port.name)
+			Log.println("Processing port " + port.qualifiedName)
 			val paramDecl = port2parameterDeclaration.get(port)
 			
 			val varDeclarationName = getStorageVarDeclarationName(port)			
@@ -683,10 +757,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			throw new Exception("Wrong way of using this function. It assumes type is not inferred yet.")
 		} else if (getField.apply(binding.src.port) !== null){
 			resultField = getField.apply(binding.src.port)
-			Log.println("Target port "+ binding.tgt.port.name +" got new type: " + resultField)
+			Log.println("Target port "+ binding.tgt.port.qualifiedName +" got new type: " + resultField)
 		} else if (getField.apply(binding.tgt.port) !== null){
 			resultField = getField.apply(binding.tgt.port)
-			Log.println("Target port "+ binding.src.port.name +" got new type: " + resultField)
+			Log.println("Target port "+ binding.src.port.qualifiedName +" got new type: " + resultField)
 		}
 		
 		return resultField
@@ -697,7 +771,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 							(EObject, Object)=>void setField,
 							(EObject)=>Object inferField){
 		var fieldInferred = false
-		Log.println("Pushing field of port " + port.name + " to its bindings.")
+		Log.println("Pushing field of port " + port.qualifiedName + " to its bindings.")
 		
 		if(getField.apply(port) === null){
 			Log.println("Has no field to be pushed.")
@@ -705,10 +779,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		} else {
 			Log.println("Pushing field: " + getField.apply(port))
 			if(port.sourcedependency !== null){
-				Log.println("Has a source dependency: " + port.sourcedependency.port.name)
+				Log.println("Has a source dependency: " + port.sourcedependency.port.qualifiedName)
 				if(getField.apply(port.sourcedependency.port) === null){
 					setField.apply(port.sourcedependency.port, getField.apply(port))
-					Log.println("Port " + port.sourcedependency.port.name + " got new type: " + getField.apply(port.sourcedependency.port))
+					Log.println("Port " + port.sourcedependency.port.qualifiedName + " got new type: " + getField.apply(port.sourcedependency.port))
 					fieldInferred = true
 				} else {
 					Log.println("Source port already has field.")
@@ -718,11 +792,11 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			}
 			
 			if (port.targetdependency !== null) {
-				Log.println("Has a target dependency: " + port.targetdependency.port.name)
+				Log.println("Has a target dependency: " + port.targetdependency.port.qualifiedName)
 				if(getField.apply(port.targetdependency.port) === null){
 					Log.println("Dependency has no field yet.")
 					setField.apply(port.targetdependency.port, getField.apply(port))
-					Log.println("Port " + port.targetdependency.port.name + " got new type: " + getField.apply(port.targetdependency.port))
+					Log.println("Port " + port.targetdependency.port.qualifiedName + " got new type: " + getField.apply(port.targetdependency.port))
 					fieldInferred = true
 				} else {
 					Log.println("Target port already has field.")
@@ -738,7 +812,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def getPortUnit(Port port){
 		var unitInferred = false
 		
-		Log.println("Computing unit for port " + port.name)
+		Log.println("Computing unit for port " + port.qualifiedName)
 		
 		var Unity returnUnit = null
 		
@@ -750,7 +824,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			Log.println("Attempting to infer unit from bindings.")
 
 			if(port.sourcedependency !== null){
-				Log.println("Has a source dependency: " + port.sourcedependency.port.name)
+				Log.println("Has a source dependency: " + port.sourcedependency.port.qualifiedName)
 				if(port.sourcedependency.port.unity === null){
 					Log.println("Dependency has no unit yet.")
 				} else {
@@ -763,7 +837,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			}
 			
 			if (port.targetdependency !== null && !unitInferred) {
-				Log.println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+				Log.println("Has a target dependency: " + port.targetdependency.port.qualifiedName)
 				if(port.targetdependency.port.unity === null){
 					Log.println("Dependency has no unit yet.")
 				} else {
@@ -782,7 +856,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	def getPortType(Port port){
 		var typeInferred = false
 		
-		Log.println("Computing type for port " + port.name)
+		Log.println("Computing type for port " + port.qualifiedName)
 		
 		var String returnType = null
 		
@@ -800,7 +874,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				Log.println("Attempting to infer type from bindings.")
 
 				if(port.sourcedependency !== null){
-					Log.println("Has a source dependency: " + port.sourcedependency.port.name)
+					Log.println("Has a source dependency: " + port.sourcedependency.port.qualifiedName)
 					if(port.sourcedependency.port.type === null){
 						Log.println("Dependency has no type yet.")
 					} else {
@@ -813,7 +887,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				}
 				
 				if (port.targetdependency !== null && !typeInferred) {
-					Log.println("Has a target dependency: " + port.targetdependency.owner.name + "." + port.targetdependency.port.name)
+					Log.println("Has a target dependency: " + port.targetdependency.port.qualifiedName)
 					if(port.targetdependency.port.type === null){
 						//println("Port object: " + port.targetdependency.port)
 						Log.println("Dependency has no type yet.")
@@ -836,21 +910,22 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 
 		for (port : getAllInnerFMUInputPortDeclarations(sa)){
 			var parentFMU = port.eContainer as InnerFMU
-			Log.println("Checking if port " + parentFMU.name + "." + port.name + " has incoming connections")
+			Log.println("Checking if port " + port.qualifiedName + " has incoming connections"
+			)
 			if (! hasConnection(port, sa, true)){
-				Log.println("Port " + parentFMU.name + "." + port.name + " has no incoming connections.")
+				Log.println("Port " + port.qualifiedName + " has no incoming connections.")
 				val externalPortName = createExternalPortNameFromInternalPort(parentFMU.name, port.name)
 				if (findExternalPortByName(sa, externalPortName) === null){
 					var newExternalPort = createExternalInputPortDeclarationFromInnerPort(port, parentFMU, sa)
-					Log.println("External port " + newExternalPort.name + " created.")
+					Log.println("External port " + newExternalPort.qualifiedName + " created.")
 					newExternalPort.bindExternalInputPortTo(parentFMU, port)
-					Log.println("External port " + newExternalPort.name + " bound to port " + parentFMU.name + "." + port.name)
+					Log.println("External port " + newExternalPort.qualifiedName + " bound to port " + port.qualifiedName)
 				} else {
 					Log.println("Error: External port " + externalPortName + " already declared.")
 					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it to avoid clashes.")
 				}
 			} else {
-				Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection.")
+				Log.println("Port " + port.qualifiedName + " has an incoming connection.")
 			}
 		}
 		
@@ -899,9 +974,18 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	}
 	
 	
-	def findExternalPortByTargetDependency(Adaptation sa, Port targetDependency) {
-		for (externalInputPort : sa.inports){
+	def findExternalPortByTargetDependency(List<Port> ports, Port targetDependency) {
+		for (externalInputPort : ports){
 			if (externalInputPort.targetdependency !== null && externalInputPort.targetdependency.port == targetDependency){
+				return externalInputPort
+			}
+		}
+		return null
+	}
+	
+	def findExternalPortBySourceDependency(List<Port> ports, Port sourceDependency) {
+		for (externalInputPort : ports){
+			if (externalInputPort.sourcedependency !== null && externalInputPort.sourcedependency.port == sourceDependency){
 				return externalInputPort
 			}
 		}
@@ -927,14 +1011,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 					if (innerScenarioWithCoupling.connection.size > 0){
 						for (connection : innerScenarioWithCoupling.connection ){
 							if ( (checkForIncomming && connection.tgt.port == port)){
-								var parentFMU = port.eContainer as InnerFMU
-								var sourceFMU = connection.src.port.eContainer as InnerFMU
-								Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection from internal port " + sourceFMU.name + "." + connection.src.port.name)
+								Log.println("Port " + port.qualifiedName + " has an incoming connection from internal port " + connection.src.port.qualifiedName)
 								result = true
 							} else if (!checkForIncomming && connection.src.port == port) {
-								var parentFMU = port.eContainer as InnerFMU
-								var targetFMU = connection.tgt.port.eContainer as InnerFMU
-								Log.println("Port " + parentFMU.name + "." + port.name + " has an outgoing connection to internal port " + targetFMU.name + "." + connection.tgt.port.name)
+								Log.println("Port " + port.qualifiedName + " has an outgoing connection to internal port " + connection.tgt.port.qualifiedName)
 								result = true
 							}
 						}
@@ -943,12 +1023,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 				
 				for (externalInputPort : adaptation.inports.filter[p | (checkForIncomming && p.targetdependency !== null) || (!checkForIncomming && p.sourcedependency !== null) ]){
 					if (checkForIncomming && externalInputPort.targetdependency.port == port){
-						var parentFMU = port.eContainer as InnerFMU
-						Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection from external port " + externalInputPort.name)
+						Log.println("Port " + port.qualifiedName + " has an incoming connection from external port " + externalInputPort.qualifiedName)
 						result = true
 					} else if ( !checkForIncomming &&  externalInputPort.sourcedependency.port == port){
-						var parentFMU = port.eContainer as InnerFMU
-						Log.println("Port " + parentFMU.name + "." + port.name + " has an outgoing connection to external port " + externalInputPort.name)
+						Log.println("Port " + port.qualifiedName + " has an outgoing connection to external port " + externalInputPort.qualifiedName)
 						result = true
 					}
 				}
@@ -1006,13 +1084,13 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		var externalPort2parameterDeclaration = new HashMap<Port, SingleParamDeclaration>(externalPortList.size)
 		
 		for (externalPortDecl : externalPortList) {
-			Log.println("Generating parameter for port " + externalPortDecl.name)
+			Log.println("Generating parameter for port " + externalPortDecl.qualifiedName)
 			var paramname = PARAM_PREFIX + externalPortDecl.name.toUpperCase()
 			
 			if (paramAlreadyDeclared(paramname, sa)){
-				Log.println("Parameter " + paramname + " already declared for port " + externalPortDecl.name)
+				Log.println("Parameter " + paramname + " already declared for port " + externalPortDecl.qualifiedName)
 			} else {
-				Log.println("Declaring new parameter " + paramname + " for port " + externalPortDecl.name)
+				Log.println("Declaring new parameter " + paramname + " for port " + externalPortDecl.qualifiedName)
 				var paramDeclaration = addNewParamDeclaration(paramname, externalPortDecl, sa)
 				externalPort2parameterDeclaration.put(externalPortDecl, paramDeclaration)
 			}
@@ -1083,22 +1161,22 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 
 		for (port : getAllInnerFMUOutputPortDeclarations(sa)){
 			var parentFMU = port.eContainer as InnerFMU
-			Log.println("Checking if port " + parentFMU.name + "." + port.name + " has outgoing connections")
+			Log.println("Checking if port " + port.qualifiedName + " has outgoing connections")
 			if (! hasConnection(port, sa, false)){
-				Log.println("Port " + parentFMU.name + "." + port.name + " has no outgoing connections.")
+				Log.println("Port " + port.qualifiedName + " has no outgoing connections.")
 				
 				val externalPortName = createExternalPortNameFromInternalPort(parentFMU.name, port.name)
 				if (findExternalPortByName(sa, externalPortName) === null){
 					var newExternalPort = createExternalOutputPortDeclarationFromInnerPort(port, parentFMU, sa)
-					Log.println("External port " + newExternalPort.name + " created.")
+					Log.println("External port " + newExternalPort.qualifiedName + " created.")
 					newExternalPort.bindExternalOutputPortTo(parentFMU, port)
-					Log.println("External port " + newExternalPort.name + " bound to port " + parentFMU.name + "." + port.name)
+					Log.println("External port " + newExternalPort.qualifiedName + " bound to port " + port.qualifiedName)
 				} else {
 					Log.println("Error: External port " + externalPortName + " already declared.")
 					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it to avoid clashes.")
 				}
 			} else {
-				Log.println("Port " + parentFMU.name + "." + port.name + " has an incoming connection.")
+				Log.println("Port " + port.qualifiedName + " has an incoming connection.")
 			}
 		}
 		
