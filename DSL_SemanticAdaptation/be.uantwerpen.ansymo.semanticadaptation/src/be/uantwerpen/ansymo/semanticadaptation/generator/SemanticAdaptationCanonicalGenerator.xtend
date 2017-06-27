@@ -251,6 +251,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		removeBindings(internalOutputPort2ExternalPortBindings, sa)
 		
 		
+		
 		Log.pop("Canonicalize")
 	}
 	
@@ -375,6 +376,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		if(! (function instanceof CompositeOutputFunction) ){
 			throw new Exception("Only CompositeOutputFunction is supported for now.")
 		}
+		
+		// TODO: Unit conversion is done here.
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
 		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
