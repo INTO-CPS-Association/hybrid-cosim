@@ -234,7 +234,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		addInRules_External2Internal_Assignments(sa, internalPort2ExternalPortBindings)
 		
-		removeInBindings(internalPort2ExternalPortBindings, sa)
+		removeBindings(internalPort2ExternalPortBindings, sa)
 		
 		addOutPorts(sa)
 		
@@ -248,6 +248,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		addOutRules_Internal2External_Assignments(sa, internalOutputPort2ExternalPortBindings)
 		
+		removeBindings(internalOutputPort2ExternalPortBindings, sa)
 		
 		
 		Log.pop("Canonicalize")
@@ -278,16 +279,18 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return port.name
 	}
 	
-	def removeInBindings(HashMap<Port, Port> internalPort2ExternalPortBindings, Adaptation sa) {
-		Log.push("removeInBindings")
+	def removeBindings(HashMap<Port, Port> internalPort2ExternalPortBindings, Adaptation sa) {
+		Log.push("removeBindings")
 		
 		for (internalPort : internalPort2ExternalPortBindings.keySet){
 			val externalPort = internalPort2ExternalPortBindings.get(internalPort)
 			Log.println("Removing binding " + externalPort.qualifiedName + "->" + internalPort.qualifiedName)
 			externalPort.targetdependency = null
+			Log.println("Removing binding " + externalPort.qualifiedName + "<-" + internalPort.qualifiedName)
+			externalPort.sourcedependency = null
 		}
 		
-		Log.pop("removeInBindings")
+		Log.pop("removeBindings")
 	}
 	
 	def findAllExternalPort2InputPort_Bindings(Adaptation sa) {

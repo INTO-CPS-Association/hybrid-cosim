@@ -125,6 +125,13 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
+	@Test def test_removeOutBindings_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.outports.forall[p | p.sourcedependency === null]
+			}
+		}) }
+	
 	@Test def test_addOutParams_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
