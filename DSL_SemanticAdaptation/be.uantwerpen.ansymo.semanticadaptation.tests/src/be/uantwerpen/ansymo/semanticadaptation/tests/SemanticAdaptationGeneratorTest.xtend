@@ -107,6 +107,17 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
+	
+	@Test def test_addOutRules_Internal2External_Assignments_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				val outFunction = sa.out.rules.head.outputfunction as CompositeOutputFunction
+				val firstAssignment = outFunction.statements.head as Assignment
+				firstAssignment.lvalue.ref.name == "innerFMU2__output_port2"
+				(firstAssignment.expr as Variable).owner.name == "innerFMU2"
+			}
+		}) }
+	
 	@Test def test_removeInBindings_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head

@@ -243,10 +243,12 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		val externalOutputPort2OutVarDeclaration = addOutVars(sa, outputPort2parameterDeclaration)
 		
 		val internalOutputPort2ExternalPortBindings = findAllInternalPort2ExternalOutputPort_Bindings(sa)
-		
 		val internalOutputPort2OutVarDeclaration = transitiveStep(internalOutputPort2ExternalPortBindings, externalOutputPort2OutVarDeclaration)
-		
 		addOutRules_Internal2Stored_Assignments(sa, internalOutputPort2OutVarDeclaration)
+		
+		addOutRules_Internal2External_Assignments(sa, internalOutputPort2ExternalPortBindings)
+		
+		
 		
 		Log.pop("Canonicalize")
 	}
@@ -345,14 +347,27 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		for(internalPort : internalPort2ExternalPort.keySet){
 			val externalPort = internalPort2ExternalPort.get(internalPort)
-			addAssignmentToInternalPort(dataRule.outputfunction, internalPort, externalPort)
+			addPortAssignment(dataRule.outputfunction, internalPort, externalPort)
 		}
 		
 		Log.pop("addInRules_External2Internal_Assignments")
 	}
 	
-	def addAssignmentToInternalPort(OutputFunction function, Port internalPort, Port externalPort) {
-		Log.push("addAssignmentToInternalPort")
+	def addOutRules_Internal2External_Assignments(Adaptation sa, HashMap<Port, Port> internalPort2ExternalPort){
+		Log.push("addOutRules_Internal2External_Assignments")
+		
+		val dataRule  = getOrPrependTrueRule(sa.out.rules)
+		
+		for(internalPort : internalPort2ExternalPort.keySet){
+			val externalPort = internalPort2ExternalPort.get(internalPort)
+			addPortAssignment(dataRule.outputfunction, externalPort, internalPort)
+		}
+		
+		Log.pop("addOutRules_Internal2External_Assignments")
+	}
+	
+	def addPortAssignment(OutputFunction function, Port toPort, Port fromPort) {
+		Log.push("addPortAssignment")
 		
 		if(! (function instanceof CompositeOutputFunction) ){
 			throw new Exception("Only CompositeOutputFunction is supported for now.")
@@ -360,18 +375,18 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
 		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
-		(assignment.lvalue as Variable).owner = internalPort.eContainer as InnerFMU
-		(assignment.lvalue as Variable).ref = internalPort
+		(assignment.lvalue as Variable).owner = toPort.eContainer as FMU
+		(assignment.lvalue as Variable).ref = toPort
 		assignment.expr = SemanticAdaptationFactory.eINSTANCE.createVariable()
-		(assignment.expr as Variable).owner = externalPort.eContainer as Adaptation
-		(assignment.expr as Variable).ref = externalPort
+		(assignment.expr as Variable).owner = fromPort.eContainer as FMU
+		(assignment.expr as Variable).ref = fromPort
 		
 		val outFunction = function as CompositeOutputFunction
 		outFunction.statements.add(0, assignment)
 		
-		Log.println("Assignment " + internalPort.qualifiedName + " := " + externalPort.qualifiedName + " created.")
+		Log.println("Assignment " + toPort.qualifiedName + " := " + fromPort.qualifiedName + " created.")
 		
-		Log.pop("addAssignmentToInternalPort")
+		Log.pop("addPortAssignment")
 	}
 	
 	def addInRules_External2Stored_Assignments(Adaptation sa, HashMap<Port, SingleVarDeclaration> inputPort2InVarDeclaration) {
