@@ -8,6 +8,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AtomicUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MultiplyUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
@@ -19,9 +20,10 @@ import org.eclipse.xtext.testing.XtextRunner
 import org.eclipse.xtext.util.IAcceptor
 import org.eclipse.xtext.xbase.testing.CompilationTestHelper
 import org.eclipse.xtext.xbase.testing.CompilationTestHelper.Result
+import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Assert
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -140,13 +142,19 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 		}) }
 	
 	
-	@Test def test_topologicalSort_sample2() { __generate('input/canonical_generation/sample2.sa', new IAcceptor<CompilationTestHelper.Result>(){
+	@Test def test_createCoSimStepInstructions_sample2() { __generate('input/canonical_generation/sample2.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
-				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
-				
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head()
+				(sa.control.rule as CustomControlRule).controlRulestatements.filter[s | s instanceof Declaration].size>4
 			}
 		}) }
 	
+	@Test def test_createInternalBindingAssignments_sample2() { __generate('input/canonical_generation/sample2.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head()
+				(sa.control.rule as CustomControlRule).controlRulestatements.filter[s | s instanceof Assignment].size>4
+			}
+		}) }
 	
 	@Test def window_SA_parseNoExceptions() { __generate('input/power_window_case_study/window_sa.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
@@ -159,7 +167,6 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	@Test def lazy_SA_parseNoExceptions() { __generate('input/power_window_case_study/lazy.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
 		}) }
-	
 	
 	def void __generate(String filename, IAcceptor<CompilationTestHelper.Result> acceptor) {
 		//readFile(filename).assertCompilesTo('oracles/power_window_case_study/lazy.BASE.sa')

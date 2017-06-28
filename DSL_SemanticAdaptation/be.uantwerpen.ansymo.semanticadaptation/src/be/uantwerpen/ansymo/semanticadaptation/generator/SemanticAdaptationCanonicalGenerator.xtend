@@ -7,6 +7,7 @@ import be.uantwerpen.ansymo.semanticadaptation.generator.graph.DirectedGraph
 import be.uantwerpen.ansymo.semanticadaptation.generator.graph.FMUGraph
 import be.uantwerpen.ansymo.semanticadaptation.generator.graph.TopologicalSort
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BuiltinFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
@@ -16,6 +17,8 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlR
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStep
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Expression
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FMU
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
@@ -47,6 +50,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SpecifiedPort
 
 /**
  * Generates code from your model files on save.
@@ -262,7 +266,81 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			createCoSimStepInstructions(sa)
 		}
 		
+		createInternalBindingAssignments(sa)
+		
 		Log.pop("Canonicalize")
+	}
+	
+	def createInternalBindingAssignments(Adaptation sa) {
+		Log.push("createInternalBindingAssignments")
+		
+		val scenario = (sa.inner as InnerFMUDeclarationFull)
+		
+		for (connection : scenario.connection){
+			val trgFMU = connection.tgt.port.eContainer as InnerFMU
+			val ctrlRule = sa.control.rule as CustomControlRule
+			
+			val doStepIndex = findDoStepStatementIndex(ctrlRule, trgFMU)
+			
+			if (! existsAssignmentToPort_BeforeIndex(connection.tgt.port, doStepIndex, ctrlRule)){
+				Log.println("Creating assignment to port " + connection.tgt.port.qualifiedName + " at position " + doStepIndex)
+				addPortAssignment(ctrlRule.controlRulestatements, connection.tgt.port, connection.src.port, doStepIndex)
+			} else {
+				Log.println("There is already an assignment to port " + connection.tgt.port.qualifiedName + " before position " + doStepIndex)
+			}
+		}
+		
+		Log.pop("createInternalBindingAssignments")
+	}
+	
+	def existsAssignmentToPort_BeforeIndex(Port port, int index, CustomControlRule rule) {
+		
+		val assignmentsToPort = rule.controlRulestatements.indexed
+									.filter[s | s.value instanceof Assignment && 
+												(s.value as Assignment).lvalue.ref == port 
+									]
+		
+		check(assignmentsToPort.size <= 1, "Multiple assignments to the same port are not supported yet. Use a loop with a single call.")
+		
+		return assignmentsToPort.size == 1
+	}
+	
+	def findDoStepStatementIndex(CustomControlRule rule, InnerFMU fmu) {
+		Log.push("findDoStepStatementIndex")
+		
+		var result = -1
+		
+		val doStepProcedures = rule.controlRulestatements.indexed.filter[s | s.value instanceof DoStep && (s.value as DoStep).fmu == fmu]
+		
+		check(doStepProcedures.size <= 1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
+		
+		if (doStepProcedures.size == 1){
+			Log.println("Found a doStep procedure for fmu "  + fmu.name + " at position " + doStepProcedures.head.key)
+			result = doStepProcedures.head.key
+		}
+		
+		// Warning: this does not support instructions such as:
+		// var someVar = 10, h = doStep(f), etc...
+		// Only single declarations are supported, such as:
+		// var h = doStep(f)
+		val doStepAssignments = rule.controlRulestatements.indexed
+									.filter[s | s.value instanceof Declaration && 
+												(s.value as Declaration).declarations.size == 1 &&
+												(s.value as Declaration).declarations.head instanceof SingleVarDeclaration &&
+												((s.value as Declaration).declarations.head as SingleVarDeclaration).expr instanceof DoStepFun &&
+												(((s.value as Declaration).declarations.head as SingleVarDeclaration).expr as DoStepFun).fmu == fmu 
+									]
+		
+		check(doStepAssignments.size <= 1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
+		
+		if (doStepAssignments.size == 1){
+			check(result==-1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
+			Log.println("Found a doStep function for fmu "  + fmu.name + " at position " + doStepAssignments.head.key)
+			result = doStepAssignments.head.key
+		}
+		
+		Log.pop("findDoStepStatementIndex")
+		return result
 	}
 	
 	def createCoSimStepInstructions(Adaptation sa) {
@@ -341,7 +419,6 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		val stepVarSingleton = new LinkedList()
 		for (fmu : innerDeclaration.topologicalSort()){
-			// TODO: Maybe add the setting of inputs and outputs here.
 			val returnedStepVar = controlRule.appendDoStep(fmu)
 			stepVarSingleton.add(returnedStepVar)
 		}
@@ -503,7 +580,9 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		for(internalPort : internalPort2ExternalPort.keySet){
 			val externalPort = internalPort2ExternalPort.get(internalPort)
-			addPortAssignment(dataRule.outputfunction, internalPort, externalPort)
+			check((dataRule.outputfunction instanceof CompositeOutputFunction), "Only CompositeOutputFunction is supported for now.")
+			val outFunction = dataRule.outputfunction as CompositeOutputFunction
+			addPortAssignment(outFunction.statements, internalPort, externalPort, 0)
 		}
 		
 		Log.pop("addInRules_External2Internal_Assignments")
@@ -516,20 +595,19 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		for(internalPort : internalPort2ExternalPort.keySet){
 			val externalPort = internalPort2ExternalPort.get(internalPort)
-			addPortAssignment(dataRule.outputfunction, externalPort, internalPort)
+			
+			check((dataRule.outputfunction instanceof CompositeOutputFunction), "Only CompositeOutputFunction is supported for now.")
+			val outFunction = dataRule.outputfunction as CompositeOutputFunction
+			addPortAssignment(outFunction.statements, externalPort, internalPort, 0)
 		}
 		
 		Log.pop("addOutRules_Internal2External_Assignments")
 	}
 	
-	def addPortAssignment(OutputFunction function, Port toPort, Port fromPort) {
+	def addPortAssignment(List<Statement> statements, Port toPort, Port fromPort, int position) {
 		Log.push("addPortAssignment")
 		
-		if(! (function instanceof CompositeOutputFunction) ){
-			throw new Exception("Only CompositeOutputFunction is supported for now.")
-		}
-		
-		// TODO: Unit conversion is done here.
+		// TODO: Unit conversion is done here, but only when method is called to add the assignment to a data rule.
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
 		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
@@ -539,8 +617,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		(assignment.expr as Variable).owner = fromPort.eContainer as FMU
 		(assignment.expr as Variable).ref = fromPort
 		
-		val outFunction = function as CompositeOutputFunction
-		outFunction.statements.add(0, assignment)
+		statements.add(position, assignment)
 		
 		Log.println("Assignment " + toPort.qualifiedName + " := " + fromPort.qualifiedName + " created.")
 		
