@@ -8,6 +8,7 @@ import be.uantwerpen.ansymo.semanticadaptation.generator.graph.FMUGraph
 import be.uantwerpen.ansymo.semanticadaptation.generator.graph.TopologicalSort
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AtomicUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BuiltinFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
@@ -17,6 +18,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlR
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DivideUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStep
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Expression
@@ -27,7 +29,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclar
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MooreOrMealy
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutputFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MultiplyUnity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ReactiveOrDelayed
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RealLiteral
@@ -44,14 +46,13 @@ import java.util.HashMap
 import java.util.LinkedList
 import java.util.List
 import java.util.Map
+import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SpecifiedPort
-import org.eclipse.emf.common.util.EList
 
 /**
  * Generates code from your model files on save.
@@ -60,11 +61,10 @@ import org.eclipse.emf.common.util.EList
  */
 class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
-	String CANONICAL_EXT = ".BASE.sa"
-	String NAME_SUFFIX = "_BASE"
+	String CANONICAL_SUFIX = "_canonical"
 	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		Log.push("Generating canonical semantic adaptation for file " + resource.URI.toFileString() + "...")
+		Log.push("Generating canonical semantic adaptation for file " + resource.URI + "...")
 		
 		Log.println("Resource URI information:")
 		Log.println("\t resource.URI.lastSegment = " + resource.URI.lastSegment())
@@ -72,23 +72,23 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		// Create in memory representation of canonical SA file
 		var adaptations = resource.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation);
-		if (adaptations.size > 1){
-			throw new Exception("Only one semantic adaptation is supported per .sa file")
-		}
+		
+		check(adaptations.size == 1, "Only one semantic adaptation is supported per .sa file")
+		
 		var adaptation = adaptations.head
 		
 		Log.println(prettyprint_model(adaptation, "File Read"))
 		
 		// Create file name for the canonical sa file
 		var fileNameWithoutExt = resource.URI.trimFileExtension().lastSegment()
-		var canonicalFileName = fileNameWithoutExt + CANONICAL_EXT
-		Log.println("canonicalFileName = " + canonicalFileName)
 		
 		Log.println("Checking if file is already a canonical version...")
-		if (adaptation.name.indexOf(NAME_SUFFIX) == -1){
-			Log.println("It is not.")
+		if (fileNameWithoutExt.indexOf(CANONICAL_SUFIX) == -1){
 			
-			adaptation.name = adaptation.name + NAME_SUFFIX
+			Log.println("It is not.")
+
+			var canonicalFileName = fileNameWithoutExt + CANONICAL_SUFIX + ".sa"
+			Log.println("canonicalFileName = " + canonicalFileName)
 			
 			canonicalize(adaptation)
 			
@@ -103,7 +103,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			Log.println("Nothing to do.")
 		}
 		
-		Log.pop("Generating canonical semantic adaptation for file " + resource.URI.toFileString() + "... DONE.")
+		Log.pop("Generating canonical semantic adaptation for file " + resource.URI + "... DONE.")
 	}
 	
 	def prettyprint_model(Adaptation sa, String title){
@@ -329,7 +329,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			
 			if (! existsAssignmentToPort_BeforeIndex(connection.tgt.port, doStepIndex, ctrlRule)){
 				Log.println("Creating assignment to port " + connection.tgt.port.qualifiedName + " at position " + doStepIndex)
-				addPortAssignment(ctrlRule.controlRulestatements, connection.tgt.port, connection.src.port, doStepIndex)
+				addPortAssignment(ctrlRule.controlRulestatements, connection.tgt.port, connection.src.port, doStepIndex, true)
 			} else {
 				Log.println("There is already an assignment to port " + connection.tgt.port.qualifiedName + " before position " + doStepIndex)
 			}
@@ -627,7 +627,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			val externalPort = internalPort2ExternalPort.get(internalPort)
 			check((dataRule.outputfunction instanceof CompositeOutputFunction), "Only CompositeOutputFunction is supported for now.")
 			val outFunction = dataRule.outputfunction as CompositeOutputFunction
-			addPortAssignment(outFunction.statements, internalPort, externalPort, 0)
+			addPortAssignment(outFunction.statements, internalPort, externalPort, 0, true)
 		}
 		
 		Log.pop("addInRules_External2Internal_Assignments")
@@ -643,30 +643,75 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			
 			check((dataRule.outputfunction instanceof CompositeOutputFunction), "Only CompositeOutputFunction is supported for now.")
 			val outFunction = dataRule.outputfunction as CompositeOutputFunction
-			addPortAssignment(outFunction.statements, externalPort, internalPort, 0)
+			addPortAssignment(outFunction.statements, externalPort, internalPort, 0, true)
 		}
 		
 		Log.pop("addOutRules_Internal2External_Assignments")
 	}
 	
-	def addPortAssignment(List<Statement> statements, Port toPort, Port fromPort, int position) {
+	def addPortAssignment(List<Statement> statements, Port toPort, Port fromPort, int position, boolean convertUnits) {
 		Log.push("addPortAssignment")
-		
-		// TODO: Unit conversion is done here, but only when method is called to add the assignment to a data rule.
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
 		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
 		(assignment.lvalue as Variable).owner = toPort.eContainer as FMU
 		(assignment.lvalue as Variable).ref = toPort
-		assignment.expr = SemanticAdaptationFactory.eINSTANCE.createVariable()
-		(assignment.expr as Variable).owner = fromPort.eContainer as FMU
-		(assignment.expr as Variable).ref = fromPort
+		val varRef = SemanticAdaptationFactory.eINSTANCE.createVariable()
+		varRef.owner = fromPort.eContainer as FMU
+		varRef.ref = fromPort
+		
+		if (convertUnits && compatibleUnits(toPort.unity, fromPort.unity) && !unitsEqual(toPort.unity, fromPort.unity)){
+			Log.println("Converting units " + fromPort.unity + " to " + toPort.unity)
+			assignment.expr = getConversionExpression(toPort.unity, fromPort.unity, varRef)
+		} else {
+			assignment.expr = varRef			
+			Log.println("Assignment " + toPort.qualifiedName + " := " + fromPort.qualifiedName + " created.")
+		}
 		
 		statements.add(position, assignment)
 		
-		Log.println("Assignment " + toPort.qualifiedName + " := " + fromPort.qualifiedName + " created.")
 		
 		Log.pop("addPortAssignment")
+	}
+	
+	def getConversionExpression(Unity toUnits, Unity fromUnit, Variable varFrom) {
+		check(toUnits instanceof AtomicUnity && fromUnit instanceof AtomicUnity, "Conversion between units is only supported for AtomicUnits.")
+		var toAtomic = toUnits as AtomicUnity
+		var fromAtomic = fromUnit as AtomicUnity
+		check(fromAtomic.name == "cm" && toAtomic.name == "m", "Conversion only possible between cm and m... Not very usefull :)")	
+		var division = SemanticAdaptationFactory.eINSTANCE.createDiv()
+		division.left = varFrom
+		var hundred = SemanticAdaptationFactory.eINSTANCE.createRealLiteral()
+		hundred.value=100f
+		division.right = hundred
+		return division
+	}
+	
+	def dispatch boolean unitsEqual(DivideUnity u1, DivideUnity u2) {
+		return unitsEqual(u1.left, u2.left) && unitsEqual(u1.right, u2.right)
+	}
+	
+	def dispatch boolean unitsEqual(Void u1, Void u2) {
+		return true
+	}
+	
+	def dispatch boolean unitsEqual(MultiplyUnity u1, MultiplyUnity u2) {
+		return unitsEqual(u1.left, u2.left) && unitsEqual(u1.right, u2.right)
+	}
+	
+	def dispatch boolean unitsEqual(AtomicUnity u1, AtomicUnity u2) {
+		return u1.name == u2.name && u1.power == u2.power
+	}
+	
+	def compatibleUnits(Unity u1, Unity u2) {
+		if ((u1 === null && u2===null) || 
+			(u1 !== null && u2!==null)
+		){
+			// TODO What makes two units compatible?
+			return true
+		} else {
+			return false
+		}
 	}
 	
 	def addInRules_External2Stored_Assignments(Adaptation sa, HashMap<Port, SingleVarDeclaration> inputPort2InVarDeclaration) {
