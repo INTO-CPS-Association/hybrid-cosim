@@ -3,12 +3,16 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.generator
 
+import be.uantwerpen.ansymo.semanticadaptation.generator.graph.DirectedGraph
+import be.uantwerpen.ansymo.semanticadaptation.generator.graph.FMUGraph
+import be.uantwerpen.ansymo.semanticadaptation.generator.graph.TopologicalSort
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BoolLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BuiltinFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DeclaredParameter
@@ -19,14 +23,16 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclar
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclarationFull
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MooreOrMealy
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ReactiveOrDelayed
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RealLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationFactory
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleParamDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleVarDeclaration
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Statement
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StringLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Unity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
@@ -41,7 +47,6 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Statement
 
 /**
  * Generates code from your model files on save.
@@ -250,10 +255,157 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		removeBindings(internalOutputPort2ExternalPortBindings, sa)
 		
-		
+		if (sa.control === null){
+			sa.control = SemanticAdaptationFactory.eINSTANCE.createControlRuleBlock()
+			sa.control.rule = SemanticAdaptationFactory.eINSTANCE.createCustomControlRule()
+			
+			createCoSimStepInstructions(sa)
+		}
 		
 		Log.pop("Canonicalize")
 	}
+	
+	def createCoSimStepInstructions(Adaptation sa) {
+		check((sa.inner as InnerFMUDeclarationFull).fmus.size > 0, "At least one internal FMU is expected...")
+		if (onlyOneInternalFMU(sa)){
+			createCosimStepForOneFMU(sa)
+		} else {
+			createCosimStepForMultipleFMUs(sa)
+		}
+	}
+	
+	def createCosimStepForOneFMU(Adaptation sa) {
+		Log.push("createCosimStepForOneFMU")
+		val fmu = (sa.inner as InnerFMUDeclarationFull).fmus.head
+		val controlRule = sa.control.rule as CustomControlRule
+		val returnedStepVar = controlRule.appendDoStep(fmu)
+		val stepVarSingleton = new LinkedList()
+		stepVarSingleton.add(returnedStepVar)
+		controlRule.appendReturnCosimStep(stepVarSingleton)
+		Log.pop("createCosimStepForOneFMU")
+	}
+	
+	def appendReturnCosimStep(CustomControlRule rule, LinkedList<SingleVarDeclaration> stepVariables) {
+		Log.push("appendReturnCosimStep")
+		
+		if (stepVariables.size == 0){
+			throw new Exception("Does not make sense. At least one inner FMU is expected.")
+		}
+		
+		val minExpression = SemanticAdaptationFactory.eINSTANCE.createMin()
+		
+		Log.println("Creating min(...) expression with the following arguments:")
+		
+		for(varDecl : stepVariables){
+			val varRef = SemanticAdaptationFactory.eINSTANCE.createVariable()
+			varRef.ref = varDecl
+			minExpression.args.add(varRef)
+			Log.println(varDecl.name)
+		}
+		
+		rule.returnstatement = SemanticAdaptationFactory.eINSTANCE.createReturnStatement()
+		rule.returnstatement.expr = minExpression
+		
+		Log.pop("appendReturnCosimStep")
+	}
+	
+	def appendDoStep(CustomControlRule rule, InnerFMU fmu) {
+		Log.push("appendDoStep")
+		val t = SemanticAdaptationFactory.eINSTANCE.createCurrentTime()
+		val H = SemanticAdaptationFactory.eINSTANCE.createStepSize()
+		
+		val doStep = SemanticAdaptationFactory.eINSTANCE.createDoStepFun()
+		doStep.t = t
+		doStep.h = H
+		doStep.fmu = fmu
+		
+		val step_var = SemanticAdaptationFactory.eINSTANCE.createSingleVarDeclaration()		
+		step_var.name = "H_" + fmu.name
+		step_var.expr = doStep
+		
+		val step_decl = SemanticAdaptationFactory.eINSTANCE.createDeclaration()
+		step_decl.declarations.add(step_var)
+		
+		rule.controlRulestatements.add(step_decl)
+		
+		Log.println("Added var " + step_var.name + " := doStep(t, H, " + fmu.name + ")")
+		
+		Log.pop("appendDoStep")
+		return step_var
+	}
+	
+	def createCosimStepForMultipleFMUs(Adaptation sa) {
+		Log.push("createCosimStepForMultipleFMUs")
+		val innerDeclaration = (sa.inner as InnerFMUDeclarationFull)
+		val controlRule = sa.control.rule as CustomControlRule
+		
+		val stepVarSingleton = new LinkedList()
+		for (fmu : innerDeclaration.topologicalSort()){
+			// TODO: Maybe add the setting of inputs and outputs here.
+			val returnedStepVar = controlRule.appendDoStep(fmu)
+			stepVarSingleton.add(returnedStepVar)
+		}
+		
+		controlRule.appendReturnCosimStep(stepVarSingleton)
+		Log.pop("createCosimStepForMultipleFMUs")
+	}
+	
+	def topologicalSort(InnerFMUDeclarationFull scenario){
+		Log.push("topologicalSort")
+		
+		val DirectedGraph<InnerFMU> inner_fmu_graph = createFMUGraph(scenario)
+		
+		val result = TopologicalSort.sort(inner_fmu_graph)
+		
+		Log.println("Sorting: " + result)
+		
+		Log.pop("topologicalSort")
+		return result
+	}
+	
+	def createFMUGraph(InnerFMUDeclarationFull scenario) {
+		Log.push("createFMUGraph")
+		
+		val graph = new FMUGraph()
+		
+		for (fmu : scenario.fmus){
+			graph.addNode(fmu)
+		}
+		
+		for (connection : scenario.connection){
+			check(connection.src.port.eContainer instanceof InnerFMU && 
+				connection.tgt.port.eContainer instanceof InnerFMU, "Weird connection found: " + connection)
+			if (reactiveMealyFMU(connection.tgt.port.eContainer as InnerFMU)){
+				graph.addEdge(connection.src.port.eContainer as InnerFMU, connection.tgt.port.eContainer as InnerFMU)
+			} else {
+				Log.println("FMU " + (connection.tgt.port.eContainer as InnerFMU).name + " is not reactive mealy, so it has no algebraic dependencies.")
+			}
+		}
+		
+		Log.println(graph.toString())
+		
+		Log.pop("createFMUGraph")
+		return graph
+	}
+	
+	def reactiveMealyFMU(InnerFMU fmu) {
+		return fmu.reactiveness == ReactiveOrDelayed.REACTIVE && fmu.machine == MooreOrMealy.MEALY
+	}
+	
+	def check(Boolean condition, String msg){
+		if (! condition){
+			throw new Exception("Assertion error: " + msg)
+		}
+	}
+	
+	def onlyOneInternalFMU(Adaptation sa) {
+		if(sa.inner instanceof InnerFMUDeclarationFull){
+			return (sa.inner as InnerFMUDeclarationFull).fmus.size == 1
+		} else {
+			throw new Exception('This kind of internal scenario is not supported yet.')
+		}
+	}
+	
 	
 	def transitiveStep(HashMap<Port, Port> internalOutputPort2ExternalPortBindings, HashMap<Port, SingleVarDeclaration> externalOutputPort2OutVarDeclaration) {
 		Log.push("transitiveStep")

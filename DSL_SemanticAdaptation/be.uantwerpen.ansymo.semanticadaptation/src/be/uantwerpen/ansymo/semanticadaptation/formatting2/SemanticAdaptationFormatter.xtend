@@ -5,14 +5,14 @@ package be.uantwerpen.ansymo.semanticadaptation.formatting2
 
 import be.uantwerpen.ansymo.semanticadaptation.generator.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptationPackage
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Statement
 import org.eclipse.xtext.formatting2.AbstractFormatter2
 import org.eclipse.xtext.formatting2.IFormattableDocument
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 
 class SemanticAdaptationFormatter extends AbstractFormatter2 {
 	
@@ -63,6 +63,12 @@ class SemanticAdaptationFormatter extends AbstractFormatter2 {
 			}
 		}
 		
+		if (sa.control !== null){
+			sa.control.prepend[newLine]
+			
+			sa.control.rule.format
+		}
+		
 		
 		/*
 		for (inPort : sa.inports){
@@ -87,6 +93,20 @@ class SemanticAdaptationFormatter extends AbstractFormatter2 {
 		rule.outputfunction.format
 		
 		Log.pop("Formatting DataRule")	
+	}
+	
+	def dispatch void format(CustomControlRule rule, extension IFormattableDocument document){
+		Log.push("Formatting CustomControlRule")
+		
+		rule.prepend[newLine]
+		
+		for (statement : rule.controlRulestatements){
+			statement.format
+		}
+		
+		rule.returnstatement.prepend[newLine]
+		
+		Log.pop("Formatting CustomControlRule")	
 	}
 	
 	def dispatch void format(StateTransitionFunction function, extension IFormattableDocument document){

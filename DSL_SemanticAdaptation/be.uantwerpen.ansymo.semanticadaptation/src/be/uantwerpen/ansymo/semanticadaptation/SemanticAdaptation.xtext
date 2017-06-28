@@ -33,12 +33,12 @@ AtomicFMU:
 	;
 
 InnerFMU: // slightly different syntax
-	'inner' 'fmu' type=FMUType name=ID
+	'inner' 'fmu' (reactiveness=ReactiveOrDelayed)? (machine=MooreOrMealy)? type=FMUType name=ID
 	('at' path=STRING)? // optional in case of a semantic adaptation, where we still want to specify the ports
 	('with' 'input' 'ports' inports+=Port ("," inports+=Port)* )?
 	('with' 'output' 'ports' outports+=Port ("," outports+=Port)* )?
 	;
-	
+
 CompositeFMU:
 	'fmu' type=FMUType name=ID
 	'at' path=STRING // to be generated here
@@ -171,7 +171,7 @@ ControlRule:
 	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
 	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
 	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
-	{CustomControlRule} 'control' 'rules' '{' ControlRulestatements+=Statement* returnstatement=ReturnStatement '}';
+	{CustomControlRule} 'control' 'rules' '{' controlRulestatements+=Statement* returnstatement=ReturnStatement '}';
 
 AnonymousFunction: // has access to ports
 	{FunctionExpression} '{=' code=Expression '}'| 
@@ -251,7 +251,7 @@ SingleParamDeclaration:
 ;
 
 ReturnStatement:
-	'return' Expression ';';
+	'return' expr=Expression ';';
 
 BreakStatement:
 	{BreakStatement} 'break' ';';
@@ -358,33 +358,33 @@ NullLiteral:
 	value='null';
 	
 BuiltinFunction:
-	{Floor} name='floor' '(' args+=ArithmeticExpression ')' | 
-	{Ceil} name='ceil' '(' args+=ArithmeticExpression ')' | 
-	{Round} name='round' '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)? ')' |
-	{Max} name='max' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
-	{Min} name='min' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |
-	{Abs} name='abs' '(' args=ArithmeticExpression ')' |
-	{Close} name='is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |  // a, b, relative tolerance, absolute tolerance 
-	{IsSet} name='is_set' '(' args=Var ')' | 
-	{DoStepFun} name='do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ',' h=ArithmeticExpression ')' |
-	{GetNextInternalTimeStep} name='get_next_time_step' '(' fmu=[FMU] ')' | // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
-	{Elapsed} name='elapsed' '(' fmu=[FMU] ')' |
-	{LastExecutionTime} name='last_execution_time' '(' fmu=[FMU] ')';
+	{Floor} 'floor' '(' args+=ArithmeticExpression ')' | 
+	{Ceil} 'ceil' '(' args+=ArithmeticExpression ')' | 
+	{Round} 'round' '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)? ')' |
+	{Max} 'max' '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)* ')' |
+	{Min} 'min' '(' args+=ArithmeticExpression (',' args+=ArithmeticExpression)* ')' |
+	{Abs} 'abs' '(' args=ArithmeticExpression ')' |
+	{Close} 'is_close' '(' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ',' args+=ArithmeticExpression ')' |  // a, b, relative tolerance, absolute tolerance 
+	{IsSet} 'is_set' '(' args=Var ')' | 
+	{DoStepFun} 'do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ',' h=ArithmeticExpression ')' |
+	{GetNextInternalTimeStep} 'get_next_time_step' '(' fmu=[FMU] ')' | // is actually the time step returned by do_step(fmu), preceded by get_state and succeeded by set_state
+	{Elapsed} 'elapsed' '(' fmu=[FMU] ')' |
+	{LastExecutionTime} 'last_execution_time' '(' fmu=[FMU] ')';
 	
 Procedure:
-	{Rollback} name='rollback' '(' fmu=[FMU] ')' |
-	{DoStep} name='do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ','  h=ArithmeticExpression ')' |
-	{Discard} name='discard' '(' args=Var ')' |
-	{SaveState} name='save_state' '(' fmu=[FMU] ')';
+	{Rollback} 'rollback' '(' fmu=[FMU] ')' |
+	{DoStep} 'do_step' '(' fmu=[FMU] ',' t=ArithmeticExpression ','  h=ArithmeticExpression ')' |
+	{Discard} 'discard' '(' args=Var ')' |
+	{SaveState} 'save_state' '(' fmu=[FMU] ')';
 	
 Var:
-	{StepSize} name='H' | // available in ctrl
-	{StepSize} name='h' | // available in mapin/mapout
-	{CurrentTime} name='t' | // available in ctrl
-	{PassedTime} name='dt' | // available in mapin/mapout
-	{ElapsedTime} name='e' | // available in ctrl
-	{Max} name='MAX' |
-	{GenericSignal} name='signal' ('[' (
+	{StepSize} 'H' | // available in ctrl
+	{MinorStepSize} 'h' | // available in mapin/mapout
+	{CurrentTime} 't' | // available in ctrl
+	{PassedTime} 'dt' | // available in mapin/mapout
+	{ElapsedTime} 'e' | // available in ctrl
+	{Max} 'MAX' |
+	{GenericSignal} 'signal' ('[' (
 		index=NOW | 
 		index=PREV | 
 		index=INTTYPE |

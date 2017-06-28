@@ -139,6 +139,15 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
+	
+	@Test def test_topologicalSort_sample2() { __generate('input/canonical_generation/sample2.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				
+			}
+		}) }
+	
+	
 	@Test def window_SA_parseNoExceptions() { __generate('input/power_window_case_study/window_sa.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
 		}) }
