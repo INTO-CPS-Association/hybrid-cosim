@@ -156,6 +156,20 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			}
 		}) }
 	
+	@Test def test_ReplacePortRefs_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				sa.in.rules.forall[dr | 
+					(dr.outputfunction as CompositeOutputFunction).statements.forall[ s |
+						s.eAllContents.filter[v | v instanceof Variable].forall[ v |
+							! ((v as Variable).ref instanceof Port)
+						]
+					]
+				]
+			}
+		}) }
+	
+	
 	@Test def window_SA_parseNoExceptions() { __generate('input/power_window_case_study/window_sa.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
 		}) }

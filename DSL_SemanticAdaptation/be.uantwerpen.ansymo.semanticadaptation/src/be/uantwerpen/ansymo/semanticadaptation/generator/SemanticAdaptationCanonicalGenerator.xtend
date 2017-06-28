@@ -51,6 +51,7 @@ import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SpecifiedPort
+import org.eclipse.emf.common.util.EList
 
 /**
  * Generates code from your model files on save.
@@ -245,14 +246,16 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		removeBindings(internalPort2ExternalPortBindings, sa)
 		
-		addOutPorts(sa)
+		if (sa.outports.size==0){
+			addOutPorts(sa)
+		} 
 		
 		val outputPort2parameterDeclaration = addOutParams(sa)
 		
-		val externalOutputPort2OutVarDeclaration = addOutVars(sa, outputPort2parameterDeclaration)
+		val internalOutputPort2OutVarDeclaration = addOutVars(sa, outputPort2parameterDeclaration)
 		
 		val internalOutputPort2ExternalPortBindings = findAllInternalPort2ExternalOutputPort_Bindings(sa)
-		val internalOutputPort2OutVarDeclaration = transitiveStep(internalOutputPort2ExternalPortBindings, externalOutputPort2OutVarDeclaration)
+		//val internalOutputPort2OutVarDeclaration = transitiveStep(internalOutputPort2ExternalPortBindings, internalOutputPort2OutVarDeclaration)
 		addOutRules_Internal2Stored_Assignments(sa, internalOutputPort2OutVarDeclaration)
 		
 		addOutRules_Internal2External_Assignments(sa, internalOutputPort2ExternalPortBindings)
@@ -268,7 +271,42 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		
 		createInternalBindingAssignments(sa)
 		
+		Log.push("Replace port refs in input rules")
+		for (rule : sa.in.rules){
+			check(rule.outputfunction instanceof CompositeOutputFunction, "Only CompositeOutputFunction are supported in DataRules.")
+			replacePortRefsByVarDecl((rule.outputfunction as CompositeOutputFunction).statements, externalInputPort2InVarDeclaration)
+		}
+		Log.pop("Replace port refs in input rules")
+		
+		Log.push("Replace port refs in control rule")
+		if (sa.control.rule instanceof CustomControlRule){
+			replacePortRefsByVarDecl((sa.control.rule as CustomControlRule).controlRulestatements,internalOutputPort2OutVarDeclaration)
+		}
+		Log.pop("Replace port refs in control rule")
+		
 		Log.pop("Canonicalize")
+	}
+	
+	def replacePortRefsByVarDecl(EList<Statement> statements, HashMap<Port, SingleVarDeclaration> port2VarDecl) {
+		Log.push("replacePortRefsByVarDecl")
+		
+		for(statement : statements){
+			val vars = statement.eAllContents.filter[v | v instanceof Variable]
+			var Variable v
+			
+			while (vars.hasNext) {
+				v = vars.next as Variable
+				if (port2VarDecl.containsKey(v.ref)){
+					val port = v.ref as Port
+					v.owner = null
+					val varDecl = port2VarDecl.get(v.ref)
+					v.ref = varDecl
+					Log.println("Replaced ref to " + port.qualifiedName + " by " + varDecl.name)
+				}
+			}
+		}
+		
+		Log.pop("replacePortRefsByVarDecl")
 	}
 	
 	def createInternalBindingAssignments(Adaptation sa) {
@@ -755,7 +793,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			if (!varDeclarationExists(varDeclarationName, varDeclarations) ){
 				Log.println("Creating new variable declaration " + varDeclarationName)
 				
-				val varDeclaration = addNewInputVarDeclaration(port, paramDecl, varDeclarations)
+				val varDeclaration = addNewVarDeclaration(port, paramDecl, varDeclarations)
 				
 				port2VarDeclaration.put(port, varDeclaration)
 			} else {
@@ -767,7 +805,7 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		return port2VarDeclaration
 	}
 	
-	def addNewInputVarDeclaration(Port externalInputPort, SingleParamDeclaration paramDecl, List<Declaration> varDeclarations) {
+	def addNewVarDeclaration(Port externalInputPort, SingleParamDeclaration paramDecl, List<Declaration> varDeclarations) {
 		/*
 		if (sa.in === null){
 			sa.in = SemanticAdaptationFactory.eINSTANCE.createInRulesBlock()
@@ -1314,26 +1352,28 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 	
 	def addInParams(Adaptation sa) {
 		Log.push("Adding input parameters...")
-		val result = addParamForExternalPortDeclarations(sa, sa.inports)
+		val result = addParamForPortDeclarations(sa, sa.inports)
 		Log.pop("Adding input parameters... DONE")
 		return result
 	}
 	
 	def addOutParams(Adaptation sa) {
 		Log.push("Adding output parameters...")
-		val result = addParamForExternalPortDeclarations(sa, sa.outports)
+		
+		val result = addParamForPortDeclarations(sa, getAllInnerFMUOutputPortDeclarations(sa))
+		
 		Log.pop("Adding output parameters... DONE")
 		return result
 	}
 	
-	def addParamForExternalPortDeclarations(Adaptation sa, List<Port> externalPortList){
-		Log.push("addParamForExternalPortDeclarations")
+	def addParamForPortDeclarations(Adaptation sa, List<Port> ports){
+		Log.push("addParamForPortDeclarations")
 		
 		val PARAM_PREFIX = "INIT_"
 		
-		var externalPort2parameterDeclaration = new HashMap<Port, SingleParamDeclaration>(externalPortList.size)
+		var port2parameterDeclaration = new HashMap<Port, SingleParamDeclaration>(ports.size)
 		
-		for (externalPortDecl : externalPortList) {
+		for (externalPortDecl : ports) {
 			Log.println("Generating parameter for port " + externalPortDecl.qualifiedName)
 			var paramname = PARAM_PREFIX + externalPortDecl.name.toUpperCase()
 			
@@ -1342,12 +1382,12 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			} else {
 				Log.println("Declaring new parameter " + paramname + " for port " + externalPortDecl.qualifiedName)
 				var paramDeclaration = addNewParamDeclaration(paramname, externalPortDecl, sa)
-				externalPort2parameterDeclaration.put(externalPortDecl, paramDeclaration)
+				port2parameterDeclaration.put(externalPortDecl, paramDeclaration)
 			}
 		}
 		
-		Log.pop("addParamForExternalPortDeclarations")
-		return externalPort2parameterDeclaration
+		Log.pop("addParamForPortDeclarations")
+		return port2parameterDeclaration
 	}
 	
 	def addNewParamDeclaration(String name, Port fromPort, Adaptation sa) {
