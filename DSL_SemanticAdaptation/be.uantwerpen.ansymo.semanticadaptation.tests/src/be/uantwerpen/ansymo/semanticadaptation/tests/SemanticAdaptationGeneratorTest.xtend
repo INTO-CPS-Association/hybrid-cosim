@@ -115,8 +115,8 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
 				val outFunction = sa.out.rules.head.outputfunction as CompositeOutputFunction
 				val firstAssignment = outFunction.statements.head as Assignment
-				firstAssignment.lvalue.ref.name == "innerFMU2__output_port2"
-				(firstAssignment.expr as Variable).owner.name == "innerFMU2"
+				firstAssignment.lvalue.ref.name == "ext_output_port2"
+				(firstAssignment.expr as Variable).ref.name == "stored__innerFMU1__output_port2"
 			}
 		}) }
 	
@@ -159,16 +159,38 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 	@Test def test_ReplacePortRefs_sample1() { __generate('input/canonical_generation/sample1.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
-				sa.in.rules.forall[dr | 
+				noPortRefsLeft(sa)
+			}
+		}) }
+	
+	def noPortRefsLeft(Adaptation sa){
+		return sa.in.rules.forall[dr | 
+					(dr.outputfunction as CompositeOutputFunction).statements.forall[ s |
+						s.eAllContents.filter[v | v instanceof Variable].forall[ v |
+							! ((v as Variable).ref instanceof Port)
+						]
+					]
+				] &&
+				(sa.control.rule as CustomControlRule).controlRulestatements.forall[ s |
+					s.eAllContents.filter[v | v instanceof Variable].forall[ v |
+						! ((v as Variable).ref instanceof Port)
+					]
+				] && 
+				sa.out.rules.forall[dr | 
 					(dr.outputfunction as CompositeOutputFunction).statements.forall[ s |
 						s.eAllContents.filter[v | v instanceof Variable].forall[ v |
 							! ((v as Variable).ref instanceof Port)
 						]
 					]
 				]
+	}
+	
+	@Test def test_ReplacePortRefs_sample2() { __generate('input/canonical_generation/sample2.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
+				noPortRefsLeft(sa)
 			}
 		}) }
-	
 	
 	@Test def window_SA_parseNoExceptions() { __generate('input/power_window_case_study/window_sa.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }

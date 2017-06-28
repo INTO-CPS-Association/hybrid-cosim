@@ -284,6 +284,13 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 		}
 		Log.pop("Replace port refs in control rule")
 		
+		Log.push("Replace port refs in output rule")
+		for (rule : sa.out.rules){
+			check(rule.outputfunction instanceof CompositeOutputFunction, "Only CompositeOutputFunction are supported in DataRules.")
+			replacePortRefsByVarDecl((rule.outputfunction as CompositeOutputFunction).statements, internalOutputPort2OutVarDeclaration)
+		}
+		Log.pop("Replace port refs in output rule")
+		
 		Log.pop("Canonicalize")
 	}
 	
