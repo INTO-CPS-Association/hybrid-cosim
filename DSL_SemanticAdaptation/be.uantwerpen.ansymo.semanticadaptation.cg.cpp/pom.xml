@@ -20,68 +20,61 @@
 
 	<dependencies>
 
-		<!-- dependency>
+		<dependency>
 			<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
 			<artifactId>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</artifactId>
 			<type>jar</type>
 			<version>${project.version}</version>
 			<scope>compile</scope>
-		</dependency-->
+		</dependency>
 	</dependencies>
 
 	<build>
-		<plugins>
-
-			<plugin>
-				<groupId>org.eclipse.xtend</groupId>
-				<artifactId>xtend-maven-plugin</artifactId>
-			</plugin>
-
-
-
-			<!-- plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy-dependencies</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-						<configuration>
-
-							<artifactItems>
-								
-								
-								<artifactItem>
-									<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
-									<artifactId>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</artifactId>
-									<type>jar</type>
-									<version>${project.version}</version>
+			<plugins>
+				<plugin>
+					<groupId>org.eclipse.xtend</groupId>
+					<artifactId>xtend-maven-plugin</artifactId>
+				</plugin>
+	
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>copy-dependencies</id>
+							<phase>process-resources</phase>
+							<goals>
+								<goal>copy</goal>
+							</goals>
+							<configuration>
+	
+								<artifactItems>
 									
-									<overWrite>true</overWrite>
 									
-									<destFileName>cppFramework.jar</destFileName>
-								</artifactItem>
-
-							</artifactItems>
-
-
-							<outputDirectory>${project.basedir}/jars</outputDirectory>
-							<overWriteReleases>false</overWriteReleases>
-							<overWriteSnapshots>false</overWriteSnapshots>
-							<overWriteIfNewer>true</overWriteIfNewer>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin-->
-
-
-			
-		</plugins>
-		
-		
+									<artifactItem>
+										<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
+										<artifactId>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</artifactId>
+										<type>jar</type>
+										<version>${project.version}</version>
+										
+										<overWrite>true</overWrite>
+										
+										<destFileName>cppFramework.jar</destFileName>
+									</artifactItem>
+	
+								</artifactItems>
+	
+	
+								<outputDirectory>${project.basedir}/jars</outputDirectory>
+								<overWriteReleases>false</overWriteReleases>
+								<overWriteSnapshots>false</overWriteSnapshots>
+								<overWriteIfNewer>true</overWriteIfNewer>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				
+			</plugins>
 	</build>
 
 </project>

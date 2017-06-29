@@ -16,7 +16,7 @@
 		<module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
-	  <!--module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</module-->
+	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp</module>
 	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests</module>
 		<!--module>../my.mavenized.herolanguage.ui</module>
