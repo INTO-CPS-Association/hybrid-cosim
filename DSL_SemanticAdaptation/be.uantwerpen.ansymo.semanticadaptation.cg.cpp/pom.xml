@@ -41,30 +41,22 @@
 					<artifactId>maven-dependency-plugin</artifactId>
 					<executions>
 						<execution>
-							<id>copy-dependencies</id>
+							<id>copy</id>
 							<phase>process-resources</phase>
 							<goals>
 								<goal>copy</goal>
 							</goals>
 							<configuration>
-	
 								<artifactItems>
-									
-									
 									<artifactItem>
 										<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
 										<artifactId>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.lib</artifactId>
 										<type>jar</type>
 										<version>${project.version}</version>
-										
 										<overWrite>true</overWrite>
-										
 										<destFileName>cppFramework.jar</destFileName>
 									</artifactItem>
-	
 								</artifactItems>
-	
-	
 								<outputDirectory>${project.basedir}/jars</outputDirectory>
 								<overWriteReleases>false</overWriteReleases>
 								<overWriteSnapshots>false</overWriteSnapshots>
