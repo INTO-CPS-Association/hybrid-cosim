@@ -1,6 +1,7 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,12 +29,13 @@ public class BuildUtilities {
 		libFiles = new LinkedList<>();
 
 		try {
-			jarfile = this.getClass().getClassLoader().getResourceAsStream("jars/cppFramework.jar");
+			jarfile = new FileInputStream(new File("jars/cppFramework.jar"));
 			jarstream = new JarInputStream(jarfile);
 			filejarentry = jarstream.getNextJarEntry();
 
 			// Extract the framework files
 			while (filejarentry != null) {
+				System.out.println("Extracting file: " + filejarentry.getName());
 				if (!filejarentry.getName().contains("hybridCosimulation-framework") || filejarentry.isDirectory()) {
 					filejarentry = jarstream.getNextJarEntry();
 					continue;

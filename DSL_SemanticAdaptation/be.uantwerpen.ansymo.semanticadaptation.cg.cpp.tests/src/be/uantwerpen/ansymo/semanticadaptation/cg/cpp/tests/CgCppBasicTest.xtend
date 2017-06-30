@@ -45,6 +45,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated', "powerwindow");
 	}
 	
+	@Ignore
 	@Test def lazy_sa_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
 	}
@@ -140,7 +141,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			BuildUtilities.writeToFile(fp, files.value.toString);	
 		}
 		
-		val mainCpp = StaticGenerators.generateMainCppFile(saRootDir.absolutePath.replace("\\","\\\\"));
+		val mainCpp = StaticGenerators.generateMainCppFile(resourcesPath.absolutePath.replace("\\","\\\\"));
 		BuildUtilities.writeToFile(new File(srcGenPath,"main.cpp"), mainCpp);
 		
 		
@@ -149,7 +150,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			val sinkFile = new File(resourcesPath, rf.name);
 			System.out.println("Copied file to: " + sinkFile);
 			BuildUtilities.copyFile(rf, sinkFile);	
-		}			
+		}
 		
 		
 		BuildUtilities.writeToFile(new File(saRootDir,"CMakeLists.txt"), StaticGenerators.generateCMakeLists(projectName, "framework"));

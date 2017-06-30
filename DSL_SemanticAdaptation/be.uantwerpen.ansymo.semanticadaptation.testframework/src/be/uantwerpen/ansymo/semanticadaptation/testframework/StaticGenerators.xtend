@@ -220,15 +220,7 @@ class StaticGenerators {
 		endif() 
 		
 		
-		# Checkout the hcf sources
-		set(HCF_DIR hcf)
-		if(EXISTS ${HCF_DIR})
-			#execute_process(COMMAND git pull WORKING_DIRECTORY ${HCF_DIR})
-		else()
-			execute_process(COMMAND git clone --depth 1 git@github.com:into-cps/hybridCosimulation-framework.git ${HCF_DIR} )
-			execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${HCF_DIR})
-		endif()
-		add_subdirectory(${HCF_DIR}/semantic-adaptation)
+		add_subdirectory(«frameworkPath»)
 		
 		include(CheckCXXCompilerFlag)
 		
@@ -244,8 +236,6 @@ class StaticGenerators {
 		endif()
 		
 		add_definitions(-DFMI_COSIMULATION)
-		
-		include_directories(sources)
 		
 		file(GLOB CPP_FILES sources/*.cpp)
 		
@@ -290,8 +280,8 @@ class StaticGenerators {
 		#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${FMI_BIN_DIR})
 		
 		
-		add_library(${PROJECT_NAME} SHARED ${CPP_FILES} ${CPP_FILES})
-		target_link_libraries(${PROJECT_NAME} hcf)
+		add_library(${PROJECT_NAME} SHARED ${CPP_FILES})
+		target_link_libraries(${PROJECT_NAME} PUBLIC hcf)
 		set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 		SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES PREFIX "")
 		
@@ -300,7 +290,7 @@ class StaticGenerators {
 		
 		## Main executable ##
 		add_executable(${PROJECT_NAME}_main ${CPP_MAIN_FILES} ${CPP_FILES})
-		target_link_libraries(${PROJECT_NAME}_main hcf)
+		target_link_libraries(${PROJECT_NAME}_main PUBLIC hcf)
 		
 		
 		# I need this: -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic

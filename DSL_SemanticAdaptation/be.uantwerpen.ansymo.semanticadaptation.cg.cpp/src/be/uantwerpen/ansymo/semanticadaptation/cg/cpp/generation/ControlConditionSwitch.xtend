@@ -63,7 +63,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 		for (ruleStm : object.controlRulestatements) {
 			tempDoSwitchCode += doSwitch(ruleStm).code;
 		}
-		tempDoSwitchCode += System.lineSeparator() + '''return «doSwitch(object.returnstatement).code»;
+		tempDoSwitchCode += System.lineSeparator() + '''return «doSwitch(object.returnstatement.expr).code»;
 		''';
 
 		var functionPrefix = "double ";

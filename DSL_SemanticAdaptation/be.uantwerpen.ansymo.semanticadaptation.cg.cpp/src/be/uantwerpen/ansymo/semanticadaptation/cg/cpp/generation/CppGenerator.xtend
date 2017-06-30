@@ -39,7 +39,6 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		this.fsa = fsa;
 		for (SemanticAdaptation type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
 			type.compile;
-
 		}
 	}
 
