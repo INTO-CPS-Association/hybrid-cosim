@@ -45,6 +45,10 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated', "powerwindow");
 	}
 	
+	@Test def window_sa_canonical_generated() {
+		__parseNoErrors('test_input/single_folder_spec/window/window_sa.BASE_canonical.sa', 'generated', "powerwindow_generated");
+	}
+	
 	@Ignore
 	@Test def lazy_sa_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");

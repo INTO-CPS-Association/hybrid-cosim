@@ -1,0 +1,39 @@
+semantic adaptation reactive mealy WindowSA windowSA
+at "./path/to/WindowSA.fmu"
+
+	for inner fmu Window window
+		at "test_input/single_folder_spec/window/Window.fmu"
+		with input ports Real displacement(rad), Real speed (rad/s), Real reaction_force (N)
+		with output ports Real height (cm), Real reaction_torque (N.m)
+
+input ports Real displacement ( rad ) , Real speed ( rad / s ) , Real reaction_force ( N )
+
+output ports Real disp (m)  , Real tau (N)
+
+param Real INIT_DISPLACEMENT := 0.0 , Real INIT_SPEED := 0.0 , Real INIT_REACTION_FORCE := 0.0 , Real INIT_HEIGHT := 0.0 , Real INIT_REACTION_TORQUE := 0.0 ;
+
+control rules {
+var H_window := do_step ( window , t , H ) ;
+return min ( H_window ) ; }
+
+in var Real stored__displacement := INIT_DISPLACEMENT , Real stored__speed := INIT_SPEED , Real stored__reaction_force := INIT_REACTION_FORCE ; 
+in rules {
+	true -> {
+		stored__speed := windowSA . speed ;
+		stored__reaction_force := windowSA . reaction_force ;
+		stored__displacement := windowSA . displacement ; } --> {
+		window . speed := stored__speed ;
+		window . displacement := stored__displacement ;
+		window . reaction_force := stored__reaction_force ; } ; }
+		
+out var Real stored__reaction_torque := INIT_REACTION_TORQUE , Real stored__height := INIT_HEIGHT ; 
+out rules {
+	true -> {
+		stored__reaction_torque := window . reaction_torque ;
+		stored__height := window . height ; } --> {
+		windowSA . disp := stored__height / 100.0 ;
+		windowSA.tau := -stored__reaction_torque;
+	};
+}
+
+

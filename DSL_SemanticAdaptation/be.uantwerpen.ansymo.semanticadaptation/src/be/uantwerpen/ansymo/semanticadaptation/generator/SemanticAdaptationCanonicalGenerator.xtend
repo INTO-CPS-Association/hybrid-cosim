@@ -97,7 +97,6 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			fsa.generateFile(canonicalFileName, adaptation.serialize_model)
 			Log.println("File " + canonicalFileName + " written.")
 			
-			
 		} else {
 			Log.println("It is already a canonical version.")
 			Log.println("Nothing to do.")
@@ -309,6 +308,8 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 					val varDecl = port2VarDecl.get(v.ref)
 					v.ref = varDecl
 					Log.println("Replaced ref to " + port.qualifiedName + " by " + varDecl.name)
+				} else {
+					Log.println("Var ref not substituted: " + v.ref)
 				}
 			}
 		}

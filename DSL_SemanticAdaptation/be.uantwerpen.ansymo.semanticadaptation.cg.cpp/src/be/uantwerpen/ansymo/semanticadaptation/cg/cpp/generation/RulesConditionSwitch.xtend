@@ -424,7 +424,7 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		} 
 		retInfo.code = 
 		'''
-		min(«doSwitchResCode.join(",")»)
+		min({«doSwitchResCode.join(",")»})
 		'''
 		return retInfo;
 	}
