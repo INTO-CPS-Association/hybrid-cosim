@@ -57,7 +57,7 @@ public class TestCompileUtils {
 
 	public boolean checkCompile(File destination) throws InterruptedException, IOException {
 		
-		File cmakeFile = new File(destination,"CMakeLists.txt");
+		File cmakeFile = new File(destination,"CMakeCache.txt");
 		if(cmakeFile.exists())
 			cmakeFile.delete();
 		
