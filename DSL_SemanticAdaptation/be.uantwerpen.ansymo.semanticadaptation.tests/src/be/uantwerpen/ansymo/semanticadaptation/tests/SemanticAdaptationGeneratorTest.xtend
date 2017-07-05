@@ -105,9 +105,11 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			override accept(Result t) {
 				var Adaptation sa = t.resourceSet.resources.head.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation).head
 				val outFunction = sa.in.rules.head.outputfunction as CompositeOutputFunction
-				val firstAssignment = outFunction.statements.head as Assignment
-				Assert.assertTrue(firstAssignment.lvalue.ref.name == "innerFMU2__input_port1")
-				Assert.assertTrue((firstAssignment.expr as Variable).ref.name == "stored__innerFMU2__input_port1")
+				//val firstAssignment = outFunction.statements.head as Assignment
+				val assignment = outFunction.statements.filter[s | s instanceof Assignment && (s as Assignment).lvalue.ref.name == "innerFMU2__input_port1"]
+				Assert.assertEquals(1, assignment.size)
+				//Assert.assertTrue(firstAssignment.lvalue.ref.name == "innerFMU2__input_port1")
+				Assert.assertTrue(((assignment.head as Assignment).expr as Variable).ref.name == "stored__innerFMU2__input_port1")
 			}
 		}) }
 	
