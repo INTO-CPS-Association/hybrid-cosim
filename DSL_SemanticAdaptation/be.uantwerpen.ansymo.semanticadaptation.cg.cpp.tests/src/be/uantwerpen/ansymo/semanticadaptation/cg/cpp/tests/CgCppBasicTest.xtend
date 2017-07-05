@@ -26,9 +26,17 @@ import org.junit.runner.RunWith
 import be.uantwerpen.ansymo.semanticadaptation.testframework.StaticGenerators
 import org.junit.Ignore
 
+
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
 class CgCppBasicTest extends AbstractSemanticAdaptationTest {
+	
+	val testOutputFolder = "c-gen-tests"
+	
+	def getOutputDirectory(String directoryName){
+		
+		return new File(("target/"+testOutputFolder+"/"+directoryName).replace("/",File.separatorChar));
+	}
 
 // @Inject CppGenerator underTest
 	@Inject extension ParseHelper<SemanticAdaptation>
@@ -70,7 +78,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			val file = new File(correctFileDirectory, filename2);
 			val correctFileContent = Files.readAllLines(file.toPath);
 
-			var path = new File("generated");
+			var path =  getOutputDirectory(directory+filename);
 			if (path.exists)
 				path.delete
 			else
@@ -105,7 +113,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 
 	def __parseNoErrors(String filename, String directory, String projectName) {
-		val saRootDir = new File(directory + File.separatorChar + projectName);
+		val saRootDir = getOutputDirectory(directory + File.separatorChar + projectName);
 		val srcGenPath = new File(saRootDir, "sources")
 		val resourcesPath = new File(saRootDir, "resources");
 		val saFrameworkPath = new File(saRootDir, "framework")

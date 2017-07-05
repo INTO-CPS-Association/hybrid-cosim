@@ -206,15 +206,15 @@ class StaticGenerators {
 		#  objdump -p binaries/win64/window-sa.dll |  grep 'DLL Name:'
 		#
 		
-			# Checkout the hcf sources
-				set(HCF_DIR hcf)
-				if(EXISTS ${HCF_DIR})
-					execute_process(COMMAND git pull WORKING_DIRECTORY ${HCF_DIR})
-				else()
-					execute_process(COMMAND git clone --depth 1 git@github.com:into-cps/hybridCosimulation-framework.git ${HCF_DIR} )
-					execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${HCF_DIR})
-				endif()
-				add_subdirectory(${HCF_DIR}/semantic-adaptation)
+		# Checkout the hcf sources
+		set(HCF_DIR hcf)
+		if(EXISTS ${HCF_DIR})
+			execute_process(COMMAND git pull WORKING_DIRECTORY ${HCF_DIR})
+		else()
+			execute_process(COMMAND git clone --depth 1 git@github.com:into-cps/hybridCosimulation-framework.git ${HCF_DIR} )
+			execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${HCF_DIR})
+		endif()
+		add_subdirectory(${HCF_DIR}/semantic-adaptation)
 		
 		if (WIN32)
 			#windows, becuase windows just cannot figure out to do it correct. 
@@ -226,9 +226,6 @@ class StaticGenerators {
 			set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
 			set(CMAKE_C_USE_RESPONSE_FILE_FOR_LIBRARIES 0)
 		endif() 
-		
-		
-		add_subdirectory(«frameworkPath»)
 		
 		include(CheckCXXCompilerFlag)
 		
