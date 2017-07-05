@@ -97,7 +97,6 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			if (correctFileContent.size != testFileContent.size) {
 				System.out.println("Error: Lines are of different length in file: " + filename2);
 			} else {
-				val error = false;
 				for (var i = 0; i < testFileContent.size; i++) {
 					val testLine = testFileContent.get(i);
 					val correctLine = correctFileContent.get(i);
