@@ -56,6 +56,11 @@ public class TestCompileUtils {
 	}
 
 	public boolean checkCompile(File destination) throws InterruptedException, IOException {
+		
+		File cmakeFile = new File(destination,"CMakeLists.txt");
+		if(cmakeFile.exists())
+			cmakeFile.delete();
+		
 		System.out.println(destination.getAbsolutePath());
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.directory(destination);
