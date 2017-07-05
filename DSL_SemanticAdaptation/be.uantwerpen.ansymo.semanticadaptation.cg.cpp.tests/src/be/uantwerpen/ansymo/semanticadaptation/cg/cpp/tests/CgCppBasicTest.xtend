@@ -162,8 +162,8 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val cMakeToolChain = StaticGenerators.generateToolChainCmake();
 		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
 		
-		(new BuildUtilities()).copyNativeLibFiles(saFrameworkPath);
-		System.out.println("Stored framework at: " + saFrameworkPath);
+//		(new BuildUtilities()).copyNativeLibFiles(saFrameworkPath);
+//		System.out.println("Stored framework at: " + saFrameworkPath);
 		
 				
 	}

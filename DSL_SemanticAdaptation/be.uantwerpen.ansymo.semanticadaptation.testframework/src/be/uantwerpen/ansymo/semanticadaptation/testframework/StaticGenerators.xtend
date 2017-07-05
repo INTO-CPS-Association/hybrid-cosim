@@ -206,7 +206,15 @@ class StaticGenerators {
 		#  objdump -p binaries/win64/window-sa.dll |  grep 'DLL Name:'
 		#
 		
-		
+			# Checkout the hcf sources
+				set(HCF_DIR hcf)
+				if(EXISTS ${HCF_DIR})
+					execute_process(COMMAND git pull WORKING_DIRECTORY ${HCF_DIR})
+				else()
+					execute_process(COMMAND git clone --depth 1 git@github.com:into-cps/hybridCosimulation-framework.git ${HCF_DIR} )
+					execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${HCF_DIR})
+				endif()
+				add_subdirectory(${HCF_DIR}/semantic-adaptation)
 		
 		if (WIN32)
 			#windows, becuase windows just cannot figure out to do it correct. 
