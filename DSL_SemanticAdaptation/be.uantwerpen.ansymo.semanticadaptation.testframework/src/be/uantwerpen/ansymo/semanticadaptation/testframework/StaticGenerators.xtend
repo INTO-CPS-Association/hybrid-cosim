@@ -210,6 +210,7 @@ class StaticGenerators {
 		set(HCF_DIR hcf)
 		if(EXISTS ${HCF_DIR})
 			execute_process(COMMAND git pull WORKING_DIRECTORY ${HCF_DIR})
+			execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${HCF_DIR})
 		else()
 			execute_process(COMMAND git clone --depth 1 git@github.com:into-cps/hybridCosimulation-framework.git ${HCF_DIR} )
 			execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${HCF_DIR})
