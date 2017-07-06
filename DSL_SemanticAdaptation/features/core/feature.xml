@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="be.uantwerpen.ansymo.semanticadaptation.features.core"
+      label="Senamtics Adaptation for FMI"
+      version="1.0.0.qualifier">
+
+   <description>
+      %description
+   </description>
+
+   <copyright url="%copyURL">
+      %copyNotice
+   </copyright>
+
+   <license url="%licenseURL">
+      %agreement
+   </license>
+
+   <requires>
+      <import plugin="org.eclipse.xtext"/>
+      <import plugin="org.eclipse.xtext.xbase"/>
+      <import plugin="org.eclipse.equinox.common" version="3.5.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.emf.ecore"/>
+      <import plugin="org.eclipse.xtext.xbase.lib"/>
+      <import plugin="org.antlr.runtime"/>
+      <import plugin="org.eclipse.xtext.util"/>
+      <import plugin="org.eclipse.xtend.lib"/>
+      <import plugin="org.eclipse.emf.common"/>
+      <import plugin="org.apache.log4j"/>
+      <import plugin="org.junit" version="4.7.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.xtext.junit4"/>
+      <import plugin="org.eclipse.xtext.xbase.junit"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.xtext.testing"/>
+      <import plugin="org.eclipse.xtext.xbase.testing"/>
+   </requires>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.cg.cpp"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
