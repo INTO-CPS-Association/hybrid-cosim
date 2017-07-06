@@ -1,0 +1,17 @@
+semantic adaptation reactive mealy OuterFMU outerFMU
+at "./path/to/FMU.fmu"
+
+	for inner fmu InnerFMU innerFMU1
+		at "./path/to/InnerFMU.fmu"
+		with input ports innerFMU1__input_port1(rad), Bool innerFMU1__input_port2, innerFMU1__input_port3 (N.m)
+		with output ports Real innerFMU1__outout_port1, Integer innerFMU1__output_port2
+
+	for inner fmu InnerFMU innerFMU2
+		at "./path/to/InnerFMU.fmu"
+		with input ports innerFMU2__input_port1(rad), Bool innerFMU2__input_port2, innerFMU2__input_port3 (N.m)
+		with output ports innerFMU2__outout_port1, String innerFMU2__output_port2
+	
+	coupled as innerFMU2.innerFMU2__outout_port1 -> innerFMU1.innerFMU1__input_port1
+	
+	input ports Real ext_input_port3 -> innerFMU1.innerFMU1__input_port3
+	output ports ext_output_port2 <- innerFMU1.innerFMU1__output_port2

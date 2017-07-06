@@ -6,6 +6,8 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-SymbolicName: be.uantwerpen.ansymo.semanticadaptation.cg.chain;singleton:=true
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Import-Package: be.uantwerpen.ansymo.semanticadaptation.cg.canonical,
- be.uantwerpen.ansymo.semanticadaptation.log
-Require-Bundle: be.uantwerpen.ansymo.semanticadaptation;bundle-version="1.0.0"
+Import-Package: be.uantwerpen.ansymo.semanticadaptation.log
+Require-Bundle: be.uantwerpen.ansymo.semanticadaptation;bundle-version="1.0.0",
+ be.uantwerpen.ansymo.semanticadaptation.cg.canonical;bundle-version="1.0.0",
+ org.eclipse.xtext.generator;bundle-version="2.11.0",
+ org.eclipse.emf.common.source;bundle-version="2.12.0"

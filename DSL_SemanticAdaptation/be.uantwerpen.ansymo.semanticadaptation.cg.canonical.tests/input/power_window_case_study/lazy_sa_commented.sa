@@ -1,0 +1,108 @@
+module Lazy_SA
+
+/*
+ * The purpose of this adaptation is to only run the internal FMU 
+ * 	when any of its inputs changes, or when it requests to be explicitly run.
+ */
+
+semantic adaptation reactive moore LazySA lazy_sa
+at "./path/to/LazySA.fmu"
+
+	for inner fmu Controller controller
+	at "./path/to/Controller.fmu"
+	with input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
+	with output ports up, down, stop
+
+/*
+ * In addition, we do not need to do anything about the outputs of the inner FMU, because they are zero order holded by default.
+ */
+input ports obj_detected -> controller.obj_detected,
+			passenger_up -> controller.passenger_up,
+			passenger_down -> controller.passenger_down,
+			passenger_stop -> controller.passenger_stop,
+			driver_up -> controller.driver_up,
+			driver_down -> controller.driver_down,
+			driver_stop -> controller.driver_stop
+
+output ports up, down, stop
+
+param 	INIT_OBJ_DETECTED := false,
+		INIT_PASSENGER_UP := false,
+		INIT_PASSENGER_DOWN := false,
+		INIT_PASSENGER_STOP := false,
+		INIT_DRIVER_UP := false,
+		INIT_DRIVER_DOWN := false,
+		INIT_DRIVER_STOP := false;
+
+control var	tn := -1.0,
+			tl := -1.0,
+			prev_obj_detected := INIT_OBJ_DETECTED,
+			prev_passenger_up := INIT_PASSENGER_UP,
+			prev_passenger_down := INIT_PASSENGER_DOWN,
+			prev_passenger_stop := INIT_PASSENGER_STOP,
+			prev_driver_up := INIT_DRIVER_UP,
+			prev_driver_down := INIT_DRIVER_DOWN,
+			prev_driver_stop := INIT_DRIVER_STOP;
+
+control rules {
+	// This initialisation covers simulations that start at a non-zero time.
+	if (tl < 0.0){
+		tl := t;
+	}
+	
+	var step_size := min(H, tn - t); // In case tn < t, this ensures that the controller will be run at the right time.
+	// Note that the expression lazy_sa.obj_detected gets replaced by the corresponding storage var in the canonical version.
+	if (lazy_sa.obj_detected != prev_obj_detected or
+		lazy_sa.passenger_up != prev_passenger_up or
+		lazy_sa.passenger_down != prev_passenger_down or
+		lazy_sa.passenger_stop != prev_passenger_stop or
+		lazy_sa.driver_up != prev_driver_up or
+		lazy_sa.driver_down != prev_driver_down or
+		lazy_sa.driver_stop != prev_driver_stop or
+		(t+H) >= tn
+	){
+		var step_to_be_done := (t+H-tl);
+		var step_done := do_step(controller, t, step_to_be_done); // calls the mapIn function that will take care of forwarding the values of the input ports to the internal FMU.
+		// We calculate these as if step_done == step_to_be_done. If that is not the case, a rollback will be done anyway.
+		tn := tl + step_done + get_next_time_step(controller); // calculates the next time step that is tolerated by the controller.
+		/*
+			The get_next_time_step(controller) function is equivalent to the following snippet:
+			save_state(controller);
+			internal_transition := do_step(controller, last_execution_time(controller), MAX);
+			next_time_step := last_execution_time(controller) + internal_transition;
+			rollback(controller);
+		 */
+		// This is the actual step size taken, from the outside world:
+		step_size := tl + step_done - t; // assert step_size <= H
+		tl := tl + step_done; // assert tl == t+H
+	}
+	
+	// Store the previous values of the inputs
+	prev_obj_detected := lazy_sa.obj_detected;
+	prev_passenger_up := lazy_sa.passenger_up;
+	prev_passenger_down := lazy_sa.passenger_down;
+	prev_passenger_stop := lazy_sa.passenger_stop;
+	prev_driver_up := lazy_sa.driver_up;
+	prev_driver_down := lazy_sa.driver_down;
+	prev_driver_stop := lazy_sa.driver_stop;
+	
+	return step_size;
+}
+
+/*
+The following code is not needed because the outputs are zero order hold'ed by default:
+out var	stored_up := INIT_UP,
+		stored_down := INIT_DOWN,
+		stored_stop := INIT_STOP;
+out rules{
+	 true -> {
+		stored_up := controller.up;
+		stored_down := controller.down;
+		stored_stop := controller.stop;
+	} --> {
+		lazy_sa.up := stored_up;
+		lazy_sa.down := stored_down;
+		lazy_sa.stop := stored_stop;
+	};
+}
+ */

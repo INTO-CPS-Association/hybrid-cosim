@@ -23,6 +23,7 @@
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical</module>
 	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical.tests</module>
  <module>features</module>
  <module>repository</module>
 	</modules>
