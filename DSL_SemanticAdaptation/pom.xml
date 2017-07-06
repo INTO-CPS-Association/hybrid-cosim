@@ -19,6 +19,7 @@
 		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical</module>
 	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests</module>
  <module>features</module>
  <module>repository</module>

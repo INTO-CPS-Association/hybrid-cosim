@@ -1,37 +1,35 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation
 
-import be.uantwerpen.ansymo.semanticadaptation.generator.SemanticAdaptationGenerator
-import org.eclipse.xtext.generator.IFileSystemAccess2
-
-import org.eclipse.xtext.generator.IGeneratorContext
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
-import org.eclipse.emf.ecore.resource.Resource
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
-import java.util.ArrayList
-import java.util.LinkedHashMap
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.GlobalInOutVariable
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InOutRulesBlockResult
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InputOutputRuleType
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.IncorrectAmountOfElementsException
-import java.io.File
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
-import org.eclipse.emf.common.util.EList
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVCausality
-import java.util.Collection
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.IncorrectAmountOfElementsException
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ControlRuleBlock
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InRulesBlock
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InOutRulesBlockResult
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutRulesBlock
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.GlobalInOutVariable
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ControlRuleBlock
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.RulesBlockResult
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
-import java.util.List
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ParamDeclarations
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InputOutputRuleType
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import java.io.File
+import java.util.ArrayList
+import java.util.Collection
+import java.util.LinkedHashMap
+import java.util.List
+import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.generator.AbstractGenerator
+import org.eclipse.xtext.generator.IFileSystemAccess2
+import org.eclipse.xtext.generator.IGeneratorContext
 
-class CppGenerator extends SemanticAdaptationGenerator {
+class CppGenerator extends AbstractGenerator {
 	private var IFileSystemAccess2 fsa;
 	private List<File> resourcePaths = newArrayList();
 
