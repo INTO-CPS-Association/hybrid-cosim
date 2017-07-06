@@ -8,7 +8,6 @@ import org.eclipse.xtext.generator.IGenerator2
 import org.junit.Assert
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.generator.IFileSystemAccess
-import be.uantwerpen.ansymo.semanticadaptation.generator.SemanticAdaptationPythonGenerator
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 
 abstract class AbstractSemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationParserTest {
@@ -27,14 +26,6 @@ abstract class AbstractSemanticAdaptationGeneratorTest extends AbstractSemanticA
 	}
 	
 	/**
-	 * Compares the default file in memory to the given oracle file
-	 */
-	def void compareFiles(String oraclefilename) {
-		val inmemoryfilename = IFileSystemAccess::DEFAULT_OUTPUT+SemanticAdaptationPythonGenerator::FILENAME
-		compareFiles(inmemoryfilename, oraclefilename)
-	}
-	
-	/**
 	 * Compares a given file in memory to the given oracle file
 	 */
 	def void compareFiles(String inmemoryfilename, String oraclefilename) {
@@ -43,15 +34,6 @@ abstract class AbstractSemanticAdaptationGeneratorTest extends AbstractSemanticA
 		val actualtext = fsa.allFiles.get(inmemoryfilename)
 		val expectedtext = readFile('oracles/'+oraclefilename)
 		Assert.assertEquals(expectedtext, actualtext)
-	}
-	
-	/**
-	 * Parses a given input file, generates code, and compares this to the given oracle file
-	 */
-	def void parseAndGenerateAndCompare(String inputfilename, String oraclefilename) {
-		val root = parseInputFile(inputfilename)
-		generateOutputFile(root)
-		compareFiles(oraclefilename)
 	}
 
 }

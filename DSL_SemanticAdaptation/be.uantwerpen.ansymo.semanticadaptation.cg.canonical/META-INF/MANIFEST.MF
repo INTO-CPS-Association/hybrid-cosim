@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: be.uantwerpen.ansymo.semanticadaptation.cg.cpp
+Bundle-Name: be.uantwerpen.ansymo.semanticadaptation.cg.canonical
 Bundle-Vendor: University of Antwerp, Ansymo Lab
 Bundle-Version: 1.0.0.qualifier
-Bundle-SymbolicName: be.uantwerpen.ansymo.semanticadaptation.cg.cpp; singleton:=true
+Bundle-SymbolicName: be.uantwerpen.ansymo.semanticadaptation.cg.canonical;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: be.uantwerpen.ansymo.semanticadaptation,
  org.junit;bundle-version="4.7.0",
@@ -15,4 +15,6 @@ Require-Bundle: be.uantwerpen.ansymo.semanticadaptation,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.util
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Import-Package: org.apache.log4j
+Import-Package: be.uantwerpen.ansymo.semanticadaptation.log,
+ org.apache.log4j
+Export-Package: be.uantwerpen.ansymo.semanticadaptation.cg.canonical

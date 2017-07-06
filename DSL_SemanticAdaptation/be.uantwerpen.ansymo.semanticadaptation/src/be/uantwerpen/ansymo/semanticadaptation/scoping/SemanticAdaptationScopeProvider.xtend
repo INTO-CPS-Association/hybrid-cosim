@@ -7,7 +7,6 @@
  *******************************************************************************/
 package be.uantwerpen.ansymo.semanticadaptation.scoping
 
-import be.uantwerpen.ansymo.semanticadaptation.generator.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.AlgebraicLoopSolution
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Component
@@ -43,6 +42,7 @@ import org.eclipse.xtext.scoping.IScope
 import org.eclipse.xtext.scoping.Scopes
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider
 import org.eclipse.xtext.scoping.impl.IScopeWrapper
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
 
 /**
  * This class contains custom scoping description.

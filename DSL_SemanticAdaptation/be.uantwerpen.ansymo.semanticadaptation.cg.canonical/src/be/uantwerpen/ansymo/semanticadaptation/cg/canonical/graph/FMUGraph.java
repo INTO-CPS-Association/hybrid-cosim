@@ -1,4 +1,4 @@
-package be.uantwerpen.ansymo.semanticadaptation.generator.graph;
+package be.uantwerpen.ansymo.semanticadaptation.cg.canonical.graph;
 
 import java.util.Iterator;
 

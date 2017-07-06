@@ -13,6 +13,8 @@
 	<modules>
 		<module>be.uantwerpen.ansymo.semanticadaptation.testframework</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.log</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.cg.chain</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
