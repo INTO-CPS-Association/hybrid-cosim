@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/be.uantwerpen.ansymo.semanticadaptation.features.core_1.0.0.qualifier.jar" id="be.uantwerpen.ansymo.semanticadaptation.features.core" version="1.0.0.qualifier">
+      <category name="be.uantwerpen.ansymo.semanticadaptation.id"/>
+   </feature>
+   <category-def name="be.uantwerpen.ansymo.semanticadaptation.id" label="Semantics Adaptation for FMI"/>
+</site>

@@ -23,6 +23,7 @@ Thumbs.db
 .classpath
 .metadata
 .settings
+.recommenders
 
 ##
 bin/
