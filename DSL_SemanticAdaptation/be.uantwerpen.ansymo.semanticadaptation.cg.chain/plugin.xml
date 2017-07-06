@@ -3,6 +3,7 @@
 <plugin>
    <extension
          id="chain_generator_extension"
+         name="chain_generator_extension"
          point="be.uantwerpen.ansymo.semanticadaptation.generator_extension">
       <generator
             class="be.uantwerpen.ansymo.semanticadaptation.cg.chain.SemanticAdaptationChainGenerator">

@@ -1,23 +1,24 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation
 
-import org.w3c.dom.Document
-import java.util.LinkedHashMap
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
-import java.util.zip.ZipFile
-import java.util.Enumeration
-import java.util.zip.ZipEntry
-import java.io.File
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.xpath.XPathFactory
-import javax.xml.xpath.XPath
-import javax.xml.xpath.XPathExpression
-import javax.xml.xpath.XPathConstants
-import org.w3c.dom.NodeList
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVCausality
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVVariability
-import javax.xml.soap.Node
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVVariability
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
+import java.io.File
+import java.util.Enumeration
+import java.util.LinkedHashMap
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import javax.xml.parsers.DocumentBuilder
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.soap.Node
+import javax.xml.xpath.XPath
+import javax.xml.xpath.XPathConstants
+import javax.xml.xpath.XPathExpression
+import javax.xml.xpath.XPathFactory
+import org.w3c.dom.Document
+import org.w3c.dom.NodeList
 
 class ModelDescription {
 	private final Document md;
@@ -29,10 +30,12 @@ class ModelDescription {
 	private var String guid;
 
 	new(String name, String type, File path) {
+		Log.push("Loading model description for fmu " + name)
 		this.name = name;
 		this.type = type;
 		
-
+		Log.println("Source fmu absolute path: " + path.absolutePath)
+		
 		var ZipFile fmu = new ZipFile(path);
 		var Enumeration<? extends ZipEntry> entries = fmu.entries();
 		var boolean entryFound = false;
@@ -52,6 +55,7 @@ class ModelDescription {
 		this.md = builder.parse(is);
 		is.close();
 		calcExtractInformation();
+		Log.pop("Loading model description for fmu " + name)
 	}
 
 	private def calcExtractInformation() {

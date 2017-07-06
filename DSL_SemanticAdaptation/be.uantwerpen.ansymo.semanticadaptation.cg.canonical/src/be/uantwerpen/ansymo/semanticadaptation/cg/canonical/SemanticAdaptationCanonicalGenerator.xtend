@@ -61,7 +61,7 @@ class SemanticAdaptationCanonicalGenerator {
 	
 	String CANONICAL_SUFIX = "_canonical"
 	
-	def doGenerate(Adaptation adaptation, IFileSystemAccess2 fsa, URI mainFile) {
+	def Adaptation doGenerate(Adaptation adaptation, IFileSystemAccess2 fsa, URI mainFile) {
 		Log.push("Generating canonical semantic adaptation for file...")
 		
 		Log.println(prettyprint_model(adaptation, "File Read"))
@@ -90,6 +90,8 @@ class SemanticAdaptationCanonicalGenerator {
 		}
 		
 		Log.pop("Generating canonical semantic adaptation for file... DONE")
+		
+		return adaptation
 	}
 	
 	def prettyprint_model(Adaptation sa, String title){

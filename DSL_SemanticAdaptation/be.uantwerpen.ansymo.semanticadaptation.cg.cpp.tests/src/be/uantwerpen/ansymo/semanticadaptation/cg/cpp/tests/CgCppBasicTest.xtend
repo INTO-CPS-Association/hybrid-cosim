@@ -6,6 +6,7 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.BuildUtilities
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.testframework.StaticGenerators
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
 import be.uantwerpen.ansymo.semanticadaptation.tests.SemanticAdaptationInjectorProvider
 import com.google.inject.Inject
@@ -13,19 +14,19 @@ import java.io.File
 import java.io.FileWriter
 import java.nio.file.Files
 import java.util.regex.Pattern
+import org.eclipse.emf.common.CommonPlugin
+import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
 import org.eclipse.xtext.testing.util.ParseHelper
 import org.eclipse.xtext.testing.validation.ValidationTestHelper
+import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import be.uantwerpen.ansymo.semanticadaptation.testframework.StaticGenerators
-import org.junit.Ignore
-import org.junit.Assert
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -71,9 +72,8 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val correctFileDirectory = new File(directory + File.separator + "correct");
 
 		val fsa = new InMemoryFileSystemAccess()
-		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
-		cppGen.doGenerate(model.eResource, fsa, ctxt);
+		cppGen.doGenerate(model.eResource, fsa);
 
 		for (files : fsa.allFiles.entrySet) {
 			val filename2 = files.key.substring(14);
@@ -124,9 +124,8 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		__assertNoParseErrors(model, filename)
 
 		val fsa = new InMemoryFileSystemAccess();
-		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
-		cppGen.doGenerate(model.eResource, fsa, ctxt);
+		cppGen.doGenerate(model.eResource, fsa, CommonPlugin.resolve(URI.createFileURI(".")));
 
 		if (saRootDir.exists) {
 			BuildUtilities.deleteFolder(srcGenPath);

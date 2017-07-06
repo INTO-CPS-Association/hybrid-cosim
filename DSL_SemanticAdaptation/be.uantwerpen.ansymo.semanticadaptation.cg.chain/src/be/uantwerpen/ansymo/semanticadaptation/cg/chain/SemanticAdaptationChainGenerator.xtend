@@ -4,6 +4,7 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.chain
 
 import be.uantwerpen.ansymo.semanticadaptation.cg.canonical.SemanticAdaptationCanonicalGenerator
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
 import be.uantwerpen.ansymo.semanticadaptation.generator.SemanticAdaptationCustomGenerator
 import be.uantwerpen.ansymo.semanticadaptation.log.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
@@ -15,7 +16,14 @@ class SemanticAdaptationChainGenerator extends SemanticAdaptationCustomGenerator
 	override void generate(Adaptation sa, IFileSystemAccess2 fsa, URI mainFile){
 		Log.push("SemanticAdaptationChainGenerator.generate")
 		
-		(new SemanticAdaptationCanonicalGenerator).doGenerate(sa, fsa, mainFile)
+		val canonical_sa = (new SemanticAdaptationCanonicalGenerator).doGenerate(sa, fsa, mainFile)
+		
+		Log.push("Generating cpp code...")
+		
+		val cppGen = new CppGenerator();
+		cppGen.doGenerate(canonical_sa.eResource, fsa);
+		
+		Log.pop("Generating cpp code... DONE")
 		
 		Log.pop("SemanticAdaptationChainGenerator.generate")
 	}
