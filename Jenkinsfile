@@ -26,6 +26,21 @@ node {
         step([$class: 'TasksPublisher', canComputeNew: false, defaultEncoding: '', excludePattern: '', healthy: '', high: 'FIXME', ignoreCase: true, low: '', normal: 'TODO', pattern: '', unHealthy: ''])
       }}
 
+		stage ('Deploy'){
+			if (env.BRANCH_NAME == 'development') {
+
+				sh "echo branch is now ${env.BRANCH_NAME}"
+			
+				DEST = sh script: "echo /home/jenkins/web/hybridcosimulation/development/${env.BRANCH_NAME}/Build-${BUILD_NUMBER}_`date +%Y-%m-%d_%H-%M`", returnStdout:true
+				REMOTE = "jenkins@overture.au.dk"
+
+				sh "echo The remote dir will be: ${DEST}"
+				sh "ssh ${REMOTE} mkdir -p ${DEST}"
+				sh "scp -r DSL_SemanticAdaptation/repository/target/target/repository/* ${REMOTE}:${DEST}"
+				sh "ssh ${REMOTE} /home/jenkins/update-latest.sh web/hybridcosimulation/development/${env.BRANCH_NAME}"
+			}
+		}
+
   } catch (any) {
     currentBuild.result = 'FAILURE'
     throw any //rethrow exception to prevent the build from proceeding
@@ -43,3 +58,5 @@ node {
     }
   }
 }
+
+
