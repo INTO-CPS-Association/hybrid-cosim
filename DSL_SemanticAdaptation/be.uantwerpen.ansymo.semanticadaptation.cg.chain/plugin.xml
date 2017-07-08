@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         id="chain_generator_extension"
+         name="chain_generator_extension"
+         point="be.uantwerpen.ansymo.semanticadaptation.generator_extension">
+      <generator
+            class="be.uantwerpen.ansymo.semanticadaptation.cg.chain.SemanticAdaptationChainGenerator">
+      </generator>
+   </extension>
+
+</plugin>

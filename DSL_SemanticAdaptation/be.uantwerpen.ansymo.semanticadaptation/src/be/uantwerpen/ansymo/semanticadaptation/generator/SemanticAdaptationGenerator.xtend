@@ -3,6 +3,12 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.generator
 
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import org.eclipse.core.runtime.IExtensionPoint
+import org.eclipse.core.runtime.IExtensionRegistry
+import org.eclipse.core.runtime.Platform
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
@@ -16,10 +22,68 @@ import org.eclipse.xtext.generator.IGeneratorContext
 class SemanticAdaptationGenerator extends AbstractGenerator {
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(typeof(Greeting))
-//				.map[name]
-//				.join(', '))
+		Log.push("Generating canonical semantic adaptation for file " + resource.URI + "...")
+		
+		Log.println("Resource URI information:")
+		Log.println("\t resource.URI.lastSegment = " + resource.URI.lastSegment())
+		Log.println("\t resource.URI.trimFileExtension = " + resource.URI.trimFileExtension())
+		
+		val chainGenerator = loadSemanticAdaptationCustomGenerator()
+		
+		// Create in memory representation of canonical SA file
+		var adaptations = resource.allContents.toIterable.filter(SemanticAdaptation).last.elements.filter(Adaptation);
+		
+		check(adaptations.size == 1, "Only one semantic adaptation is supported per .sa file")
+		
+		var adaptation = adaptations.head
+		
+		chainGenerator.generate(adaptation, fsa, resource.URI)
+		
+		Log.pop("Generating canonical semantic adaptation for file " + resource.URI + "...")
 	}
+	
+	def SemanticAdaptationCustomGenerator loadSemanticAdaptationCustomGenerator() {
+		Log.push("loadSemanticAdaptationCustomGenerator")
+		
+		val IExtensionRegistry registry = Platform.getExtensionRegistry();
+		val IExtensionPoint point = registry.getExtensionPoint("be.uantwerpen.ansymo.semanticadaptation.generator_extension");
+		if (point === null) {
+			Log.println("Extension point be_uantwerpen_ansymo_semanticadaptation_generator must be provided.")
+			throw new Exception("Extension point be_uantwerpen_ansymo_semanticadaptation_generator must be provided.");
+		}
+		Log.println("Extension point found.")
+		var chainExtension = point.getExtension("be.uantwerpen.ansymo.semanticadaptation.cg.chain.chain_generator_extension")
+		if (chainExtension === null) {
+			throw new Exception("An extension called chain_generator_extension must be provided to Extension Point be.uantwerpen.ansymo.semanticadaptation.generator_extension.");
+		}
+		Log.println("Extension to extension point found.")
+		
+		val configElement = chainExtension.configurationElements.head
+		if (configElement === null) {
+			throw new Exception("Configuration element not found.");
+		}
+		
+		val obj = configElement.createExecutableExtension("class")
+		if (obj === null) {
+			throw new Exception("Class attribute of extension not proper java class.");
+		}
+		if (!(obj instanceof SemanticAdaptationCustomGenerator)) {
+			throw new Exception("Instance of SemanticAdaptationCustomGenerator expected. Found " + obj.class);
+		}
+		
+		Log.println("Instance of SemanticAdaptationCustomGenerator found.")
+		
+		val chainGenerator = obj as SemanticAdaptationCustomGenerator
+		
+		Log.pop("loadSemanticAdaptationCustomGenerator")
+		return chainGenerator
+	}
+	
+	
+	def check(Boolean condition, String msg){
+		if (! condition){
+			throw new Exception("Assertion error: " + msg)
+		}
+	}
+	
 }

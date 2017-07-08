@@ -9,6 +9,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVCausality
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.IncorrectAmountOfElementsException
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ControlRuleBlock
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
@@ -25,23 +26,34 @@ import java.util.LinkedHashMap
 import java.util.List
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.resource.Resource
-import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.generator.IGeneratorContext
+import org.eclipse.emf.common.CommonPlugin
+import org.eclipse.emf.common.util.URI
 
-class CppGenerator extends AbstractGenerator {
+class CppGenerator {
 	private var IFileSystemAccess2 fsa;
 	private List<File> resourcePaths = newArrayList();
 
-	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
+	def void doGenerate(Resource resource, IFileSystemAccess2 fsa) {
+		Log.push("CppGenerator.doGenerate")
+		val adaptationFolderURI = resource.URI.trimSegments(1)
+		Log.println("Adaptation folder URI: " + adaptationFolderURI)
+		doGenerate(resource, fsa, adaptationFolderURI)
+		Log.pop("CppGenerator.doGenerate")
+	}
+	
+	def void doGenerate(Resource resource, IFileSystemAccess2 fsa, URI adaptationFolderURI) {
+		Log.push("CppGenerator.doGenerate " + adaptationFolderURI)
 		this.fsa = fsa;
 		for (SemanticAdaptation type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
-			type.compile;
+			type.compile(adaptationFolderURI);
 		}
+		Log.pop("CppGenerator.doGenerate"  + adaptationFolderURI)
 	}
-
+	
 	// TODO: Verify adaptation.name is not a C++ keyword
-	def void compile(SemanticAdaptation adaptation) {
+	def void compile(SemanticAdaptation adaptation, URI adaptationFolderURI) {
+		Log.push("CppGenerator.compile")
 		for (Adaptation adap : adaptation.elements.filter(Adaptation)) {
 			// Value used for scoping variables in the .sa file
 			val adapInteralRefName = adap.name;
@@ -70,14 +82,15 @@ class CppGenerator extends AbstractGenerator {
 			 * The mappedSV contains the original scalar variable and extra data such as define name.
 			 */
 			var LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mappedScalarVariables = newLinkedHashMap();
-
+			
 			/*
 			 * Loading the FMU defined in InnerFMU, the related model description file and its scalar variables.
 			 */
 			// TODO: Add support for multiple inner fmus
 			var ModelDescription md;
 			for (fmu : adap.inner.eAllContents.toList.filter(InnerFMU)) {
-				val fmuFile = new File(fmu.path.replace('\"', ''));
+				Log.push("Loading fmu " + fmu.path)
+				val fmuFile = getFMUFile(fmu.path, adaptationFolderURI)
 				this.resourcePaths.add(fmuFile);
 				md = new ModelDescription(fmu.name, fmu.type.name, fmuFile);
 				fmus.add(fmu.name -> fmu.type.name);
@@ -88,6 +101,7 @@ class CppGenerator extends AbstractGenerator {
 					mSV.put(mappedSv.mappedSv.name, mappedSv);
 				}
 				mappedScalarVariables.put(fmu.name, mSV);
+				Log.pop("Loading fmu " + fmu.path)
 			}
 
 			// C++ Defines for accessing FMU scalar variables.
@@ -194,6 +208,16 @@ class CppGenerator extends AbstractGenerator {
 			fsa.generateFile("Fmu.cpp", fmuCppFile);
 
 		}
+		Log.pop("CppGenerator.compile")
+	}
+	
+	def getFMUFile(String fmuUnresolvedPath, URI adaptationFolderURI) {
+		var resolvedFolderURI = CommonPlugin.resolve(adaptationFolderURI);
+		val fmuCompleteURI = URI.createFileURI(resolvedFolderURI.toFileString + File.separatorChar + fmuUnresolvedPath.replace('\"', ''))
+		var fmuPath = fmuCompleteURI.toFileString
+		Log.println("Resolved fmu path: " + fmuPath)
+		val fmuFile = new File(fmuPath);
+		return fmuFile
 	}
 
 	def String compileParams(LinkedHashMap<String, GlobalInOutVariable> gVars, EList<ParamDeclarations> params) {

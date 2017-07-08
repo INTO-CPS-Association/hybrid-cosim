@@ -15,12 +15,15 @@
 	<modules>
 		<module>be.uantwerpen.ansymo.semanticadaptation.testframework</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.log</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.cg.chain</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.tests</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ide</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.ui</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical</module>
 	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests</module>
+		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical.tests</module>
  <module>features</module>
  <module>repository</module>
 	</modules>

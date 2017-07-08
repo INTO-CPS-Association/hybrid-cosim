@@ -12,15 +12,12 @@
 	<artifactId>be.uantwerpen.ansymo.semanticadaptation.cg.canonical</artifactId>
 	<packaging>eclipse-plugin</packaging>
 
-	<name>be.uantwerpen.ansymo.semanticadaptation Code Generation to Canonical</name>
+	<name>be.uantwerpen.ansymo.semanticadaptation Canonical Generator</name>
 
 	<properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
 	</properties>
 
-	<dependencies>
-		
-	</dependencies>
 
 	<build>
 			<plugins>

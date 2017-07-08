@@ -1,0 +1,34 @@
+semantic adaptation reactive mealy OuterFMU outerFMU
+at "./path/to/FMU.fmu"
+
+	for inner fmu reactive moore NA n1
+		at "./path/to/NA.fmu"
+		with input ports Real ip(m)
+		with output ports Real op(m)
+	
+	for inner fmu reactive mealy NA n2
+		at "./path/to/NA.fmu"
+		with input ports Real ip(m)
+		with output ports Real op(m)
+	
+	for inner fmu reactive mealy NA n3
+		at "./path/to/NA.fmu"
+		with input ports Real ip(m)
+		with output ports Real op(m)
+	
+	for inner fmu reactive mealy NA n4
+		at "./path/to/NA.fmu"
+		with input ports Real ip(m)
+		with output ports Real op(m)
+	
+	for inner fmu reactive mealy NB n5
+		at "./path/to/NB.fmu"
+		with input ports Real ip1(m), Real ip2(m)
+		with output ports Real op(m)
+	
+	coupled as n1.op -> n2.op, 
+				n2.op -> n3.ip, n2.op -> n4.ip,
+				n3.op -> n5.ip1,
+				n4.op -> n5.ip2,
+				n5.op -> n1.ip
+	

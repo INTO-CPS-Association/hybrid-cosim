@@ -33,7 +33,6 @@
 				<artifactId>xtend-maven-plugin</artifactId>
 			</plugin>
 
-
 			<plugin>
 				<!-- Remember that these tests only run in integration so between package and install http://www.vogella.com/tutorials/EclipseTycho/article.html -->
 				<groupId>org.eclipse.tycho</groupId>
