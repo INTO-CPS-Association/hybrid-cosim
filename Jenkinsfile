@@ -31,7 +31,7 @@ node {
 
 				sh "echo branch is now ${env.BRANCH_NAME}"
 			
-				DEST = sh script: "echo /home/jenkins/web/hybridcosimulation/development/${env.BRANCH_NAME}/Build-${BUILD_NUMBER}_`date +%Y-%m-%d_%H-%M`", returnStdout:true
+				DEST = sh script: "echo /home/jenkins/web/hybridcosimulation/${env.BRANCH_NAME}/Build-${BUILD_NUMBER}_`date +%Y-%m-%d_%H-%M`", returnStdout:true
 				REMOTE = "jenkins@overture.au.dk"
 
 				sh "echo The remote dir will be: ${DEST}"
