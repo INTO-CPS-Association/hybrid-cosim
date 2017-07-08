@@ -37,7 +37,7 @@ node {
 				sh "echo The remote dir will be: ${DEST}"
 				sh "ssh ${REMOTE} mkdir -p ${DEST}"
 				sh "scp -r DSL_SemanticAdaptation/repository/target/repository/* ${REMOTE}:${DEST}"
-				sh "ssh ${REMOTE} /home/jenkins/update-latest.sh web/hybridcosimulation/${env.BRANCH_NAME}"
+				sh "ssh ${REMOTE} /home/jenkins/update-latest.sh web/hybridcosimulation/${env.BRANCH_NAME}/"
 			}
 		}
 
