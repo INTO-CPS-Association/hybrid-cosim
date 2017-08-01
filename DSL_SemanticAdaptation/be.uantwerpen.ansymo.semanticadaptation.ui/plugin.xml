@@ -409,13 +409,16 @@
 	</extension>
  <extension
        point="org.eclipse.ui.newWizards">
+        <category
+            id="be.uantwerpen.ansymo.semanticadaptation.ui.wizard.category"
+            name="Semantic Adaptation">
+      </category>
     <wizard
             
             class="be.uantwerpen.ansymo.semanticadaptation.ui.wizard.SaNewFileWizard"
-            
-            icon="icons/cview16/vdmpp_file_tsk.png"
             id="be.uantwerpen.ansymo.semanticadaptation.ui.ui.newFileWizard"
-            name="%newProjectWizardName"
+            name="%newSAWizardName"
+            category="be.uantwerpen.ansymo.semanticadaptation.ui.wizard.category"
             project="false">
       </wizard>
  </extension>
