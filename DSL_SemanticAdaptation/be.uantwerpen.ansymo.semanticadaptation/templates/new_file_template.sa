@@ -1,0 +1,44 @@
+semantic adaptation reactive mealy MyAdaptation myAdaptationInstance
+at "./MyAdaptation.fmu" // generated fmu path
+
+/* Internal scenario description */
+	for inner fmu OriginalFMU originalFMUInstance
+		at "./OriginalFMU.fmu"
+		with input ports inPort1 (m/s), inPort2 (N)
+		with output ports outPort1 (m/s), outPort2 (N)
+
+/* Input and Output ports description */
+input ports extInPort1 (km/s),
+			extInPort2 -> inPort2
+
+output ports extOutPort1 <- outPort1,
+			extOutPort2 (N)
+
+/* Parameters */
+param Real INIT_EXTINPORT1 := 0.0;
+
+/* Control rules */
+control rules {
+	var H_window := do_step(originalFMUInstance, t, H);
+	return H_window; 
+}
+
+/* Input rules */
+in var Real stored__inPort1 := INIT_EXTINPORT1;
+in rules {
+	true -> {
+		stored__inPort1 := myAdaptationInstance.extInPort1 ;
+	} --> {
+		originalFMUInstance.inPort1 := stored__inPort1 * 100;
+	}; 
+}
+
+/* Output rules */
+out var Real stored__outPort2 := 0.0;
+out rules {
+	true -> {
+		stored__outPort2 := originalFMUInstance.outPort2;
+	} --> {
+		myAdaptationInstance.extOutPort2 := stored__outPort2;
+	};
+}
