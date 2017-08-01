@@ -13,18 +13,20 @@ Require-Bundle: org.eclipse.xtext,
  org.antlr.runtime,
  org.eclipse.xtext.util,
  org.eclipse.xtend.lib,
- org.eclipse.emf.common
+ org.eclipse.emf.common,
+ org.eclipse.core.runtime;bundle-version="3.12.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.util,
- be.uantwerpen.ansymo.semanticadaptation.services,
- be.uantwerpen.ansymo.semanticadaptation.scoping,
- be.uantwerpen.ansymo.semanticadaptation,
- be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.impl,
- be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation,
- be.uantwerpen.ansymo.semanticadaptation.parser.antlr.internal,
- be.uantwerpen.ansymo.semanticadaptation.serializer,
- be.uantwerpen.ansymo.semanticadaptation.validation,
+Export-Package: be.uantwerpen.ansymo.semanticadaptation,
+ be.uantwerpen.ansymo.semanticadaptation.formatting2,
  be.uantwerpen.ansymo.semanticadaptation.parser.antlr,
- be.uantwerpen.ansymo.semanticadaptation.generator,
- be.uantwerpen.ansymo.semanticadaptation.formatting2
-Import-Package: org.apache.log4j
+ be.uantwerpen.ansymo.semanticadaptation.parser.antlr.internal,
+ be.uantwerpen.ansymo.semanticadaptation.scoping,
+ be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation,
+ be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.impl,
+ be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.util,
+ be.uantwerpen.ansymo.semanticadaptation.serializer,
+ be.uantwerpen.ansymo.semanticadaptation.services,
+ be.uantwerpen.ansymo.semanticadaptation.validation,
+ be.uantwerpen.ansymo.semanticadaptation.generator
+Import-Package: be.uantwerpen.ansymo.semanticadaptation.log,
+ org.apache.log4j

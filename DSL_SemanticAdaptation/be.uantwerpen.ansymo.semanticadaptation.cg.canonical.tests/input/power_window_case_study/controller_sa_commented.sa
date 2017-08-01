@@ -1,0 +1,80 @@
+module Controller_SA
+
+semantic adaptation reactive moore ControllerSA controller_sa
+at "./path/to/ControllerSA.fmu"
+
+	for inner fmu LazySA lazy
+	at "./path/to/LazySA.fmu"
+	with input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
+	with output ports up, down, stop
+
+/*
+At some point in the future, we support for simple wildcars in the input ports.
+According to Casper and Kenneth, some FMUs have thousands of ports...
+*/
+input ports armature_current -> lazy.obj_detected, 
+			passenger_up -> lazy.passenger_up, // You could write passenger_* here.
+			passenger_down -> lazy.passenger_down,
+			passenger_stop -> lazy.passenger_stop,
+			driver_up -> lazy.driver_up, // You could write driver_* here.
+			driver_down -> lazy.driver_down,
+			driver_stop -> lazy.driver_stop
+
+output ports	u,
+				d
+
+param	REL_TOL := 0.0001,
+		ABS_TOL := 1e-8,
+		CROSSING := 5.0,
+		INIT_ARMATURE_CURRENT := 0.0;
+
+control var	aux_obj_detected := 0,
+			previous_arm_current := INIT_ARMATURE_CURRENT;
+control rules {
+	var step_size := H;
+	var aux_obj_detected := false;
+	var crossedTooFar := false;
+	if ((not is_close(previous_arm_current, CROSSING, REL_TOL, ABS_TOL) and previous_arm_current < CROSSING)
+				and (not is_close(future_arm_current, CROSSING, REL_TOL, ABS_TOL) and future_arm_current > CROSSING)) { // crossing, but not within tolerance
+		crossedTooFar := true;
+		var negative_value := previous_arm_current - CROSSING;
+		var positive_value := future_arm_current - CROSSING;
+		step_size := (H * (- negative_value)) / (positive_value - negative_value);
+	} else {
+		if ((not is_close(previous_arm_current, CROSSING, REL_TOL, ABS_TOL) and previous_arm_current < CROSSING)
+					and is_close(future_arm_current, CROSSING, REL_TOL, ABS_TOL )) { // crossing within tolerance found
+			aux_obj_detected := true;
+		}
+	}
+	
+	if (not crossedTooFar){
+		step_size := do_step(lazy, t, H);
+	}
+	
+	if (is_close(step_size, H, REL_TOL, ABS_TOL)) {
+		// Step accepted, so store the known input.
+		// We cannot store the armature current at the in rules because we may not accept the step and because they may be called multiple times. 
+		// If that happens, we want to still have the old value of armature current, to compare it with the new one.
+		previous_arm_current := future_arm_current;
+	}
+	return step_size;
+}
+
+in var	future_arm_current := INIT_ARMATURE_CURRENT;
+in rules {
+	true -> {
+		future_arm_current := armature_current;
+	} --> {
+		obj_detected := aux_obj_detected; // Sets this input to the FMU 
+	};
+}
+
+out rules {
+	lazy.up -> { } --> {u := 1.0; };
+	not lazy.up -> { } --> {u := 0.0; };
+	
+	lazy.down -> { } --> {d := 1.0; };
+	not lazy.down -> { } --> {d := 0.0; };
+	
+	lazy.stop -> { } --> {u := 0.0 ; d := 0.0; };
+}

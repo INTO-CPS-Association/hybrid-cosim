@@ -1,17 +1,12 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
+
+import be.uantwerpen.ansymo.semanticadaptation.log.Log;
 
 public class BuildUtilities {
 //	public List<File> copyNativeLibFiles(File outfolder) {
@@ -81,7 +76,7 @@ public class BuildUtilities {
 		FileWriter writer = new FileWriter(file);
 		writer.write(content);
 		writer.close();
-		System.out.println("Stored file: " + file);
+		Log.println("Stored file: " + file);
 	}
 
 	public static void copyFile(File sourceFile, File sinkFile) throws IOException {

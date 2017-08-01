@@ -27,6 +27,14 @@
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency-->
+		<dependency>
+			<groupId>be.uantwerpen.ansymo.semanticadaptation</groupId>
+			<artifactId>
+				be.uantwerpen.ansymo.semanticadaptation
+			</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<type>eclipse-plugin</type>
+		</dependency>
 	</dependencies>
 
 	<build>
