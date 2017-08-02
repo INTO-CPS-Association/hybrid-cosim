@@ -49,4 +49,46 @@
          version="0.0.0"
          unpack="false"/>
 
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.cg.canonical"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.cg.chain"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.ide"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.ide.platform"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.log"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="be.uantwerpen.ansymo.semanticadaptation.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
 </feature>
