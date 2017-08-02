@@ -24,10 +24,10 @@
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical</module>
 	  <module>be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests</module>
 		<module>be.uantwerpen.ansymo.semanticadaptation.cg.canonical.tests</module>
- <module>features</module>
- <module>repository</module>
-<module>platform</module>
-<module>product</module>
+		<module>features</module>
+		<module>repository</module>
+		<module>platform</module>
+		<module>product</module>
 	</modules>
 
 	<properties>
@@ -217,7 +217,7 @@
 					</configuration>
 				</plugin>
 
- <plugin>
+				<plugin>
           <groupId>pl.project13.maven</groupId>
           <artifactId>git-commit-id-plugin</artifactId>
           <version>2.2.0</version>
@@ -225,7 +225,7 @@
           </configuration>
         </plugin>
 
- <plugin>
+				<plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <version>2.7</version>
@@ -472,5 +472,38 @@
 				</plugins>
 			</build>
 		</profile>
+
+		<profile>
+      <id>codesigning</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jarsigner-plugin</artifactId>
+            <configuration>
+							
+							<!-- This is an attempt to disable the test error: java.lang.SecurityException: class ...'s signer information does not match signer information of other classes in the same package
+							-->
+							<removeExistingSignatures>true</removeExistingSignatures>
+              
+							<storetype>${keystore.type}</storetype>
+              <keystore>${keystore.path}</keystore>
+              <alias>${keystore.alias}</alias>
+              <storepass>${keystore.store.password}</storepass>
+              <keypass>${keystore.key.password}</keypass>
+            </configuration>
+            <executions>
+              <execution>
+                <id>sign</id>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+		
 	</profiles>
 </project>
