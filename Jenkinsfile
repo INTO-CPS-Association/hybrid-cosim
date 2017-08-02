@@ -18,7 +18,7 @@ node {
       withMaven(mavenLocalRepo: '.repository', mavenSettingsFilePath: "${env.MVN_SETTINGS_PATH}") {
 
         // Run the maven build
-        sh "mvn install -f DSL_SemanticAdaptation/pom.xml"
+        sh "mvn install -f DSL_SemanticAdaptation/pom.xml -Pall-platforms -Pcodesigning"
         step([$class: 'ArtifactArchiver', artifacts: '**/target/*.jar', fingerprint: true])
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
 				//        step([$class: 'JacocoPublisher'])
