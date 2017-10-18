@@ -12,6 +12,7 @@ public class ReturnInformation {
 	private SAScalarVariable ConSaSv;
 	private GlobalInOutVariable conGlobVar;
 	private boolean forceType = false;
+	private boolean isExpression = false;
 
 	public ReturnInformation() {
 		// TODO Auto-generated constructor stub
@@ -27,6 +28,16 @@ public class ReturnInformation {
 
 	public void setCode(String code) {
 		this.code = code;
+	}
+	
+	public void setIsExpression(boolean isExpression)
+	{
+		this.isExpression = isExpression;
+	}
+	
+	public boolean getIsExpression()
+	{
+		return this.isExpression;
 	}
 
 	public SVType getType() throws Exception {

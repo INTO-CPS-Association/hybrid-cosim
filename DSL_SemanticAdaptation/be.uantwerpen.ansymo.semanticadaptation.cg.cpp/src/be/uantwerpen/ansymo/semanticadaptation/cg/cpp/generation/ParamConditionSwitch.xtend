@@ -34,7 +34,5 @@ class ParamConditionSwitch extends GeneralConditionSwitch {
 			this->«gVar.name» = «doSwitchRes.code»;
 		'''
 		return retInfo;
-
 	}
-
 }

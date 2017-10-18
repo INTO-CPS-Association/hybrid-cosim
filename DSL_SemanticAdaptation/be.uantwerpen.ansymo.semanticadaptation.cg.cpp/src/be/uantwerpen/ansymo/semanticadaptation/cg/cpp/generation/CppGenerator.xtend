@@ -30,6 +30,7 @@ import java.util.List
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ParamDeclarations
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InputOutputRuleType
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.InnerFMUData
 
 class CppGenerator extends SemanticAdaptationGenerator {
 	private var IFileSystemAccess2 fsa;
@@ -55,13 +56,14 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			val adapExternalName = adap.type.name;
 
 			// List of FMUs with a pairing between its name and its type.name.
-			var ArrayList<Pair<String, String>> fmus = newArrayList();
+			//var ArrayList<Pair<String, String>> fmus = newArrayList();
+			var ArrayList<InnerFMUData> innerFMUsData = newArrayList();
 
 			// TODO: Currently only 1 inner fmu is supported
 			val innerFmus = adap.inner.eAllContents.toList.filter(InnerFMU);
-			if (innerFmus.size > 1) {
-				throw new IncorrectAmountOfElementsException("Only one InnerFmu is supported.")
-			}
+//			if (innerFmus.size > 1) {
+//				throw new IncorrectAmountOfElementsException("Only one InnerFmu is supported.")
+//			}
 			if (innerFmus.isEmpty) {
 				throw new IncorrectAmountOfElementsException("The adaptation does not contain any InnerFMUs.")
 			}
@@ -82,7 +84,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				val fmuFile = new File(fmu.path.replace('\"', ''));
 				this.resourcePaths.add(fmuFile);
 				md = new ModelDescription(fmu.name, fmu.type.name, fmuFile);
-				fmus.add(fmu.name -> fmu.type.name);
+				innerFMUsData.add(new InnerFMUData(fmu.name, fmu.type.name, md.guid));
+				//fmus.add(fmu.name -> fmu.type.name);
 				val LinkedHashMap<String, MappedScalarVariable> mSV = newLinkedHashMap();
 				for (sv : md.sv.values) {
 					var mappedSv = new MappedScalarVariable(sv);
@@ -121,17 +124,16 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				filter(OutRulesBlock).map[x|x as InOutRules], adapClassName, adapInteralRefName, mappedScalarVariables,
 				SASVs, params);
 
-			// Compile the Control Rules
+			// Compile the Control Rules. These might use the out vars, so pass these along.
 			val crtlRuleResult = compileControlRuleBlock(adaptation.eAllContents.toIterable.filter(ControlRuleBlock),
-				adapClassName, adapInteralRefName, SASVs, params);
+				adapClassName, adapInteralRefName, mappedScalarVariables, SASVs, params, outRuleResult.gVars);
 
 			/*
 			 * Compile the constructor, destructor and initialize functions
 			 */
 			val String deAndConstructorAndInitializeSource = compileDeAndConstructorAndInitialize(
 				adapClassName,
-				fmus.head.key,
-				fmus.head.value,
+				innerFMUsData,
 				md.guid,
 				paramsConstructorSource,
 				inRuleResult.constructorInitialization,
@@ -181,7 +183,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				outRuleResult.functionSignatures,
 				crtlRuleResult.functionSignatures,
 				allGVars,
-				fmus,
+				innerFMUsData,
 				SASVs.values.map[CalcSVar()].toList
 			);
 			fsa.generateFile(adapClassName + ".h", headerFile);
@@ -263,7 +265,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 */
 	def String compileHeader(String adapClassName, String fmusDefines, String SADefines, List<String> inRulesFuncSig,
 		List<String> outRulesFuncSig, List<String> crtlRulesFuncSig,
-		LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<Pair<String, String>> fmus,
+		LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<InnerFMUData> fmus,
 		Collection<ScalarVariable> sVars) {
 		return '''
 			
@@ -314,7 +316,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 							«crtlRulesFuncSig.map[x | x+";"].join("\n")»
 							
 							«FOR fmu : fmus»
-								shared_ptr<FmuComponent> «fmu.key»;
+								shared_ptr<FmuComponent> «fmu.name»;
 							«ENDFOR»
 							
 							«FOR sv : sVars»
@@ -337,8 +339,24 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	/*
 	 * Compiles the source file constructor, destructor and the initialize function
 	 */
-	def String compileDeAndConstructorAndInitialize(String adapClassName, String fmuName, String fmuTypeName,
+	def String compileDeAndConstructorAndInitialize(String adapClassName, ArrayList<InnerFMUData> fmus,
 		String guid, String paramsCons, String inCons, String outCons, String crtlCons) {
+			
+			var ArrayList<String> initialisations = newArrayList();
+			for( fmu : fmus)
+			{
+				initialisations.add('''
+				auto path = make_shared<string>(*resourceLocation);
+				path->append(string("«fmu.typeName».fmu"));
+				auto «fmu.name»Fmu = make_shared<fmi2::Fmu>(*path);
+				«fmu.name»Fmu->initialize();
+				this->«fmu.name» = «fmu.name»Fmu->instantiate("«fmu.name»",fmi2CoSimulation, "«fmu.guid»", true, true, shared_from_this());
+				
+				if(this->«fmu.name»->component == NULL)
+					this->lastErrorState = fmi2Fatal;
+				this->instances->push_back(this->«fmu.name»);
+				''');
+			}
 		return '''
 			«adapClassName»::«adapClassName»(shared_ptr<std::string> fmiInstanceName,shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions) : 
 				SemanticAdaptation(fmiInstanceName, resourceLocation, createInputRules(),createOutputRules(), functions)
@@ -351,16 +369,19 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			}
 			
 			void «adapClassName»::initialize()
-			{				
-				auto path = make_shared<string>(*resourceLocation);
-				path->append(string("«fmuTypeName».fmu"));
-				auto «fmuName»Fmu = make_shared<fmi2::Fmu>(*path);
-				«fmuName»Fmu->initialize();
-				this->«fmuName» = «fmuName»Fmu->instantiate("«fmuName»",fmi2CoSimulation, "«guid»", true, true, shared_from_this());
-				
-				if(this->«fmuName»->component == NULL)
-					this->lastErrorState = fmi2Fatal;
-				this->instances->push_back(this->«fmuName»);
+			{
+				«initialisations.join("\r\n")»
+«««				«FOR fmu : fmus»
+«««				auto path = make_shared<string>(*resourceLocation);
+«««				path->append(string("«fmu.value».fmu"));
+«««				auto «fmu.key»Fmu = make_shared<fmi2::Fmu>(*path);
+«««				«fmu.key»Fmu->initialize();
+«««				this->«fmu.key» = «fmu.key»Fmu->instantiate("«fmu.key»",fmi2CoSimulation, "«guid»", true, true, shared_from_this());
+«««				
+«««				if(this->«fmu.key»->component == NULL)
+«««					this->lastErrorState = fmi2Fatal;
+«««				this->instances->push_back(this->«fmu.key»);
+«««				«ENDFOR»
 			}
 			
 			«adapClassName»::~«adapClassName»()
@@ -474,9 +495,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 	 * Calculates necessary information on function signatures necessary for generation of the header file.
 	 */
 	def InOutRulesBlockResult compileControlRuleBlock(Iterable<ControlRuleBlock> crtlRuleBlocks, String adaptationClassName,
-		String adaptationName, LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params) {
+		String adaptationName, LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars, 
+		LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params, LinkedHashMap<String, GlobalInOutVariable> outVars) {
 		var cpp = "";
-		val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, SASVs, params);
+		val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params, outVars);
 		for (crtlRule : crtlRuleBlocks) {
 			cpp += visitor.doSwitch(crtlRule).code;
 		}

@@ -15,7 +15,7 @@ class InRulesConditionSwitch extends RulesConditionSwitch {
 	new(String adaptationClassName, String adaptationName, LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars, LinkedHashMap<String,SAScalarVariable> SASVs
 		,LinkedHashMap<String, GlobalInOutVariable> params
 	) {
-		super(adaptationClassName, adaptationName, "in_rule_", mSVars, SASVs, params);
+		super(adaptationClassName, adaptationName, "in_rule_", mSVars, SASVs, params, null);
 	}
 
 
@@ -32,9 +32,7 @@ class InRulesConditionSwitch extends RulesConditionSwitch {
 				
 		if (inOutputFunction) {
 			retVal.code = 	
-				'''
-					setValue(«object.lvalue.owner.name»,«mSVars.get(object.lvalue.owner.name).get(object.lvalue.ref.name).define»,«doSwitch(object.expr).code»);
-				''';
+				'''setValue(«object.lvalue.owner.name»,«mSVars.get(object.lvalue.owner.name).get(object.lvalue.ref.name).define»,«doSwitch(object.expr).code»)''';
 			return retVal;
 		}
 		else

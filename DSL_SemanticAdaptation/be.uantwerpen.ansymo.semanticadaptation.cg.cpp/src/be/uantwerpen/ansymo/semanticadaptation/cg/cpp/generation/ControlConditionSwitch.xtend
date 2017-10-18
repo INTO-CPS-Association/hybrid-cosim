@@ -12,16 +12,37 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.util.LinkedHashMap
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SaveState
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BreakStatement
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
+import java.util.List
 
 class ControlConditionSwitch extends RulesConditionSwitch {
 
 	new(
 		String adaptationClassName,
 		String adaptationName,
+		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs,
-		LinkedHashMap<String, GlobalInOutVariable> params
+		LinkedHashMap<String, GlobalInOutVariable> params,
+		LinkedHashMap<String, GlobalInOutVariable> outVars
 	) {
-		super(adaptationClassName, adaptationName, "", null, SASVs, params);
+		super(adaptationClassName, adaptationName, "", mSVars, SASVs, params, outVars);
+	}
+
+	override ReturnInformation caseAssignment(Assignment object) {
+		
+		if (object.lvalue.owner !== null) {
+			var retVal = new ReturnInformation();
+			retVal.code = '''setValue(«object.lvalue.owner.name»,«mSVars.get(object.lvalue.owner.name).get(object.lvalue.ref.name).define»,«doSwitch(object.expr).code»)'''
+			return retVal;
+		} else {
+			return super.caseAssignment(object);
+		}
 	}
 
 	override ReturnInformation caseVariable(Variable object) {
@@ -80,14 +101,14 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseDoStepFun(DoStepFun object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»);''';
+		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»)''';
 		retVal.type = SVType.Integer;
 		return retVal;
 	}
 
 	override ReturnInformation caseDoStep(DoStep object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»);''';
+		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»)''';
 		return retVal;
 	}
 
@@ -100,6 +121,35 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	override ReturnInformation caseCurrentTime(CurrentTime object) {
 		var retVal = new ReturnInformation();
 		retVal.code = '''t''';
+		return retVal;
+	}
+	
+	
+
+	override ReturnInformation caseSaveState(SaveState object) {
+		var retVal = new ReturnInformation();
+		retVal.appendCode('''
+		saveState(«object.fmu.name»)''')
+		return retVal;
+	}
+	
+	override ReturnInformation caseClose(Close object)
+	{
+		var retVal = new ReturnInformation();
+		retVal.code = '''is_close(«object.args.map[e | doSwitch(e).code].join(", ")»)''';		
+		return retVal;
+	}
+	
+	override ReturnInformation caseBreakStatement(BreakStatement object){
+		var retVal = new ReturnInformation();
+		retVal.appendCode('''break''')
+		return retVal;
+	}
+	
+	override ReturnInformation caseRollback(Rollback object)
+	{
+		var retVal = new ReturnInformation();
+		retVal.appendCode('''rollback(«object.fmu.name»)''')
 		return retVal;
 	}
 }

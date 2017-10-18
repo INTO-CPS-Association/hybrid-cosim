@@ -40,18 +40,18 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 //		__parseNoErrorsWithValidation('test_input/single_folder_spec/window',
 //			'test_input/single_folder_spec/window/window_sa_canonical.BASE.sa');
 	}
-	
+
 	@Test def window_sa_canonical_new() {
-		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated', "powerwindow");
+		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated',
+			"powerwindow");
 	}
-	
-	@Test def window_sa_canonical_generated() {
-		__parseNoErrors('test_input/single_folder_spec/window/window_sa.BASE_canonical.sa', 'generated', "powerwindow_generated");
-	}
-	
-	@Ignore
-	@Test def lazy_sa_canonical() {
+
+	@Test def lazy_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
+	}
+
+	@Test def loop() {
+		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "loop");
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
@@ -103,7 +103,6 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 	}
 
-
 	def __parseNoErrors(String filename, String directory, String projectName) {
 		val saRootDir = new File(directory + File.separatorChar + projectName);
 		val srcGenPath = new File(saRootDir, "sources")
@@ -119,11 +118,11 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
 		cppGen.doGenerate(model.eResource, fsa, ctxt);
-		
+
 		if (saRootDir.exists) {
 			BuildUtilities.deleteFolder(saRootDir);
 		}
-				
+
 		saRootDir.mkdirs();
 		srcGenPath.mkdirs();
 		resourcesPath.mkdirs();
@@ -131,41 +130,35 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 		for (files : fsa.allFiles.entrySet) {
 			val fName = files.key.substring(14);
-			
+
 			var File fp;
-			if(fName.equals("modelDescription.xml"))
-			{
+			if (fName.equals("modelDescription.xml")) {
 				fp = new File(saRootDir, fName);
-			}
-			else
-			{
+			} else {
 				fp = new File(srcGenPath, fName);
 			}
-			
-			BuildUtilities.writeToFile(fp, files.value.toString);	
+
+			BuildUtilities.writeToFile(fp, files.value.toString);
 		}
-		
-		val mainCpp = StaticGenerators.generateMainCppFile(resourcesPath.absolutePath.replace("\\","\\\\"));
-		BuildUtilities.writeToFile(new File(srcGenPath,"main.cpp"), mainCpp);
-		
-		
-		for(rf : cppGen.resourcePaths)
-		{
+
+		val mainCpp = StaticGenerators.generateMainCppFile(resourcesPath.absolutePath.replace("\\", "\\\\"));
+		BuildUtilities.writeToFile(new File(srcGenPath, "main.cpp"), mainCpp);
+
+		for (rf : cppGen.resourcePaths) {
 			val sinkFile = new File(resourcesPath, rf.name);
 			System.out.println("Copied file to: " + sinkFile);
-			BuildUtilities.copyFile(rf, sinkFile);	
+			BuildUtilities.copyFile(rf, sinkFile);
 		}
-		
-		
-		BuildUtilities.writeToFile(new File(saRootDir,"CMakeLists.txt"), StaticGenerators.generateCMakeLists(projectName, "framework"));
-		
+
+		BuildUtilities.writeToFile(new File(saRootDir, "CMakeLists.txt"),
+			StaticGenerators.generateCMakeLists(projectName, "framework"));
+
 		val cMakeToolChain = StaticGenerators.generateToolChainCmake();
 		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
-		
+
 		(new BuildUtilities()).copyNativeLibFiles(saFrameworkPath);
 		System.out.println("Stored framework at: " + saFrameworkPath);
-		
-				
+
 	}
 
 	def __parseNoErrorsPrint(String filename) {

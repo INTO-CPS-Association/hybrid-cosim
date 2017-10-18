@@ -1,0 +1,74 @@
+semantic adaptation reactive moore LoopSA loop_sa
+at "./path/to/LoopSA.fmu"
+	
+	for inner fmu WindowSA window_sa
+		at "./test_input/single_folder_spec/loop/WindowSA.fmu"
+		with input ports displacement (rad), speed (rad/s), reaction_force (N)
+		with output ports disp (m), tau (N.m)
+	
+	for inner fmu Obstacle obstacle
+		at "./test_input/single_folder_spec/loop/Obstacle.fmu"
+		with input ports disp (m)
+		with output ports reaction_force (m)
+	
+	coupled as window_sa.disp -> obstacle.disp, 
+				obstacle.reaction_force -> window_sa.reaction_force
+
+input ports displacement, speed
+
+output ports tau
+
+param 	MAXITER := 10, REL_TOL := 1e-05, ABS_TOL := 1e-05,
+		INIT_LOOP_SA_DISPLACEMENT := 0.0,
+		INIT_LOOP_SA_SPEED := 0.0,
+		INIT_WINDOW_SA_DISP := 0.0,
+		INIT_WINDOW_SA_TAU := 0.0,
+		INIT_OBSTACLE_REACTION_FORCE := 0.0;
+
+control var prev_disp := 0.0;
+control rules {
+	var repeat := false;
+	for (var iter in 0 .. MAXITER) {
+		save_state(obstacle);
+		save_state(window_sa);
+		obstacle.disp := prev_disp;
+		do_step(obstacle,t,H);
+		window_sa.reaction_force := stored_obstacle_reaction_force;
+		do_step(window_sa,t,H);
+		
+		repeat := is_close(prev_disp, stored_window_sa_disp, REL_TOL, ABS_TOL);
+		prev_disp := stored_window_sa_disp;
+		if (repeat) {
+			break;
+		} else {
+			rollback(obstacle);
+			rollback(window_sa);
+		}
+	}
+	return H;
+}
+
+in var 	stored_loop_sa_displacement := INIT_LOOP_SA_DISPLACEMENT,
+		stored_loop_sa_speed := INIT_LOOP_SA_SPEED;
+in rules {
+	true -> {
+		stored_loop_sa_displacement := loop_sa.displacement;
+		stored_loop_sa_speed := loop_sa.speed;
+	} --> {
+		window_sa.displacement := stored_loop_sa_displacement;
+		window_sa.speed := stored_loop_sa_speed;
+	};
+}
+
+out var	stored_window_sa_disp := INIT_WINDOW_SA_DISP,
+		stored_window_sa_tau := INIT_WINDOW_SA_TAU,
+		stored_obstacle_reaction_force := INIT_OBSTACLE_REACTION_FORCE;
+out rules{
+	true -> {
+		stored_window_sa_disp := window_sa.disp;
+		stored_window_sa_tau := window_sa.tau;
+		stored_obstacle_reaction_force := obstacle.reaction_force;
+	} --> {
+		loop_sa.tau := stored_window_sa_tau;
+	};
+}

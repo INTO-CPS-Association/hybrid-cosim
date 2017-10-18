@@ -14,7 +14,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 public class BuildUtilities {
-	public List<File> copyNativeLibFiles(File outfolder) {
+	public void copyNativeLibFiles(File outfolder) {
 		List<File> libFiles;
 		File outputFile = null;
 		InputStream jarfile = null;
@@ -25,11 +25,15 @@ public class BuildUtilities {
 		if (!outfolder.exists()) {
 			outfolder.mkdir();
 		}
+		else
+		{
+			return;
+		}
 
 		libFiles = new LinkedList<>();
 
 		try {
-			jarfile = new FileInputStream(new File("jars/cppFramework.jar"));
+			jarfile = new FileInputStream(new File("target/classes/jars/cppFramework.jar"));
 			jarstream = new JarInputStream(jarfile);
 			filejarentry = jarstream.getNextJarEntry();
 
@@ -72,8 +76,6 @@ public class BuildUtilities {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		return libFiles;
 	}
 
 	public static void writeToFile(File file, String content) throws IOException

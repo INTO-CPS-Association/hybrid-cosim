@@ -34,6 +34,13 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Min
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.TypeException
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Minus
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.For
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SaveState
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Range
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BreakStatement
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 
 abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 	// Global in and out variables
@@ -58,9 +65,12 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 	 * It is necessary because of parsing error
 	 */
 	protected String externalVariableOwner;
+	protected boolean externalVariableOwnerIsSet = false;
 
 	protected final LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars;
 	protected final LinkedHashMap<String, SAScalarVariable> SASVs;
+	
+	LinkedHashMap<String, GlobalInOutVariable> outVars;
 
 	protected boolean inRuleCondition;
 	protected boolean inRuleTransition;
@@ -74,13 +84,19 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 	// Add scope information to this.
 	protected var LinkedHashMap<String, SVType> localDeclarations = newLinkedHashMap();
 
+	protected String forLoopIterVar;
+	protected boolean forLoopIterVarIsSet = false;
+	
+	
+
 	new(
 		String adaptationClassName,
 		String adaptationName,
 		String functionPrefix,
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs,
-		LinkedHashMap<String, GlobalInOutVariable> params
+		LinkedHashMap<String, GlobalInOutVariable> params,
+		LinkedHashMap<String, GlobalInOutVariable> outVars
 	) {
 		this.params = params;
 		this.SASVs = SASVs;
@@ -88,6 +104,7 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		this.adaptationClassName = adaptationClassName;
 		this.functionPrefix = functionPrefix;
 		this.mSVars = mSVars;
+		this.outVars = outVars;
 	}
 
 	/*
@@ -206,15 +223,18 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		retVal.code = '''
 			«functionSig»{
 				«IF object.expression !== null»
-					«doSwitch(object.expression).code»
+					«val result = doSwitch(object.expression)»
+					«result.code»«if (!result.isExpression) ";"»
 				«ENDIF»
 				«IF object.statements !== null»
 					«FOR stm : object.statements»
-						«doSwitch(stm).code»
+						«val result = doSwitch(stm)»
+						«result.code»«if (!result.isExpression) ";"»
 					«ENDFOR»
 				«ENDIF»			
 				«IF object.assignment !== null»
-					«doSwitch(object.assignment).code»
+					«val result = doSwitch(object.assignment)»
+					«result.code»«if (!result.isExpression) ";"»
 				«ENDIF»
 			}
 		''';
@@ -224,13 +244,25 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 
 	override ReturnInformation caseIf(If object) {
 		var retVal = new ReturnInformation();
+		retVal.isExpression = true;
 		retVal.code = '''
 			if(«doSwitch(object.ifcondition).code»){
 				«FOR stm : object.ifstatements»
-					«doSwitch(stm).code»
+					«val result = doSwitch(stm)»
+					«result.code»«if (!result.isExpression) ";"»
 				«ENDFOR»
 			}
 		''';
+		if(object.elsestatements.length > 0)
+		{
+			retVal.appendCode('''
+			else {
+				«FOR stm : object.elsestatements»
+					«doSwitch(stm).code»;
+				«ENDFOR»
+			}
+			''')
+		}
 
 		return retVal;
 	}
@@ -265,7 +297,10 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 			calcConSaSvData(lValSwitch.conSaSv, rValSwitch);
 		}
 
-		retVal.code = '''«lValSwitch.code» = «rValSwitch.code»;''';
+
+			retVal.code = '''«lValSwitch.code» = «rValSwitch.code»''';
+
+		
 		return retVal;
 	}
 
@@ -310,13 +345,13 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		retVal.code = '''
 			«functionSig»{
 				«FOR stm : object.statements»
-					«doSwitch(stm).code»
+					«val result = doSwitch(stm)»
+					«result.code»«if(!result.isExpression) ";"»
 				«ENDFOR»
 			}
 		''';
 		return retVal;
 	}
-
 
 	override ReturnInformation caseVariable(Variable object) {
 
@@ -325,7 +360,7 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		if (object.owner === null || object.owner.name == this.adaptationName) {
 
 			if (SASVs.containsKey(object.ref.name) || gVars.containsKey(object.ref.name) ||
-				params.containsKey(object.ref.name)) {
+				params.containsKey(object.ref.name) || outVars.containsKey(object.ref.name)) {
 
 				retVal.code = '''this->«object.ref.name»''';
 
@@ -336,13 +371,22 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 				} else if (params.containsKey(object.ref.name)) {
 					retVal.conGlobVar = params.get(object.ref.name);
 				}
+				else if (outVars.containsKey(object.ref.name)){
+					retVal.conGlobVar = outVars.get(object.ref.name);
+				}
 			} else if (localDeclarations.containsKey(object.ref.name)) {
 				retVal.code = '''«object.ref.name»'''
 				retVal.type = localDeclarations.get(object.ref.name);
 			}
+			else 
+			{
+				throw new Exception("Variable not found: " + object.ref.name);
+			}
 
 		} else {
+			// This has to be converted to an setValue using the FMU component. 
 			this.externalVariableOwner = object.owner.name;
+			this.externalVariableOwnerIsSet = true;
 			retVal.code = '''«doSwitch(object.ref).code»''';
 		}
 		return retVal;
@@ -373,7 +417,9 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 			} else {
 				// This is a local declaration.
 				val String type = Conversions.fmiTypeToCppType(doSwitchRes.type)
-				code = '''«type» «decl.name» = «doSwitchRes.code»''';
+				code = '''
+					«type» «decl.name» = «doSwitchRes.code»;
+				''';
 				this.localDeclarations.put(decl.name, doSwitchRes.type);
 			}
 			retVal.appendCode = code;
@@ -413,28 +459,55 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		return retInfo;
 	}
 
-	override ReturnInformation caseMin(Min object)
-	{
+	override ReturnInformation caseMin(Min object) {
 		var retInfo = new ReturnInformation();
 		var doSwitchResCode = newArrayList();
 		for (expr : object.args) {
 			val doSwitchRes_ = this.doSwitch(expr);
 			doSwitchResCode.add(doSwitchRes_.code);
 			retInfo = new ReturnInformation(retInfo, doSwitchRes_);
-		} 
-		retInfo.code = 
-		'''
-		min({«doSwitchResCode.join(",")»})
+		}
+		retInfo.code = '''
+			min({«doSwitchResCode.join(",")»})
 		'''
 		return retInfo;
 	}
-	
-	override ReturnInformation caseMinus(Minus object){
+
+	override ReturnInformation caseMinus(Minus object) {
 		val doSwitchLeft = doSwitch(object.left);
 		val doSwitchRight = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
 		retVal.code = '''«doSwitchLeft.code» - «doSwitchRight.code»''';
-		return retVal;		
+		return retVal;
+	}
+
+	override ReturnInformation caseFor(For object) {
+		{
+			var retVal = new ReturnInformation();
+			retVal.isExpression = true;
+			val iterator = doSwitch(object.iterator);
+			forLoopIterVar = iterator.code;
+			forLoopIterVarIsSet = true;
+			val iterable = doSwitch(object.iterable);
+			retVal.appendCode('''
+			for (int «forLoopIterVar» = «iterable.code»){
+				«FOR stm : object.statements»
+					«val result = doSwitch(stm)»		
+					«result.code»«if (!result.isExpression) ";"»
+				«ENDFOR»
+			}
+			''')
+			forLoopIterVarIsSet = false;
+			return retVal;
+		}
+	}
+	
+	override ReturnInformation caseRange(Range object){
+		var retVal = new ReturnInformation();
+		val left = doSwitch(object.left);
+		val right = doSwitch(object.right);
+			retVal.appendCode('''«left.code»; «forLoopIterVar»<=«right.code»; «forLoopIterVar»++''')
+		return retVal;
 	}
 
 }
