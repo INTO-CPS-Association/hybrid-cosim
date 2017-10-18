@@ -53,6 +53,14 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Test def loop() {
 		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "loop");
 	}
+	
+	@Test def rate() {
+		__parseNoErrors('test_input/single_folder_spec/rate/rate.sa', 'generated', "rate");
+	}
+	
+	@Test def rate_canonical() {
+		__parseNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
+	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
 		val model = __parse(filename);

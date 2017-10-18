@@ -2,19 +2,19 @@ semantic adaptation reactive moore RateSA rate_sa
 at "./path/to/RateSA.fmu"
 
 	for inner fmu LoopSA loop_sa
-		at "./path/to/LoopSA.fmu"
+		at "./test_input/single_folder_spec/rate/LoopSA.fmu"
 		with input ports displacement (rad), speed (rad/s)
 		with output ports tau (N.m)
 	
 input ports speed
-output ports tau <- loop_sa.tau
+output ports tau
 
-param 	RATE := 10;
+param 	RATE := 10,
+		INIT_LOOP_SA_TAU := 0.0;
 
 control var previous_speed := 0;
 control rules {
-	var micro_step := 0.0;
-	micro_step := H/RATE;
+	var micro_step := H/RATE;
 	var inner_time := t;
 	
 	for (var iter in 0 .. RATE) { 
@@ -32,6 +32,15 @@ in rules {
 		current_speed := speed;
 	} --> {
 		loop_sa.speed := previous_speed + (current_speed - previous_speed)*(dt + h);
+	};
+}
+
+out var stored_loop_sa_tau := INIT_LOOP_SA_TAU;
+out rules {
+	true -> {
+		stored_loop_sa_tau := loop_sa.tau;
+	} --> {
+		rate_sa.tau := stored_loop_sa_tau;
 	};
 }
 

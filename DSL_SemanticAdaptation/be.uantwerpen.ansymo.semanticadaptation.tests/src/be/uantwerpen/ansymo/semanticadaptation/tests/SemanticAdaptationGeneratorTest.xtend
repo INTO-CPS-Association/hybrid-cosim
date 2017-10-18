@@ -26,6 +26,7 @@ import org.eclipse.xtext.xbase.testing.CompilationTestHelper.Result
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.Ignore
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -214,6 +215,11 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 		}) }
 	
 	@Test def lazy_SA_parseNoExceptions() { __generate('input/power_window_case_study/lazy.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) { }
+		}) }
+	
+	@Ignore
+		@Test def rate_SA_parseNoExceptions() { __generate('input/power_window_case_study/rate.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
 		}) }
 	

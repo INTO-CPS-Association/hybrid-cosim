@@ -29,13 +29,15 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs,
 		LinkedHashMap<String, GlobalInOutVariable> params,
-		LinkedHashMap<String, GlobalInOutVariable> outVars
+		LinkedHashMap<String, GlobalInOutVariable> inVars,
+		LinkedHashMap<String, GlobalInOutVariable> outVars,
+		LinkedHashMap<String, GlobalInOutVariable> crtlVars
 	) {
-		super(adaptationClassName, adaptationName, "", mSVars, SASVs, params, outVars);
+		super(adaptationClassName, adaptationName, "", mSVars, SASVs, params, inVars, outVars, crtlVars);
 	}
 
 	override ReturnInformation caseAssignment(Assignment object) {
-		
+
 		if (object.lvalue.owner !== null) {
 			var retVal = new ReturnInformation();
 			retVal.code = '''setValue(«object.lvalue.owner.name»,«mSVars.get(object.lvalue.owner.name).get(object.lvalue.ref.name).define»,«doSwitch(object.expr).code»)'''
@@ -48,30 +50,37 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	override ReturnInformation caseVariable(Variable object) {
 		var retVal = new ReturnInformation();
 
-		// H and t are protected variables.
-		if ((object.owner === null || object.owner.name == this.adaptationName) &&
-			(object.ref.name == "H" || object.ref.name == "t")) {
-			retVal.type = SVType.Real;
-			retVal.forceType = true;
-			retVal.code = object.ref.name;
-		} else {
-			retVal = super.caseVariable(object);
-		}
-
+		// H and t are protected variables and are handles by caseStepSize and caseCurrentTime respectively.
+//		if ((object.owner === null || object.owner.name == this.adaptationName) &&
+//			(object.ref.name == "H" || object.ref.name == "t")) {
+//			retVal.type = SVType.Real;
+//			retVal.forceType = true;
+//			retVal.code = object.ref.name;
+//		} else {
+		retVal = super.caseVariable(object);
+//		}
 		return retVal;
 	}
 
-	override ReturnInformation caseControlRuleBlock(ControlRuleBlock object) {
-		this.globalDeclaration = true;
-
-		var retVal = new ReturnInformation();
-
-		// Get the global variables added to globalVars
-		for (gVar : object.globalCtrlVars) {
-			constructorInitialization += doSwitch(gVar).code;
+	public def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(ControlRuleBlock object) {
+		if (object.globalCtrlVars !== null) {
+			this.globalDeclaration = true;
+			for (gVar : object.globalCtrlVars)
+				doSwitch(gVar);
+			this.globalDeclaration = false;
 		}
+		return this.gVars;
+	}
 
-		this.globalDeclaration = false;
+	override ReturnInformation caseControlRuleBlock(ControlRuleBlock object) {
+		var retVal = new ReturnInformation();
+//
+//		// Get the global variables added to globalVars
+//		this.globalDeclaration = true;
+//		for (gVar : object.globalCtrlVars) {
+//			constructorInitialization += doSwitch(gVar).code;
+//		}
+//		this.globalDeclaration = false;
 		retVal.appendCode(doSwitch(object.rule).code);
 
 		return retVal;
@@ -115,16 +124,18 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	override ReturnInformation caseStepSize(StepSize object) {
 		var retVal = new ReturnInformation();
 		retVal.code = '''H''';
+		retVal.type = SVType.Real;
+		retVal.forceType = true;
 		return retVal;
 	}
 
 	override ReturnInformation caseCurrentTime(CurrentTime object) {
 		var retVal = new ReturnInformation();
 		retVal.code = '''t''';
+		retVal.type = SVType.Real;
+		retVal.forceType = true;
 		return retVal;
 	}
-	
-	
 
 	override ReturnInformation caseSaveState(SaveState object) {
 		var retVal = new ReturnInformation();
@@ -132,22 +143,20 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 		saveState(«object.fmu.name»)''')
 		return retVal;
 	}
-	
-	override ReturnInformation caseClose(Close object)
-	{
+
+	override ReturnInformation caseClose(Close object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''is_close(«object.args.map[e | doSwitch(e).code].join(", ")»)''';		
+		retVal.code = '''is_close(«object.args.map[e | doSwitch(e).code].join(", ")»)''';
 		return retVal;
 	}
-	
-	override ReturnInformation caseBreakStatement(BreakStatement object){
+
+	override ReturnInformation caseBreakStatement(BreakStatement object) {
 		var retVal = new ReturnInformation();
 		retVal.appendCode('''break''')
 		return retVal;
 	}
-	
-	override ReturnInformation caseRollback(Rollback object)
-	{
+
+	override ReturnInformation caseRollback(Rollback object) {
 		var retVal = new ReturnInformation();
 		retVal.appendCode('''rollback(«object.fmu.name»)''')
 		return retVal;

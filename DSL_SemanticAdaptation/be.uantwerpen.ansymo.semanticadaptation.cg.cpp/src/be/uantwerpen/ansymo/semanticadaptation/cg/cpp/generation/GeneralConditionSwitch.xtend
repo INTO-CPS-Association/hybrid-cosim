@@ -11,13 +11,6 @@ import org.eclipse.emf.ecore.EObject
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 
 class GeneralConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
-	override ReturnInformation caseParamDeclarations(ParamDeclarations object) {
-		for (SingleParamDeclaration declaration : object.declarations) {
-			doSwitch(declaration);
-		}
-		return new ReturnInformation();
-	}
-
 	override ReturnInformation caseIntLiteral(IntLiteral object){
 		var retInfo = new ReturnInformation();
 		retInfo.type = SVType.Integer;

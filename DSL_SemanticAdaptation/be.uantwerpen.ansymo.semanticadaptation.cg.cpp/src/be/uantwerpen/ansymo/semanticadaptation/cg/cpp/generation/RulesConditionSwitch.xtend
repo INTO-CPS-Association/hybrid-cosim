@@ -41,11 +41,11 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Range
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BreakStatement
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Var
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 
-abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
-	// Global in and out variables
-	protected var LinkedHashMap<String, GlobalInOutVariable> gVars = newLinkedHashMap();
-
+ class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 	// Global params
 	protected var LinkedHashMap<String, GlobalInOutVariable> params;
 
@@ -62,23 +62,26 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 
 	/*
 	 * Intermediate variable used for referencing external FMU.
-	 * It is necessary because of parsing error
+	 * Currently only used by OutRulesConditionSwitch. 
 	 */
 	protected String externalVariableOwner;
-	protected boolean externalVariableOwnerIsSet = false;
 
 	protected final LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars;
 	protected final LinkedHashMap<String, SAScalarVariable> SASVs;
-	
+
+	// Global in and out variables
+	protected var LinkedHashMap<String, GlobalInOutVariable> gVars = newLinkedHashMap();
+	LinkedHashMap<String, GlobalInOutVariable> inVars;
 	LinkedHashMap<String, GlobalInOutVariable> outVars;
+	LinkedHashMap<String, GlobalInOutVariable> crtlVars;
 
 	protected boolean inRuleCondition;
 	protected boolean inRuleTransition;
 	protected boolean inRuleOutput;
 	protected boolean inControlRule;
 
-	// This is used for storing initialization information for global declarations.
-	protected String constructorInitialization = "";
+	
+	
 	// Flag to signal whether the declarations to be processed are global or local.
 	protected boolean globalDeclaration = false;
 	// Add scope information to this.
@@ -86,8 +89,6 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 
 	protected String forLoopIterVar;
 	protected boolean forLoopIterVarIsSet = false;
-	
-	
 
 	new(
 		String adaptationClassName,
@@ -96,7 +97,9 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs,
 		LinkedHashMap<String, GlobalInOutVariable> params,
-		LinkedHashMap<String, GlobalInOutVariable> outVars
+		LinkedHashMap<String, GlobalInOutVariable> inVars,
+		LinkedHashMap<String, GlobalInOutVariable> outVars,
+		LinkedHashMap<String, GlobalInOutVariable> crtlVars
 	) {
 		this.params = params;
 		this.SASVs = SASVs;
@@ -105,6 +108,8 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		this.functionPrefix = functionPrefix;
 		this.mSVars = mSVars;
 		this.outVars = outVars;
+		this.inVars = inVars;
+		this.crtlVars = crtlVars;
 	}
 
 	/*
@@ -153,18 +158,30 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 	/*
 	 * COMPILATION FUNCTIONS
 	 */
-	protected def ReturnInformation doSwitch(EList<Declaration> gVars, InOutRules object) {
-
+	
+	public def Pair<String, LinkedHashMap<String, GlobalInOutVariable>> getGlobalVars(EList<Declaration> gVars)
+	{
+		
+		var String constructorInitialisation= "";
+		
+		// Get the global variables added to globalVars
 		this.globalDeclaration = true;
-
+		for (gVar : gVars) {
+			constructorInitialisation += doSwitch(gVar).code;
+		}
+		this.globalDeclaration = false;
+		return constructorInitialisation -> this.gVars;
+	}
+	
+	protected def ReturnInformation doSwitch(EList<Declaration> gVars, InOutRules object) {
 		var retVal = new ReturnInformation();
 
-		// Get the global variables added to globalVars
-		for (gVar : gVars) {
-			constructorInitialization += doSwitch(gVar).code;
-		}
-
-		this.globalDeclaration = false;
+//		// Get the global variables added to globalVars
+//		this.globalDeclaration = true;
+//		for (gVar : gVars) {
+//			constructorInitialization += doSwitch(gVar).code;
+//		}
+//		this.globalDeclaration = false;
 
 		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
 			this.incrementCount;
@@ -172,15 +189,6 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		}
 
 		return retVal;
-	}
-
-	override ReturnInformation caseInRulesBlock(InRulesBlock object) {
-		return this.doSwitch(object.globalInVars, object);
-	}
-
-	override ReturnInformation caseOutRulesBlock(OutRulesBlock object) {
-
-		return this.doSwitch(object.globalOutVars, object);
 	}
 
 	override ReturnInformation caseDataRule(DataRule object) {
@@ -253,14 +261,13 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 				«ENDFOR»
 			}
 		''';
-		if(object.elsestatements.length > 0)
-		{
+		if (object.elsestatements.length > 0) {
 			retVal.appendCode('''
-			else {
-				«FOR stm : object.elsestatements»
-					«doSwitch(stm).code»;
-				«ENDFOR»
-			}
+				else {
+					«FOR stm : object.elsestatements»
+						«doSwitch(stm).code»;
+					«ENDFOR»
+				}
 			''')
 		}
 
@@ -297,10 +304,8 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 			calcConSaSvData(lValSwitch.conSaSv, rValSwitch);
 		}
 
+		retVal.code = '''«lValSwitch.code» = «rValSwitch.code»''';
 
-			retVal.code = '''«lValSwitch.code» = «rValSwitch.code»''';
-
-		
 		return retVal;
 	}
 
@@ -359,34 +364,34 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 
 		if (object.owner === null || object.owner.name == this.adaptationName) {
 
-			if (SASVs.containsKey(object.ref.name) || gVars.containsKey(object.ref.name) ||
-				params.containsKey(object.ref.name) || outVars.containsKey(object.ref.name)) {
+			if ((SASVs !== null && SASVs.containsKey(object.ref.name)) || 
+				params.containsKey(object.ref.name) || 
+				(outVars !== null && outVars.containsKey(object.ref.name)) ||
+				(inVars !== null && inVars.containsKey(object.ref.name)) ||
+				(crtlVars !== null && crtlVars.containsKey(object.ref.name))) {
 
 				retVal.code = '''this->«object.ref.name»''';
 
-				if (SASVs.containsKey(object.ref.name)) {
+				if (SASVs !== null && SASVs.containsKey(object.ref.name)) {
 					retVal.conSaSv = SASVs.get(object.ref.name);
-				} else if (gVars.containsKey(object.ref.name)) {
-					retVal.conGlobVar = gVars.get(object.ref.name);
+				} else if (crtlVars !== null && crtlVars.containsKey(object.ref.name)) {
+					retVal.conGlobVar = crtlVars.get(object.ref.name);
 				} else if (params.containsKey(object.ref.name)) {
 					retVal.conGlobVar = params.get(object.ref.name);
-				}
-				else if (outVars.containsKey(object.ref.name)){
+				} else if (outVars !== null && outVars.containsKey(object.ref.name)) {
 					retVal.conGlobVar = outVars.get(object.ref.name);
+				} else if (inVars !== null && inVars.containsKey(object.ref.name)) {
+					retVal.conGlobVar = inVars.get(object.ref.name);
 				}
 			} else if (localDeclarations.containsKey(object.ref.name)) {
 				retVal.code = '''«object.ref.name»'''
 				retVal.type = localDeclarations.get(object.ref.name);
-			}
-			else 
-			{
+			} else {
 				throw new Exception("Variable not found: " + object.ref.name);
 			}
 
 		} else {
-			// This has to be converted to an setValue using the FMU component. 
 			this.externalVariableOwner = object.owner.name;
-			this.externalVariableOwnerIsSet = true;
 			retVal.code = '''«doSwitch(object.ref).code»''';
 		}
 		return retVal;
@@ -396,6 +401,11 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 
 		var retVal = new ReturnInformation();
 		retVal.code = '''«object.name»''';
+		return retVal;
+	}
+
+	override ReturnInformation caseVar(Var object) {
+		var retVal = new ReturnInformation();
 		return retVal;
 	}
 
@@ -481,6 +491,14 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 		return retVal;
 	}
 
+	override ReturnInformation casePlus(Plus object) {
+		val doSwitchLeft = doSwitch(object.left);
+		val doSwitchRight = doSwitch(object.right);
+		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
+		retVal.code = '''«doSwitchLeft.code» + «doSwitchRight.code»''';
+		return retVal;
+	}
+
 	override ReturnInformation caseFor(For object) {
 		{
 			var retVal = new ReturnInformation();
@@ -490,23 +508,23 @@ abstract class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInfor
 			forLoopIterVarIsSet = true;
 			val iterable = doSwitch(object.iterable);
 			retVal.appendCode('''
-			for (int «forLoopIterVar» = «iterable.code»){
-				«FOR stm : object.statements»
-					«val result = doSwitch(stm)»		
-					«result.code»«if (!result.isExpression) ";"»
-				«ENDFOR»
-			}
+				for (int «forLoopIterVar» = «iterable.code»){
+					«FOR stm : object.statements»
+						«val result = doSwitch(stm)»		
+						«result.code»«if (!result.isExpression) ";"»
+					«ENDFOR»
+				}
 			''')
 			forLoopIterVarIsSet = false;
 			return retVal;
 		}
 	}
-	
-	override ReturnInformation caseRange(Range object){
+
+	override ReturnInformation caseRange(Range object) {
 		var retVal = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
-			retVal.appendCode('''«left.code»; «forLoopIterVar»<=«right.code»; «forLoopIterVar»++''')
+		retVal.appendCode('''«left.code»; «forLoopIterVar»<=«right.code»; «forLoopIterVar»++''')
 		return retVal;
 	}
 

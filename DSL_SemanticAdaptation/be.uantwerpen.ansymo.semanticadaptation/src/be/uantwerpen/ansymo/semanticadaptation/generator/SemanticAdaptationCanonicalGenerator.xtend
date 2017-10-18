@@ -53,6 +53,7 @@ import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.AbstractGenerator
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.eclipse.xtext.generator.IGeneratorContext
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
 
 /**
  * Generates code from your model files on save.
@@ -1082,7 +1083,10 @@ class SemanticAdaptationCanonicalGenerator extends AbstractGenerator {
 			} else {
 				return "Real"
 			}
-		} else {
+		} else if (expression instanceof CurrentTime) {
+			return "Real"
+		}
+		else {
 			throw new Exception("Initial value for declaration " + declarationName + " must be literal or var ref for now. Got instead " + expression + ". If you want complex expressions, give it an explicit type.")
 		}
 		return null
