@@ -40,5 +40,4 @@ public class OutRulesConditionSwitch extends RulesConditionSwitch {
 		retVal.code = '''getValue«Conversions.fmiTypeToCppTypeCapitalized(type)»(«this.externalVariableOwner»,«define»)''';
 		return retVal;
 	}
-
 }

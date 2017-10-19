@@ -9,8 +9,7 @@ at "./path/to/RateSA.fmu"
 input ports speed
 output ports tau
 
-param 	RATE := 10,
-		INIT_LOOP_SA_TAU := 0.0;
+param 	RATE := 10;
 
 control var previous_speed := 0;
 control rules {
@@ -35,7 +34,7 @@ in rules {
 	};
 }
 
-out var stored_loop_sa_tau := INIT_LOOP_SA_TAU;
+out var stored_loop_sa_tau := 0.0;
 out rules {
 	true -> {
 		stored_loop_sa_tau := loop_sa.tau;

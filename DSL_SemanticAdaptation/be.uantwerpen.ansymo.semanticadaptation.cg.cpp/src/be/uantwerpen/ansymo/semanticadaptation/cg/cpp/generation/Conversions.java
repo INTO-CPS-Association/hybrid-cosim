@@ -57,7 +57,10 @@ public class Conversions {
 			throw new InvalidConversionException("The value type: " + t + " is invalid.");
 		}
 	}
-
+	public static boolean isTypeANumber(SVType t1)
+	{
+		return t1 == SVType.Real || t1 == SVType.Integer;
+	}
 	public static SVType typeDecider(SVType t1, SVType t2) throws InvalidConversionException {
 		switch (t1) {
 		case Real:

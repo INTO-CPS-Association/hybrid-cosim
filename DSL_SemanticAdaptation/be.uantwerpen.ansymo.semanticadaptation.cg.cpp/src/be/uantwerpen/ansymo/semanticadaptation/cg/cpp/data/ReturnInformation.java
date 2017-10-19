@@ -29,22 +29,18 @@ public class ReturnInformation {
 	public void setCode(String code) {
 		this.code = code;
 	}
-	
-	public void setIsExpression(boolean isExpression)
-	{
+
+	public void setIsExpression(boolean isExpression) {
 		this.isExpression = isExpression;
 	}
-	
-	public boolean getIsExpression()
-	{
+
+	public boolean getIsExpression() {
 		return this.isExpression;
 	}
 
 	public SVType getType() throws Exception {
-		if(!typeIsSet)
-		{
-			throw new Exception(
-					"Attempt to retrieve unset type for code: " + code);
+		if (!typeIsSet) {
+			throw new Exception("Attempt to retrieve unset type for code: " + code);
 		}
 		return type;
 	}
@@ -74,8 +70,16 @@ public class ReturnInformation {
 		return ConSaSv;
 	}
 
-	public void setConSaSv(SAScalarVariable conSaSv) {
+	public void setConSaSv(SAScalarVariable conSaSv) throws InvalidConversionException {
 		ConSaSv = conSaSv;
+		if (this.typeIsSet && conSaSv.getType().isPresent()) {
+			this.type = Conversions.typeDecider(conSaSv.getType().get(), this.type);
+		} else {
+			if (conSaSv.getType().isPresent()) {
+				this.type = conSaSv.getType().get();
+				this.typeIsSet = true;
+			}
+		}
 	}
 
 	public GlobalInOutVariable getConGlobVar() {
@@ -86,9 +90,7 @@ public class ReturnInformation {
 		this.conGlobVar = conGlobVar;
 		if (this.typeIsSet) {
 			this.type = Conversions.typeDecider(conGlobVar.type, this.type);
-		}
-		else
-		{
+		} else {
 			this.type = conGlobVar.type;
 			this.typeIsSet = true;
 		}
@@ -108,7 +110,7 @@ public class ReturnInformation {
 	/*
 	 * This method automatically extracts and compares type information
 	 */
-	
+
 	public ReturnInformation(ReturnInformation information, ReturnInformation information2) throws Exception {
 		if (information.conGlobVar != null) {
 			if (information2.conGlobVar != null) {
@@ -118,8 +120,8 @@ public class ReturnInformation {
 				// In this case they must have the same type otherwise the
 				// return value is impossible to typecheck.
 				else if (information.conGlobVar.type != information2.conGlobVar.type) {
-					throw new Exception("The two connected global variables: " + information.conGlobVar.name
-							+ " and " + information2.conGlobVar.name + " have different types");
+					throw new Exception("The two connected global variables: " + information.conGlobVar.name + " and "
+							+ information2.conGlobVar.name + " have different types");
 				}
 
 			} else {
@@ -164,21 +166,16 @@ public class ReturnInformation {
 				this.setConSaSv(information2.ConSaSv);
 			}
 		}
-		
-		if(information.forceType && information2.forceType)
-		{
-			if(information.getType() != information2.getType())
-			{
-				throw new Exception(
-						"Two connected return informations with force types contain different types: "
-								+ information.getType() + " and " + information2.getType());
+
+		if (information.forceType && information2.forceType) {
+			if (information.getType() != information2.getType()) {
+				throw new Exception("Two connected return informations with force types contain different types: "
+						+ information.getType() + " and " + information2.getType());
 			}
-		}
-		else if(information.forceType || information2.forceType)
-		{
-			
+		} else if (information.forceType || information2.forceType) {
+
 			this.forceType = true;
-			if(information.forceType)
+			if (information.forceType)
 				this.type = information.type;
 			else
 				this.type = information2.type;

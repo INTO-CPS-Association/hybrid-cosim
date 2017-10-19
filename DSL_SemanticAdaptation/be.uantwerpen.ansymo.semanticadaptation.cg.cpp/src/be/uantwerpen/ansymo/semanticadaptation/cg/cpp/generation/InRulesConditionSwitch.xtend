@@ -57,6 +57,6 @@ class InRulesConditionSwitch extends RulesConditionSwitch {
 		} else {
 			return super.caseAssignment(object);
 		}
-	}
+	}	
 
 }

@@ -20,6 +20,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BreakStatement
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
 import java.util.List
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GetNextInternalTimeStep
 
 class ControlConditionSwitch extends RulesConditionSwitch {
 
@@ -49,16 +50,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseVariable(Variable object) {
 		var retVal = new ReturnInformation();
-
-		// H and t are protected variables and are handles by caseStepSize and caseCurrentTime respectively.
-//		if ((object.owner === null || object.owner.name == this.adaptationName) &&
-//			(object.ref.name == "H" || object.ref.name == "t")) {
-//			retVal.type = SVType.Real;
-//			retVal.forceType = true;
-//			retVal.code = object.ref.name;
-//		} else {
 		retVal = super.caseVariable(object);
-//		}
 		return retVal;
 	}
 
@@ -74,13 +66,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseControlRuleBlock(ControlRuleBlock object) {
 		var retVal = new ReturnInformation();
-//
-//		// Get the global variables added to globalVars
-//		this.globalDeclaration = true;
-//		for (gVar : object.globalCtrlVars) {
-//			constructorInitialization += doSwitch(gVar).code;
-//		}
-//		this.globalDeclaration = false;
+
 		retVal.appendCode(doSwitch(object.rule).code);
 
 		return retVal;
@@ -89,22 +75,23 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	override ReturnInformation caseCustomControlRule(CustomControlRule object) {
 		var retVal = new ReturnInformation();
 
-		var String tempDoSwitchCode = "";
-		for (ruleStm : object.controlRulestatements) {
-			tempDoSwitchCode += doSwitch(ruleStm).code;
+		val functionPrefix = "double ";
+		val functionNameArgs = "executeInternalControlFlow(double H, double t)"
+		functionSignatures.add(functionPrefix + functionNameArgs);
+				
+		val code = '''
+		«functionPrefix+this.adaptationClassName»::«functionNameArgs» {
+			«FOR ruleStm : object.controlRulestatements»
+			«val result = doSwitch(ruleStm)»
+			«result.code»«if (!result.isExpression) ";"»
+			«ENDFOR»
+			
+			return «doSwitch(object.returnstatement.expr).code»;
 		}
-		tempDoSwitchCode += System.lineSeparator() + '''return «doSwitch(object.returnstatement.expr).code»;
 		''';
 
-		var functionPrefix = "double ";
-		var functionNameArgs = "executeInternalControlFlow(double H, double t)"
-		functionSignatures.add(functionPrefix + functionNameArgs);
-		retVal.code = '''
-			«functionPrefix+this.adaptationClassName»::«functionNameArgs»
-			{
-				«tempDoSwitchCode»
-			}
-		''';
+		
+		retVal.code = code;
 		return retVal;
 	}
 
@@ -139,8 +126,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseSaveState(SaveState object) {
 		var retVal = new ReturnInformation();
-		retVal.appendCode('''
-		saveState(«object.fmu.name»)''')
+		retVal.appendCode('''saveState(«object.fmu.name»)''')
 		return retVal;
 	}
 
@@ -159,6 +145,14 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	override ReturnInformation caseRollback(Rollback object) {
 		var retVal = new ReturnInformation();
 		retVal.appendCode('''rollback(«object.fmu.name»)''')
+		return retVal;
+	}
+
+	override ReturnInformation caseGetNextInternalTimeStep(GetNextInternalTimeStep object)
+	{
+		var retVal = new ReturnInformation();
+		retVal.type = SVType.Real;
+		retVal.code = '''getMextTimeStep(«object.fmu.name»)''';
 		return retVal;
 	}
 }

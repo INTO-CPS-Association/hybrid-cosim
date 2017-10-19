@@ -44,8 +44,9 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Var
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.LessThan
 
- class RulesConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
+class RulesConditionSwitch extends BasicConditionSwitch {
 	// Global params
 	protected var LinkedHashMap<String, GlobalInOutVariable> params;
 
@@ -53,10 +54,10 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 
 	protected final String adaptationClassName;
 
-	private Integer count = 0;
+	protected Integer count = 0;
 
 	/** See the method {@link #createFunctionSignature(String, String)} and subclasses */
-	private final String functionPrefix;
+	public final String functionPrefix;
 
 	protected List<String> functionSignatures = newArrayList();
 
@@ -80,8 +81,6 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 	protected boolean inRuleOutput;
 	protected boolean inControlRule;
 
-	
-	
 	// Flag to signal whether the declarations to be processed are global or local.
 	protected boolean globalDeclaration = false;
 	// Add scope information to this.
@@ -101,6 +100,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 		LinkedHashMap<String, GlobalInOutVariable> outVars,
 		LinkedHashMap<String, GlobalInOutVariable> crtlVars
 	) {
+		super();
 		this.params = params;
 		this.SASVs = SASVs;
 		this.adaptationName = adaptationName;
@@ -115,41 +115,18 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 	/*
 	 * UTILITY FUNCTIONS 
 	 */
-	override ReturnInformation defaultCase(EObject object) {
-		var retVal = new ReturnInformation();
-		retVal.code = '''[«object.class»]''';
-		return retVal;
-	}
-
-	private def Object convertTypeToObject(SVType type, Literal object) {
-		switch (type) {
-			case Real: {
-				return (object as RealLiteral).value.doubleValue;
-			}
-			case Integer: {
-				return (object as IntLiteral).value;
-			}
-			case Boolean: {
-				return Boolean.parseBoolean((object as BoolLiteral).value);
-			}
-			default: {
-			}
-		}
-	}
-
-	public def getGlobalVars() { return this.gVars; }
-
-	public def getConstructorInitialization() { return this.constructorInitialization; }
-
 	/**
 	 * This function adds a header style function signature to the list <i>functionsignatures</i> 
 	 * and returns the source style function signature
 	 */
-	protected def String createFunctionSignature(String functionName, String type) {
-		val functionSignature = this.functionPrefix + functionName + this.count + "()";
-		this.functionSignatures.add(type + " " + functionSignature);
+	public def String createFunctionSignature(String functionName, String type, int count,
+		List<String> functionSignatures) {
+		val functionSignature = this.functionPrefix + functionName + count + "()";
+		functionSignatures.add(type + " " + functionSignature);
 		return type + " " + this.adaptationClassName + "::" + functionSignature;
 	}
+
+	public def getDataRuleCount() { return this.count; }
 
 	def void incrementCount() {
 		this.count++;
@@ -158,30 +135,20 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 	/*
 	 * COMPILATION FUNCTIONS
 	 */
-	
-	public def Pair<String, LinkedHashMap<String, GlobalInOutVariable>> getGlobalVars(EList<Declaration> gVars)
-	{
-		
-		var String constructorInitialisation= "";
-		
+	public def Pair<String, LinkedHashMap<String, GlobalInOutVariable>> getGlobalVars(EList<Declaration> gVars) {
+
 		// Get the global variables added to globalVars
 		this.globalDeclaration = true;
+		val List<String> constructorInits = newArrayList();
 		for (gVar : gVars) {
-			constructorInitialisation += doSwitch(gVar).code;
+			constructorInits.add('''«doSwitch(gVar).code»''');
 		}
 		this.globalDeclaration = false;
-		return constructorInitialisation -> this.gVars;
+		return constructorInits.join(System.lineSeparator) -> this.gVars;
 	}
-	
+
 	protected def ReturnInformation doSwitch(EList<Declaration> gVars, InOutRules object) {
 		var retVal = new ReturnInformation();
-
-//		// Get the global variables added to globalVars
-//		this.globalDeclaration = true;
-//		for (gVar : gVars) {
-//			constructorInitialization += doSwitch(gVar).code;
-//		}
-//		this.globalDeclaration = false;
 
 		for (dataRule : object.eAllContents.toIterable.filter(DataRule)) {
 			this.incrementCount;
@@ -214,7 +181,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 	override ReturnInformation caseRuleCondition(RuleCondition object) {
 		var retVal = new ReturnInformation();
 
-		val functionSignature = createFunctionSignature("condition", "bool");
+		val functionSignature = createFunctionSignature("condition", "bool", this.count, this.functionSignatures);
 		retVal.code = '''
 			«functionSignature»{
 				return «doSwitch(object.condition).code»;
@@ -227,7 +194,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 	override ReturnInformation caseStateTransitionFunction(StateTransitionFunction object) {
 		var retVal = new ReturnInformation();
 
-		val functionSig = createFunctionSignature("body", "void");
+		val functionSig = createFunctionSignature("body", "void", this.count, this.functionSignatures);
 		retVal.code = '''
 			«functionSig»{
 				«IF object.expression !== null»
@@ -309,44 +276,30 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 		return retVal;
 	}
 
-	override ReturnInformation caseMulti(Multi object) {
-
-		val doSwitchLeft = doSwitch(object.left);
-		val doSwitchRight = doSwitch(object.right);
-		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» * «doSwitchRight.code»''';
-		return retVal;
-	}
-
-	override ReturnInformation caseDiv(Div object) {
-		val doSwitchLeft = doSwitch(object.left);
-		val doSwitchRight = doSwitch(object.right);
-		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» / «doSwitchRight.code»''';
-		retVal.type = SVType.Real;
-		retVal.forceType = true;
-		return retVal;
-	}
-
-	override ReturnInformation caseNeg(Neg object) {
-
-		var doSwitch = doSwitch(object.right);
-		var retVal = new ReturnInformation(doSwitch);
-		retVal.code = doSwitch.code;
-
-		return retVal;
-	}
-
 	override ReturnInformation caseSingleVarDeclaration(SingleVarDeclaration object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''«object.name»''';
+		var exprRes = doSwitch(object.expr);
+		var String code = "";
+		if (globalDeclaration) {
+			// This is an in var, out var or crtl var declaration
+			code = '''this->«object.name» = «exprRes.code»''';
+			var globVar = new GlobalInOutVariable(object.name, exprRes.type);
+			gVars.put(object.name, globVar)
+		} else {
+			// This is a local declaration.
+			val String type = Conversions.fmiTypeToCppType(exprRes.type)
+			code = '''«type» «object.name» = «exprRes.code»''';
+			this.localDeclarations.put(object.name, exprRes.type);
+		}
+		retVal.code = code;
 		return retVal;
+
 	}
 
 	override ReturnInformation caseCompositeOutputFunction(CompositeOutputFunction object) {
 
 		var retVal = new ReturnInformation();
-		val functionSig = createFunctionSignature("flush", "void");
+		val functionSig = createFunctionSignature("flush", "void", this.count, this.functionSignatures);
 		retVal.code = '''
 			«functionSig»{
 				«FOR stm : object.statements»
@@ -364,8 +317,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 
 		if (object.owner === null || object.owner.name == this.adaptationName) {
 
-			if ((SASVs !== null && SASVs.containsKey(object.ref.name)) || 
-				params.containsKey(object.ref.name) || 
+			if ((SASVs !== null && SASVs.containsKey(object.ref.name)) || params.containsKey(object.ref.name) ||
 				(outVars !== null && outVars.containsKey(object.ref.name)) ||
 				(inVars !== null && inVars.containsKey(object.ref.name)) ||
 				(crtlVars !== null && crtlVars.containsKey(object.ref.name))) {
@@ -411,29 +363,15 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 
 	override ReturnInformation caseDeclaration(Declaration object) {
 		var retVal = new ReturnInformation();
+		val code = '''
+			«FOR decl : object.declarations»
+				«val res = doSwitch(decl)»
+				«res.code»;
+			«ENDFOR»
+		'''
 
-		for (SingleVarDeclaration decl : object.declarations) {
-			var doSwitchRes = doSwitch(decl.expr);
-			var String code = "";
-
-			if (globalDeclaration) {
-				// This is an in var, out var or crtl var declaration	
-				code = '''
-					this->«decl.name» = «doSwitchRes.code»;
-				'''
-				var globVar = new GlobalInOutVariable(decl.name, doSwitchRes.type);
-
-				gVars.put(decl.name, globVar);
-			} else {
-				// This is a local declaration.
-				val String type = Conversions.fmiTypeToCppType(doSwitchRes.type)
-				code = '''
-					«type» «decl.name» = «doSwitchRes.code»;
-				''';
-				this.localDeclarations.put(decl.name, doSwitchRes.type);
-			}
-			retVal.appendCode = code;
-		}
+		retVal.code = code;
+		retVal.isExpression = true;
 
 		return retVal;
 	}
@@ -442,61 +380,6 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Plus
 		var retInfo = new ReturnInformation();
 		retInfo.code = '''this->isSet«(object.args as Variable).ref.name»''';
 		return retInfo;
-	}
-
-	override ReturnInformation caseRealLiteral(RealLiteral object) {
-		var retInfo = new ReturnInformation();
-		retInfo.type = SVType.Real;
-		retInfo.value = convertTypeToObject(retInfo.type, object);
-		retInfo.code = '''«object.value»''';
-		return retInfo;
-	}
-
-	override ReturnInformation caseIntLiteral(IntLiteral object) {
-		var retInfo = new ReturnInformation();
-		retInfo.type = SVType.Integer;
-		retInfo.value = convertTypeToObject(retInfo.type, object);
-		retInfo.code = '''«object.value»''';
-		return retInfo;
-	}
-
-	override ReturnInformation caseBoolLiteral(BoolLiteral object) {
-		var retInfo = new ReturnInformation();
-		retInfo.type = SVType.Boolean;
-		retInfo.value = convertTypeToObject(retInfo.type, object);
-		retInfo.code = '''«object.value»''';
-
-		return retInfo;
-	}
-
-	override ReturnInformation caseMin(Min object) {
-		var retInfo = new ReturnInformation();
-		var doSwitchResCode = newArrayList();
-		for (expr : object.args) {
-			val doSwitchRes_ = this.doSwitch(expr);
-			doSwitchResCode.add(doSwitchRes_.code);
-			retInfo = new ReturnInformation(retInfo, doSwitchRes_);
-		}
-		retInfo.code = '''
-			min({«doSwitchResCode.join(",")»})
-		'''
-		return retInfo;
-	}
-
-	override ReturnInformation caseMinus(Minus object) {
-		val doSwitchLeft = doSwitch(object.left);
-		val doSwitchRight = doSwitch(object.right);
-		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» - «doSwitchRight.code»''';
-		return retVal;
-	}
-
-	override ReturnInformation casePlus(Plus object) {
-		val doSwitchLeft = doSwitch(object.left);
-		val doSwitchRight = doSwitch(object.right);
-		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» + «doSwitchRight.code»''';
-		return retVal;
 	}
 
 	override ReturnInformation caseFor(For object) {
