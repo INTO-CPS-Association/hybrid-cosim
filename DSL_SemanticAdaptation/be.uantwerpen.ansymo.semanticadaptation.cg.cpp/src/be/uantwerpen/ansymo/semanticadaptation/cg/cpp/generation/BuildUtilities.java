@@ -33,7 +33,7 @@ public class BuildUtilities {
 		libFiles = new LinkedList<>();
 
 		try {
-			jarfile = new FileInputStream(new File("target/classes/jars/cppFramework.jar"));
+			jarfile = new FileInputStream(new File("jars/cppFramework.jar"));
 			jarstream = new JarInputStream(jarfile);
 			filejarentry = jarstream.getNextJarEntry();
 

@@ -222,6 +222,11 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 		@Test def rate_SA_parseNoExceptions() { __generate('input/power_window_case_study/rate.sa', new IAcceptor<CompilationTestHelper.Result>(){
 			override accept(Result t) { }
 		}) }
+		
+	@Ignore
+	@Test def power_base_SA_parseNoExceptions() { __generate('input/power_window_case_study/power.BASE.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) { }
+		}) }
 	
 	def void __generate(String filename, IAcceptor<CompilationTestHelper.Result> acceptor) {
 		//readFile(filename).assertCompilesTo('oracles/power_window_case_study/lazy.BASE.sa')

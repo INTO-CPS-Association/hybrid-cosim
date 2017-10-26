@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><fmiModelDescription fmiVersion="2.0" guid="3767c7d8-b6f5-40f4-b646-4691b9287f55" modelName="LazySA" variableNamingConvention="flat">
+    <ModelVariables>
+        <ScalarVariable causality="input" name="obj_detected" valueReference="0" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="passenger_up" valueReference="1" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="passenger_down" valueReference="2" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="passenger_stop" valueReference="3" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="driver_up" valueReference="4" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="driver_down" valueReference="5" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="input" name="driver_stop" valueReference="6" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="output" name="up" valueReference="7" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="output" name="down" valueReference="8" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+        <ScalarVariable causality="output" name="stop" valueReference="9" variability="discrete">
+            <Boolean/>
+        </ScalarVariable>
+    </ModelVariables>
+    <ModelStructure>
+        <Outputs>
+            <Unknown dependencies="" index="8"/>
+            <Unknown dependencies="" index="9"/>
+            <Unknown dependencies="" index="10"/>
+        </Outputs>
+    </ModelStructure>
+</fmiModelDescription>

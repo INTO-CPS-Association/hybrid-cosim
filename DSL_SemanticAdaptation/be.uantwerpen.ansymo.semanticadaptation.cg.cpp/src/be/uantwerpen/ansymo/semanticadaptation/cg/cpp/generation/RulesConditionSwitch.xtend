@@ -282,7 +282,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 		var String code = "";
 		if (globalDeclaration) {
 			// This is an in var, out var or crtl var declaration
-			code = '''this->«object.name» = «exprRes.code»''';
+			code = '''this->internalState.«object.name» = «exprRes.code»''';
 			var globVar = new GlobalInOutVariable(object.name, exprRes.type);
 			gVars.put(object.name, globVar)
 		} else {
@@ -322,7 +322,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 				(inVars !== null && inVars.containsKey(object.ref.name)) ||
 				(crtlVars !== null && crtlVars.containsKey(object.ref.name))) {
 
-				retVal.code = '''this->«object.ref.name»''';
+				retVal.code = '''this->internalState.«object.ref.name»''';
 
 				if (SASVs !== null && SASVs.containsKey(object.ref.name)) {
 					retVal.conSaSv = SASVs.get(object.ref.name);
@@ -344,7 +344,9 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 
 		} else {
 			this.externalVariableOwner = object.owner.name;
-			retVal.code = '''«doSwitch(object.ref).code»''';
+			val res =  doSwitch(object.ref);
+			retVal.code = res.code;
+			retVal.type = res.type;
 		}
 		return retVal;
 	}
@@ -378,7 +380,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 
 	override ReturnInformation caseIsSet(IsSet object) {
 		var retInfo = new ReturnInformation();
-		retInfo.code = '''this->isSet«(object.args as Variable).ref.name»''';
+		retInfo.code = '''this->internalState.isSet«(object.args as Variable).ref.name»''';
 		return retInfo;
 	}
 

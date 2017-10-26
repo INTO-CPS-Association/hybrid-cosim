@@ -97,7 +97,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseDoStepFun(DoStepFun object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»)''';
+		retVal.code = '''this->do_step(this->«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»)''';
 		retVal.type = SVType.Integer;
 		return retVal;
 	}
@@ -126,13 +126,14 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseSaveState(SaveState object) {
 		var retVal = new ReturnInformation();
-		retVal.appendCode('''saveState(«object.fmu.name»)''')
+		retVal.appendCode('''save_state(«object.fmu.name»)''')
 		return retVal;
 	}
 
 	override ReturnInformation caseClose(Close object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''is_close(«object.args.map[e | doSwitch(e).code].join(", ")»)''';
+		retVal.code = '''HyfMath::is_close(«object.args.map[e | doSwitch(e).code].join(", ")»)''';
+		retVal.type = SVType.Boolean;
 		return retVal;
 	}
 
@@ -152,7 +153,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	{
 		var retVal = new ReturnInformation();
 		retVal.type = SVType.Real;
-		retVal.code = '''getMextTimeStep(«object.fmu.name»)''';
+		retVal.code = '''getNextTimeStep(«object.fmu.name»)''';
 		return retVal;
 	}
 }

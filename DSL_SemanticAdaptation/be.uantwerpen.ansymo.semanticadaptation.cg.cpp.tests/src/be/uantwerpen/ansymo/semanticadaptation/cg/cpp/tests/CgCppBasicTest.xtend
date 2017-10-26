@@ -61,6 +61,18 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Test def rate_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
 	}
+	
+	@Test def power(){
+		__parseNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated','power');
+	}
+	
+	@Test def rollback_test(){
+		__parseNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated','rollback_test');
+	}
+	
+	@Test def controller_test(){
+		__parseNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated','controller');
+	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
 		val model = __parse(filename);

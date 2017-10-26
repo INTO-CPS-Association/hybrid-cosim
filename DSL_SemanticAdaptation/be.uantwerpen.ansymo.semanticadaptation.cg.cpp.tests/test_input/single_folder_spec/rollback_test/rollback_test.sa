@@ -1,0 +1,15 @@
+semantic adaptation reactive moore RollbackTest rollbackTest_sa
+at "./path/to/RollbackTest.fmu"
+
+	for inner fmu rollbackEnd rollbackend
+		at "./test_input/single_folder_spec/rollback_test/rollback-end.fmu"
+		with input ports level
+
+input ports level -> rollbackend.level
+		
+control rules {
+	save_state(rollbackend);
+	rollback(rollbackend);
+	
+	return 1;
+}
