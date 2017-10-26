@@ -171,7 +171,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			}
 
 			// Compile the in rules
-			val inRules = if(adap.out !== null) adap.in as InOutRules else null;
+			val inRules = if(adap.in !== null) adap.in as InOutRules else null;
 			val inRuleResult = compileInOutRuleBlocks(IORuleType.Input, inRules, adapClassName, adapInteralRefName,
 				mappedScalarVariables, SASVs, params, if(inVars !== null) inVars.value else null,
 				if(outVars !== null) outVars.value else null, if(crtlVars !== null) crtlVars.value else null,
