@@ -5,14 +5,20 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests
 
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.BuildUtilities
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests.CMakeUtil.CMakeGenerateException
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
+import be.uantwerpen.ansymo.semanticadaptation.testframework.CMakeListsGenerator
+import be.uantwerpen.ansymo.semanticadaptation.testframework.FmuMainTestGenerator
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
 import be.uantwerpen.ansymo.semanticadaptation.tests.SemanticAdaptationInjectorProvider
 import com.google.inject.Inject
 import java.io.File
+import java.io.FileFilter
 import java.io.FileWriter
 import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.regex.Pattern
+import org.apache.commons.io.FileUtils
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.IGeneratorContext
@@ -21,10 +27,11 @@ import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
 import org.eclipse.xtext.testing.util.ParseHelper
 import org.eclipse.xtext.testing.validation.ValidationTestHelper
+import org.junit.Assert
+import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import be.uantwerpen.ansymo.semanticadaptation.testframework.StaticGenerators
-import org.junit.Ignore
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -33,6 +40,24 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 // @Inject CppGenerator underTest
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
+
+	val static hcfRoot = Paths.get("target", "hcfDummy", "hcf").toFile()
+
+	@BeforeClass
+	def static setupHcf() {
+		if (!CMakeUtil.windows) {
+			FileUtils.write(new File(hcfRoot.parent, "CMakeLists.txt"),
+				CMakeListsGenerator.generateCMakeListsHcfDummy());
+
+			val cmake = new CMakeUtil(true)
+			try {
+				Assert.assertTrue("Expected cmake to parse", cmake.generate(hcfRoot));
+				Assert.assertTrue("Expected no make errors", cmake.make(hcfRoot));
+			} catch (CMakeGenerateException e) {
+				e.printStackTrace
+			}
+		}
+	}
 
 	@Ignore
 	@Test def window_sa_canonical() {
@@ -53,25 +78,25 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@Test def loop() {
 		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "loop");
 	}
-	
+
 	@Test def rate() {
 		__parseNoErrors('test_input/single_folder_spec/rate/rate.sa', 'generated', "rate");
 	}
-	
+
 	@Test def rate_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
 	}
-	
-	@Test def power(){
-		__parseNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated','power');
+
+	@Test def power() {
+		__parseNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated', 'power');
 	}
-	
-	@Test def rollback_test(){
-		__parseNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated','rollback_test');
+
+	@Test def rollback_test() {
+		__parseNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated', 'rollback_test');
 	}
-	
-	@Test def controller_test(){
-		__parseNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated','controller');
+
+	@Test def controller_test() {
+		__parseNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated', 'controller');
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
@@ -107,7 +132,6 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			if (correctFileContent.size != testFileContent.size) {
 				System.out.println("Error: Lines are of different length in file: " + filename2);
 			} else {
-				val error = false;
 				for (var i = 0; i < testFileContent.size; i++) {
 					val testLine = testFileContent.get(i);
 					val correctLine = correctFileContent.get(i);
@@ -124,12 +148,9 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	}
 
 	def __parseNoErrors(String filename, String directory, String projectName) {
-		val saRootDir = new File(directory + File.separatorChar + projectName);
+		val saRootDir = Paths.get("target", directory, projectName).toFile();
 		val srcGenPath = new File(saRootDir, "sources")
 		val resourcesPath = new File(saRootDir, "resources");
-		val saFrameworkPath = new File(saRootDir, "framework")
-
-		System.out.println("Rootdir: " + saRootDir.absolutePath)
 
 		val model = __parse(filename)
 		__assertNoParseErrors(model, filename)
@@ -146,7 +167,6 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		saRootDir.mkdirs();
 		srcGenPath.mkdirs();
 		resourcesPath.mkdirs();
-		saFrameworkPath.mkdirs();
 
 		for (files : fsa.allFiles.entrySet) {
 			val fName = files.key.substring(14);
@@ -161,7 +181,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			BuildUtilities.writeToFile(fp, files.value.toString);
 		}
 
-		val mainCpp = StaticGenerators.generateMainCppFile(resourcesPath.absolutePath.replace("\\", "\\\\"));
+		val mainCpp = FmuMainTestGenerator.generateMainCppFile(resourcesPath.absolutePath.replace("\\", "\\\\"));
 		BuildUtilities.writeToFile(new File(srcGenPath, "main.cpp"), mainCpp);
 
 		for (rf : cppGen.resourcePaths) {
@@ -171,14 +191,23 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		}
 
 		BuildUtilities.writeToFile(new File(saRootDir, "CMakeLists.txt"),
-			StaticGenerators.generateCMakeLists(projectName, "framework"));
+			CMakeListsGenerator.generateCMakeLists(projectName));
 
-		val cMakeToolChain = StaticGenerators.generateToolChainCmake();
+		val cMakeToolChain = CMakeListsGenerator.generateToolChainCmake();
 		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
 
-		(new BuildUtilities()).copyNativeLibFiles(saFrameworkPath);
-		System.out.println("Stored framework at: " + saFrameworkPath);
+		if (!CMakeUtil.windows) {
+			val cmake = new CMakeUtil(true)
+			FileUtils.copyDirectory(hcfRoot, new File(saRootDir, "hcf"), new FileFilter() {
 
+				override accept(File pathname) {
+					return !pathname.name.equals("CMakeCache.txt")
+				}
+
+			})
+			Assert.assertTrue("Expected cmake to parse", cmake.generate(saRootDir));
+			Assert.assertTrue("Expected no make errors", cmake.make(saRootDir));
+		}
 	}
 
 	def __parseNoErrorsPrint(String filename) {

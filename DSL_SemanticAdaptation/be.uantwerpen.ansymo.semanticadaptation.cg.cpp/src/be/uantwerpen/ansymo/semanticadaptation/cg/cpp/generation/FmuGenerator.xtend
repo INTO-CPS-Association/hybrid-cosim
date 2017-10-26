@@ -1,7 +1,7 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation
 
-class StaticGenerators {
-	def static String GenFmuCppFile(String adapClassName)
+class FmuGenerator {
+	def static String genFmuCppFile(String adapClassName)
 	{
 		'''
 		#include <stdio.h>

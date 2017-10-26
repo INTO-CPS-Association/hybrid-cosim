@@ -268,7 +268,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				fsa.generateFile("modelDescription.xml", modelDescription);
 
 				// Compile the fmu.cpp file
-				val fmuCppFile = StaticGenerators.GenFmuCppFile(adapClassName);
+				val fmuCppFile = FmuGenerator.genFmuCppFile(adapClassName);
 				fsa.generateFile("Fmu.cpp", fmuCppFile);
 
 			}
