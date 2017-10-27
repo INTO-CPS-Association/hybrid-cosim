@@ -9,6 +9,23 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Literal;
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RealLiteral;
 
 public class Conversions {
+	
+	public static String fmiTypeToGetValueString(SVType t) throws InvalidConversionException
+	{
+		switch (t) {
+		case Real:
+			return "Double";
+		case Integer:
+			return "Integer";
+		case Boolean:
+			return "Boolean";
+		case String:
+			return "String";
+		default:
+			throw new InvalidConversionException("The value type: " + t + " is invalid.");
+		}
+	}
+	
 	public static String fmiTypeToCppType(SVType t) throws InvalidConversionException {
 		switch (t) {
 		case Real:

@@ -718,7 +718,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 					var ruleCpp = "";
 					if (ioType == IORuleType.Output) {
-						val getValueCpp = '''getValue«Conversions.fmiTypeToCppTypeCapitalized(type)»(«dependency.owner.name»,«define»)''';
+						val getValueCpp = '''getValue«Conversions.fmiTypeToGetValueString(type)»(«dependency.owner.name»,«define»)''';
 						ruleCpp = '''
 							«funcSigCon»{
 								return true;
