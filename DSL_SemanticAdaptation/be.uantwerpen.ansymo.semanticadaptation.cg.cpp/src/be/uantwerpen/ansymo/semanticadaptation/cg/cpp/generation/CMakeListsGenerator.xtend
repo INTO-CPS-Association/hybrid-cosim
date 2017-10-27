@@ -1,4 +1,4 @@
-package be.uantwerpen.ansymo.semanticadaptation.testframework
+package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation
 
 class CMakeListsGenerator {
 

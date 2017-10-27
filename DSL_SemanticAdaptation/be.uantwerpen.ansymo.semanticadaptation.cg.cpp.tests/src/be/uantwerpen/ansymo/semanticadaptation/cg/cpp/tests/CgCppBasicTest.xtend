@@ -7,7 +7,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.BuildUtilities
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests.CMakeUtil.CMakeGenerateException
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
-import be.uantwerpen.ansymo.semanticadaptation.testframework.CMakeListsGenerator
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CMakeListsGenerator
 import be.uantwerpen.ansymo.semanticadaptation.testframework.FmuMainTestGenerator
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
 import be.uantwerpen.ansymo.semanticadaptation.tests.SemanticAdaptationInjectorProvider
