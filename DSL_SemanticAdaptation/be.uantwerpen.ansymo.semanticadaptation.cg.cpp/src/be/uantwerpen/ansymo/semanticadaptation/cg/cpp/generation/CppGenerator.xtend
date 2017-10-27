@@ -724,12 +724,18 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						val getValueCpp = '''getValue«Conversions.fmiTypeToGetValueString(type)»(«dependency.owner.name»,«define»)''';
 						ruleCpp = '''
 							«funcSigCon»{
+								double h = 0;
+								double dt = 0;
 								return true;
 							}
 							«funcSigBody»{
+								double h = 0;
+								double dt = 0;
 								this->internalState.stored_«dependency.owner.name»_«dependency.port.name» = «getValueCpp»;
 							}
 							«funcSigFlush»{
+								double h = 0;
+								double dt = 0;
 								this->internalState.«currentPort.name» = this->internalState.stored_«dependency.owner.name»_«dependency.port.name»;
 							}
 						'''
@@ -737,12 +743,18 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						val setValueCpp = '''setValue(«dependency.owner.name»,«define»,this->internalState.stored_«dependency.owner.name»_«dependency.port.name»);''';
 						ruleCpp = '''
 							«funcSigCon»{
+								double h = 0;
+								double dt = 0;
 								return true;
 							}
 							«funcSigBody»{
+								double h = 0;
+								double dt = 0;
 								this->internalState.stored_«dependency.owner.name»_«dependency.port.name» = this->internalState.«currentPort.name»;
 							}
 							«funcSigFlush»{
+								double h = 0;
+								double dt = 0;
 								«setValueCpp»
 							}
 						'''
