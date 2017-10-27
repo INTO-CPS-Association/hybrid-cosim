@@ -186,6 +186,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 			«functionSignature»{
 				double h = 0;
 				double dt = 0;
+				//FIXME
 				return «doSwitch(object.condition).code»;
 			}
 		''';
@@ -201,6 +202,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 			«functionSig»{
 				double h = 0;
 				double dt = 0;
+				//FIXME
 				«IF object.expression !== null»
 					«val result = doSwitch(object.expression)»
 					«result.code»«if (!result.isExpression) ";"»
@@ -308,6 +310,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 			«functionSig»{
 				double h = 0;
 				double dt = 0;
+				//FIXME
 				«FOR stm : object.statements»
 					«val result = doSwitch(stm)»
 					«result.code»«if(!result.isExpression) ";"»

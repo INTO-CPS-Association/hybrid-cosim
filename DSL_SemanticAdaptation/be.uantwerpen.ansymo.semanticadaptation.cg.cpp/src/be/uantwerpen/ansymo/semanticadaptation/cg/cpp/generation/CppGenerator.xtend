@@ -726,16 +726,19 @@ class CppGenerator extends SemanticAdaptationGenerator {
 							«funcSigCon»{
 								double h = 0;
 								double dt = 0;
+								//FIXME
 								return true;
 							}
 							«funcSigBody»{
 								double h = 0;
 								double dt = 0;
+								//FIXME
 								this->internalState.stored_«dependency.owner.name»_«dependency.port.name» = «getValueCpp»;
 							}
 							«funcSigFlush»{
 								double h = 0;
 								double dt = 0;
+								//FIXME
 								this->internalState.«currentPort.name» = this->internalState.stored_«dependency.owner.name»_«dependency.port.name»;
 							}
 						'''
@@ -745,16 +748,19 @@ class CppGenerator extends SemanticAdaptationGenerator {
 							«funcSigCon»{
 								double h = 0;
 								double dt = 0;
+								//FIXME
 								return true;
 							}
 							«funcSigBody»{
 								double h = 0;
 								double dt = 0;
+								//FIXME
 								this->internalState.stored_«dependency.owner.name»_«dependency.port.name» = this->internalState.«currentPort.name»;
 							}
 							«funcSigFlush»{
 								double h = 0;
 								double dt = 0;
+								//FIXME
 								«setValueCpp»
 							}
 						'''
