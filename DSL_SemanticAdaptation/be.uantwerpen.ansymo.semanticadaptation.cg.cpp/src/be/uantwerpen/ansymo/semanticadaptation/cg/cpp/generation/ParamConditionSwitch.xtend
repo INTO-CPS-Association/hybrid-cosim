@@ -31,7 +31,7 @@ class ParamConditionSwitch extends GeneralConditionSwitch {
 		val retInfo = new ReturnInformation();
 		retInfo.code = 
 		'''
-			this->«gVar.name» = «doSwitchRes.code»;
+			this->internalState.«gVar.name» = «doSwitchRes.code»;
 		'''
 		return retInfo;
 	}
