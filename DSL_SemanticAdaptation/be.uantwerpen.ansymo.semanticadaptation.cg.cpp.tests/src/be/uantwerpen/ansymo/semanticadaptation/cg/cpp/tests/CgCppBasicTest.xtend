@@ -46,13 +46,13 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	@BeforeClass
 	def static setupHcf() {
 		if (!CMakeUtil.windows) {
-			FileUtils.write(new File(hcfRoot.parent, "CMakeLists.txt"),
+			FileUtils.write(new File(hcfRoot.parentFile, "CMakeLists.txt"),
 				CMakeListsGenerator.generateCMakeListsHcfDummy());
 
 			val cmake = new CMakeUtil(true)
 			try {
-				Assert.assertTrue("Expected cmake to parse", cmake.generate(hcfRoot));
-				Assert.assertTrue("Expected no make errors", cmake.make(hcfRoot));
+				Assert.assertTrue("Expected cmake to parse", cmake.generate(hcfRoot.parentFile));
+				Assert.assertTrue("Expected no make errors", cmake.make(hcfRoot.parentFile));
 			} catch (CMakeGenerateException e) {
 				e.printStackTrace
 			}
