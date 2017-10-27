@@ -207,6 +207,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			})
 			Assert.assertTrue("Expected cmake to parse", cmake.generate(saRootDir));
 			Assert.assertTrue("Expected no make errors", cmake.make(saRootDir));
+			Assert.assertTrue("Failed to pack the FMU", cmake.make(saRootDir,"pack"));
 		}
 	}
 

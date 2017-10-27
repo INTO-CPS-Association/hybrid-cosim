@@ -243,6 +243,14 @@ class CMakeListsGenerator {
 				set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libstdc++ -static-libgcc  -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic")
 			endif() 
 			
+			
+			add_custom_target(pack COMMAND
+			    ${CMAKE_COMMAND} -E tar "cfv" ${PROJECT_NAME}.fmu --format=zip
+			       "${CMAKE_CURRENT_SOURCE_DIR}/modelDescription.xml"
+			       "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+			        "${FMI_BIN_DIR}"
+			)
+			
 		'''
 	}
 
