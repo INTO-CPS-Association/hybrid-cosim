@@ -153,7 +153,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	{
 		var retVal = new ReturnInformation();
 		retVal.type = SVType.Real;
-		retVal.code = '''getMextTimeStep(«object.fmu.name»)''';
+		retVal.code = '''getNextTimeStep(«object.fmu.name»)''';
 		return retVal;
 	}
 }
