@@ -22,6 +22,8 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GreaterThanOrE
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.And
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Not
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GreaterThan
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.PassedTime
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MinorStepSize
 
 class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 
@@ -40,8 +42,31 @@ class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 			}
 		}
 	}
-	
-		override ReturnInformation caseRealLiteral(RealLiteral object) {
+
+	private def String MathOperationParenthesisHandler(boolean enforceOperationsOrder, String code) {
+
+		if (enforceOperationsOrder) {
+			return '''(«code»)''';
+
+		} else {
+			return code;
+
+		}
+	}
+
+	protected def String CreateMathOperationString(String mathOperator, ReturnInformation left,
+		ReturnInformation right) {
+		var returnVal = MathOperationParenthesisHandler(left.enforceOperationsOrder, left.code)
+
+		returnVal += " " + mathOperator + " ";
+		
+		returnVal += MathOperationParenthesisHandler(right.enforceOperationsOrder, right.code)
+
+		return returnVal;
+
+	}
+
+	override ReturnInformation caseRealLiteral(RealLiteral object) {
 		var retInfo = new ReturnInformation();
 		retInfo.type = SVType.Real;
 		retInfo.value = convertTypeToObject(retInfo.type, object);
@@ -76,7 +101,9 @@ class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 		val doSwitchLeft = doSwitch(object.left);
 		val doSwitchRight = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» * «doSwitchRight.code»''';
+		retVal.code = CreateMathOperationString("*", doSwitchLeft, doSwitchRight);
+//		retVal.code = '''«doSwitchLeft.code» * «doSwitchRight.code»''';
+		retVal.enforceOperationsOrder = true;
 		return retVal;
 	}
 
@@ -84,7 +111,25 @@ class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 		val doSwitchLeft = doSwitch(object.left);
 		val doSwitchRight = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» / «doSwitchRight.code»''';
+		retVal.code = CreateMathOperationString("/", doSwitchLeft, doSwitchRight);
+//		retVal.code = '''«doSwitchLeft.code» / «doSwitchRight.code»''';
+		retVal.type = SVType.Real;
+		retVal.forceType = true;
+		retVal.enforceOperationsOrder = true;
+		return retVal;
+	}
+
+	override ReturnInformation casePassedTime(PassedTime object) {
+		var retVal = new ReturnInformation();
+		retVal.code = '''dt''';
+		retVal.type = SVType.Real;
+		retVal.forceType = true;
+		return retVal;
+	}
+
+	override ReturnInformation caseMinorStepSize(MinorStepSize object) {
+		var retVal = new ReturnInformation();
+		retVal.code = '''h''';
 		retVal.type = SVType.Real;
 		retVal.forceType = true;
 		return retVal;
@@ -98,8 +143,8 @@ class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 
 		return retVal;
 	}
-	
-		override ReturnInformation caseMin(Min object) {
+
+	override ReturnInformation caseMin(Min object) {
 		var retInfo = new ReturnInformation();
 		var doSwitchResCode = newArrayList();
 		for (expr : object.args) {
@@ -115,7 +160,9 @@ class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 		val doSwitchLeft = doSwitch(object.left);
 		val doSwitchRight = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» - «doSwitchRight.code»''';
+		retVal.code = CreateMathOperationString("-", doSwitchLeft, doSwitchRight);
+//		retVal.code = '''«doSwitchLeft.code» - «doSwitchRight.code»''';
+		retVal.enforceOperationsOrder = true;
 		return retVal;
 	}
 
@@ -123,106 +170,94 @@ class BasicConditionSwitch extends SemanticAdaptationSwitch<ReturnInformation> {
 		val doSwitchLeft = doSwitch(object.left);
 		val doSwitchRight = doSwitch(object.right);
 		var retVal = new ReturnInformation(doSwitchLeft, doSwitchRight);
-		retVal.code = '''«doSwitchLeft.code» + «doSwitchRight.code»''';
+		retVal.code = CreateMathOperationString("+", doSwitchLeft, doSwitchRight);
+//		retVal.code = '''«doSwitchLeft.code» + «doSwitchRight.code»''';
+		retVal.enforceOperationsOrder = true;
 		return retVal;
 	}
-	
-	override ReturnInformation caseGreaterThan(GreaterThan object)
-	{
+
+	override ReturnInformation caseGreaterThan(GreaterThan object) {
 		var ret = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
 		val code = '''«left.code» > «right.code»'''
-		if(!Conversions.isTypeANumber(left.type) || !Conversions.isTypeANumber(right.type))
-		{
+		if (!Conversions.isTypeANumber(left.type) || !Conversions.isTypeANumber(right.type)) {
 			throw new TypeException('''Wrong types at: «code»''');
 		}
 		ret.type = SVType.Boolean;
 		ret.code = code;
 		return ret;
 	}
-	
-	override ReturnInformation caseGreaterThanOrEquals(GreaterThanOrEquals object)
-	{
+
+	override ReturnInformation caseGreaterThanOrEquals(GreaterThanOrEquals object) {
 		var ret = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
 		val code = '''«left.code» >= «right.code»'''
-		if(!Conversions.isTypeANumber(left.type) || !Conversions.isTypeANumber(right.type))
-		{
+		if (!Conversions.isTypeANumber(left.type) || !Conversions.isTypeANumber(right.type)) {
 			throw new TypeException('''Wrong types at: «code»''');
 		}
 		ret.type = SVType.Boolean;
 		ret.code = code;
 		return ret;
 	}
-	
-	override ReturnInformation caseNotEquals(NotEquals object)
-	{
+
+	override ReturnInformation caseNotEquals(NotEquals object) {
 		var ret = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
 		val code = '''«left.code» != «right.code»'''
-		if(left.type !== right.type)
-		{
+		if (left.type !== right.type) {
 			throw new TypeException('''Wrong types at: «code»''');
 		}
 		ret.type = SVType.Boolean;
 		ret.code = code;
 		return ret;
 	}
-	
-	override ReturnInformation caseLessThan(LessThan object)
-	{
+
+	override ReturnInformation caseLessThan(LessThan object) {
 		var ret = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
 		val code = '''«left.code» < «right.code»'''
-		if(!Conversions.isTypeANumber(left.type) || !Conversions.isTypeANumber(right.type))
-		{
+		if (!Conversions.isTypeANumber(left.type) || !Conversions.isTypeANumber(right.type)) {
 			throw new TypeException('''Wrong types at: «code»''');
 		}
 		ret.type = SVType.Boolean;
 		ret.code = code;
 		return ret;
 	}
-	
-	override ReturnInformation caseNot(Not object)
-	{
+
+	override ReturnInformation caseNot(Not object) {
 		var ret = new ReturnInformation();
 		val res = doSwitch(object.left);
-		if(res.type !== SVType.Boolean)
-		{
+		if (res.type !== SVType.Boolean) {
 			throw new TypeException('''Wrong types at: «res.code»''');
 		}
 		ret.type = SVType.Boolean;
 		ret.code = res.code;
 		return ret;
 	}
-	
-	override ReturnInformation caseAnd(And object)
-	{
+
+	override ReturnInformation caseAnd(And object) {
 		var ret = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
 		val code = '''«left.code» && «right.code»'''
-		if(left.type !== SVType.Boolean || right.type !== SVType.Boolean)
-		{
+		if (left.type !== SVType.Boolean || right.type !== SVType.Boolean) {
 			throw new TypeException('''Wrong types at: «code»''');
 		}
 		ret.type = SVType.Boolean;
 		ret.code = code;
 		return ret;
 	}
-	
-	override ReturnInformation caseOr(Or object)
-	{
+
+	override ReturnInformation caseOr(Or object) {
 		var ret = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
 		val code = '''«left.code» || «right.code»'''
-		if(left.type !== SVType.Boolean || right.type !== SVType.Boolean)
-		{
+		if (left.type !== SVType.Boolean || right.type !== SVType.Boolean) {
 			throw new TypeException('''Wrong types at: «code»''');
 		}
 		ret.type = SVType.Boolean;

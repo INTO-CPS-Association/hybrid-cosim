@@ -137,7 +137,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			 * TODO: Do for inVars
 			 */
 			for (Port port : outPortsWithSrcDep) {
-				val name = '''stored_«port.sourcedependency.owner.name»_«port.sourcedependency.port.name»;''';
+				val name = '''stored_«port.sourcedependency.owner.name»_«port.sourcedependency.port.name»''';
 				val type = mappedScalarVariables.get(port.sourcedependency.owner.name).get(
 					port.sourcedependency.port.name).mappedSv.type;
 				val globVar = new GlobalInOutVariable(name, type);
@@ -299,7 +299,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 			for (fmuEntries : map.entrySet) {
 				for (MappedScalarVariable mSV : fmuEntries.value.values) {
-					defines.add("#define " + mSV.define + " " + mSV.valueReference);
+					defines.add("#define " + mSV.define.replace('(','_').replace(')','_') + " " + mSV.valueReference);
 				}
 			}
 
@@ -377,6 +377,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					#define SRC_«adapClassName.toUpperCase»_H
 				
 					#include "SemanticAdaptation.h"
+					#include "HyfMath.h"
 					#include <memory>
 					#include "Fmu.h"
 					
@@ -467,12 +468,14 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			} else if (machineType == MooreOrMealy.MEALY) {
 				initialisations.add('''this->machineType = MooreOrMealy::Mealy;''');
 			}
-
+			var pathCount = 1;
 			for (fmu : fmus) {
+				val pathName = '''path«pathCount»''';
+				pathCount++;
 				initialisations.add('''
-					auto path = make_shared<string>(*resourceLocation);
-					path->append(string("«fmu.typeName».fmu"));
-					auto «fmu.name»Fmu = make_shared<fmi2::Fmu>(*path);
+					auto «pathName» = make_shared<string>(*resourceLocation);
+					«pathName»->append(string("«fmu.typeName».fmu"));
+					auto «fmu.name»Fmu = make_shared<fmi2::Fmu>(*«pathName»);
 					«fmu.name»Fmu->initialize();
 					this->«fmu.name» = «fmu.name»Fmu->instantiate("«fmu.name»",fmi2CoSimulation, "«fmu.guid»", true, true, shared_from_this());
 					

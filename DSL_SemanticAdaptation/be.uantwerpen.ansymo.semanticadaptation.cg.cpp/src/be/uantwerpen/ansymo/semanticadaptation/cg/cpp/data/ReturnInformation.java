@@ -12,7 +12,10 @@ public class ReturnInformation {
 	private SAScalarVariable ConSaSv;
 	private GlobalInOutVariable conGlobVar;
 	private boolean forceType = false;
+	// Related to for-loops, while-loops and if constructs, such that ; is not appended
 	private boolean isExpression = false;
+	// Related to parenthesis
+	private boolean enforceOperationsOrder = false;
 
 	public ReturnInformation() {
 		// TODO Auto-generated constructor stub
@@ -30,12 +33,21 @@ public class ReturnInformation {
 		this.code = code;
 	}
 
+
 	public void setIsExpression(boolean isExpression) {
 		this.isExpression = isExpression;
 	}
 
 	public boolean getIsExpression() {
 		return this.isExpression;
+	}
+
+	public boolean isEnforceOperationsOrder() {
+		return this.enforceOperationsOrder;
+	}
+
+	public void setEnforceOperationsOrder(boolean enforceOperationsOrder) {
+		this.enforceOperationsOrder = enforceOperationsOrder;
 	}
 
 	public SVType getType() throws Exception {
