@@ -632,6 +632,12 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		def String removeEmptyArgumentParenthesis(String content) {
 			return content.substring(0, content.length - 2);
 		}
+		
+		def String removeArgumentParenthesis(String content) {
+			val startParen = content.indexOf('(');
+			
+			return content.substring(0,startParen);
+		}
 
 		/*
 		 * Calculates necessary information on global in/out variables
@@ -688,9 +694,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					'''
 							list->push_back(
 								(Rule<«adaptationClassName»>){
-									&«adaptationClassName»::«visitor.functionSignatures.get(i).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»,
-									&«adaptationClassName»::«visitor.functionSignatures.get(i+1).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»,
-									&«adaptationClassName»::«visitor.functionSignatures.get(i+2).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»
+									&«adaptationClassName»::«visitor.functionSignatures.get(i).SplitAtSpaceAndRemoveFirst.removeArgumentParenthesis»,
+									&«adaptationClassName»::«visitor.functionSignatures.get(i+1).SplitAtSpaceAndRemoveFirst.removeArgumentParenthesis»,
+									&«adaptationClassName»::«visitor.functionSignatures.get(i+2).SplitAtSpaceAndRemoveFirst.removeArgumentParenthesis»
 								});
 							
 						''');
@@ -760,9 +766,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					'''
 						list->push_back(
 							(Rule<«adaptationClassName»>){
-								&«depFunctionSource.get(i).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»,
-								&«depFunctionSource.get(i+1).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»,
-								&«depFunctionSource.get(i+2).SplitAtSpaceAndRemoveFirst.removeEmptyArgumentParenthesis»
+								&«depFunctionSource.get(i).SplitAtSpaceAndRemoveFirst.removeArgumentParenthesis»,
+								&«depFunctionSource.get(i+1).SplitAtSpaceAndRemoveFirst.removeArgumentParenthesis»,
+								&«depFunctionSource.get(i+2).SplitAtSpaceAndRemoveFirst.removeArgumentParenthesis»
 							});
 						
 					''');
