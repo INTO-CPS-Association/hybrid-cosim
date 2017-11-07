@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="windows-1252"?>
 <?eclipse version="3.0"?>
 <plugin>
+   <extension-point id="generator_extension" name="generator_extension" schema="schema/generator_extension.exsd"/>
 	<extension point="org.eclipse.emf.ecore.generated_package">
 		<package 
 			uri = "http://www.uantwerpen.be/ansymo/semanticadaptation/SemanticAdaptation"

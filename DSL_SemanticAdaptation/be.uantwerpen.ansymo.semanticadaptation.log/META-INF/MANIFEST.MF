@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: be.uantwerpen.ansymo.semanticadaptation.log
+Bundle-Vendor: University of Antwerp, Ansymo Lab
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: be.uantwerpen.ansymo.semanticadaptation.log; singleton:=true
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Import-Package: org.apache.log4j
+Export-Package: be.uantwerpen.ansymo.semanticadaptation.log
+Require-Bundle: org.eclipse.xtext.xbase.lib;bundle-version="2.11.0"

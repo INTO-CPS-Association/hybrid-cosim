@@ -73,7 +73,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			 * The mappedSV contains the original scalar variable and extra data such as define name.
 			 */
 			var LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mappedScalarVariables = newLinkedHashMap();
-
+			
 			/*
 			 * Loading the FMU defined in InnerFMU, the related model description file and its scalar variables.
 			 */

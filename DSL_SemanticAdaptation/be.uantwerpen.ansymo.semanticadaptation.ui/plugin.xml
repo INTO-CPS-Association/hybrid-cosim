@@ -407,4 +407,19 @@
 			type="text">
 		</fileTypes>
 	</extension>
+ <extension
+       point="org.eclipse.ui.newWizards">
+        <category
+            id="be.uantwerpen.ansymo.semanticadaptation.ui.wizard.category"
+            name="Semantic Adaptation">
+      </category>
+    <wizard
+            
+            class="be.uantwerpen.ansymo.semanticadaptation.ui.wizard.SaNewFileWizard"
+            id="be.uantwerpen.ansymo.semanticadaptation.ui.ui.newFileWizard"
+            name="%newSAWizardName"
+            category="be.uantwerpen.ansymo.semanticadaptation.ui.wizard.category"
+            project="false">
+      </wizard>
+ </extension>
 </plugin>

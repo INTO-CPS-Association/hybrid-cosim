@@ -21,7 +21,6 @@ import java.util.regex.Pattern
 import org.apache.commons.io.FileUtils
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.ResourceSet
-import org.eclipse.xtext.generator.IGeneratorContext
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
 import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
@@ -32,6 +31,7 @@ import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.eclipse.xtext.generator.IGeneratorContext
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)

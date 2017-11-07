@@ -3,7 +3,6 @@
  */
 package be.uantwerpen.ansymo.semanticadaptation.formatting2
 
-import be.uantwerpen.ansymo.semanticadaptation.generator.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlRule
@@ -11,6 +10,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Statement
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
 import org.eclipse.xtext.formatting2.AbstractFormatter2
 import org.eclipse.xtext.formatting2.IFormattableDocument
 
