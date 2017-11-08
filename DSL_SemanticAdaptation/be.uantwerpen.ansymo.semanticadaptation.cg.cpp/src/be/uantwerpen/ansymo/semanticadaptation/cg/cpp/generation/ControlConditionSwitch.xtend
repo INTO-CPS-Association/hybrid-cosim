@@ -1,26 +1,24 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation
 
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.GlobalInOutVariable
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ReturnInformation
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BreakStatement
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ControlRuleBlock
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStep
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GetNextInternalTimeStep
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SaveState
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.util.LinkedHashMap
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SaveState
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BreakStatement
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
-import java.util.List
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GetNextInternalTimeStep
 
 class ControlConditionSwitch extends RulesConditionSwitch {
 
