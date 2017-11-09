@@ -64,6 +64,11 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			"powerwindow");
 	}
 
+	@Test def getSetState_sa() {
+		__parseNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated',
+			"getSetState");
+	}
+
 	@Test def lazy_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
 	}

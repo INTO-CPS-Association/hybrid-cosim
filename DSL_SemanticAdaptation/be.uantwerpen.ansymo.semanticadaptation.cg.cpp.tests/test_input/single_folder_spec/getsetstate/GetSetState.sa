@@ -1,0 +1,42 @@
+semantic adaptation reactive mealy GetSetStateSA getSetStateSA
+at "./path/to/GetSetStateSA.fmu"
+
+	for inner fmu GetSetState getSetState
+		at "test_input/single_folder_spec/getsetstate/GetSetState.fmu"
+		with input ports valve
+		with output ports level
+
+input ports 	valve
+
+output ports	level
+
+control rules {
+	save_state(getSetState);
+	var H_getSetState := do_step(getSetState, t, H);
+	if(dt < 1.0 and dt > 0.5)
+	{	
+		rollback(getSetState);
+	}
+	return H_getSetState;
+}
+
+in var 	stored_getsetstatesa_valve := false;
+
+in rules {
+	true -> {
+		stored_getsetstatesa_valve := getSetStateSA.valve;
+	} --> {
+		getSetState.valve := stored_getsetstatesa_valve;
+	};
+}
+
+out var stored_getsetstatesa_level := 1.0;
+
+out rules {
+	true -> {
+		stored_getsetstatesa_level := getSetState.level;
+	} --> {
+		getSetStateSA.level := stored_getsetstatesa_level;
+	};
+	
+}
