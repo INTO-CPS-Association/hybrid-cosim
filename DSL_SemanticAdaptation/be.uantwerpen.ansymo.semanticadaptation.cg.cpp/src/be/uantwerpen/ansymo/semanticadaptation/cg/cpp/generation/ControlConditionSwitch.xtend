@@ -74,7 +74,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 		var retVal = new ReturnInformation();
 
 		val functionPrefix = "double ";
-		val functionNameArgs = "executeInternalControlFlow(double H, double t)"
+		val functionNameArgs = "executeInternalControlFlow(double t, double H)"
 		functionSignatures.add(functionPrefix + functionNameArgs);
 				
 		val code = '''
