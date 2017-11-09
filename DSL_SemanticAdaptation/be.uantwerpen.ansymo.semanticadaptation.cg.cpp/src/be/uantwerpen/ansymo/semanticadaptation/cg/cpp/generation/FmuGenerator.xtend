@@ -35,7 +35,7 @@ class FmuGenerator {
 			std::string m(message);
 			if (g_functions != NULL)
 			{
-				log(g_functions, g_adaptation->getComponent(), "", fmi2Error, "error", (base + m).c_str(), "");
+				log(g_functions, g_functions->componentEnvironment, "", fmi2Error, "error", (base + m).c_str(), "");
 			}
 		}
 		
@@ -44,7 +44,7 @@ class FmuGenerator {
 		{
 			if (g_functions != NULL)
 			{
-				log(g_functions, g_adaptation->getComponent(), name->c_str(), fmi2OK, "logAll", message, arg);
+				log(g_functions, g_functions->componentEnvironment, name->c_str(), fmi2OK, "logAll", message, arg);
 			}
 		}
 		
