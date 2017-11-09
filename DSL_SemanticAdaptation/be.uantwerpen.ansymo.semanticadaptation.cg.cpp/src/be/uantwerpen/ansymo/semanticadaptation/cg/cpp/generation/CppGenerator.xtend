@@ -582,7 +582,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					'''
 						«functionSignature»
 						{
-							«Utilities.getDebug2('''printf("«adapClassName»::setFmiValue(%u,?)",id);''')»
+							«Utilities.getDebug2('''printf("«adapClassName»::setFmiValue(%d,?)",id);''')»
 							«IF convertedSASVsOrdered.containsKey(type)»
 								switch (id)	
 									{
