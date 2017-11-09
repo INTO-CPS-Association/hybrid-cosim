@@ -24,6 +24,7 @@ public class ModelDescriptionBuilder {
 	private DocumentBuilder docBuilder;
 	private Document doc;
 	private Element rootElement;
+	private Element coSimulation;
 	private Element modelVariables;
 	private Element outputs;
 	private int valueReferenceCounter = 1;
@@ -42,7 +43,34 @@ public class ModelDescriptionBuilder {
 		rootElement.setAttribute("modelName", modelName);
 		rootElement.setAttribute("guid", guid);
 		rootElement.setAttribute("variableNamingConvention", "flat");
-
+		rootElement.setAttribute("generationTool", "BaseSA");
+		rootElement.setAttribute("numberOfEventIndicators", "0");
+		rootElement.setAttribute("copyright", "Aarhus University and University of Antwerpen");
+		rootElement.setAttribute("license", "MIT");
+		
+		coSimulation = doc.createElement("CoSimulation");
+		coSimulation.setAttribute("modelIdentifier", modelName);
+		coSimulation.setAttribute("needsExecutionTool", "false");
+		coSimulation.setAttribute("canHandleVariableCommunicationStepSize", "true");
+		coSimulation.setAttribute("canInterpolateInputs", "true");
+		coSimulation.setAttribute("maxOutputDerivativeOrder", "0");
+		coSimulation.setAttribute("canRunAsynchronuously", "false");
+		coSimulation.setAttribute("canBeInstantiatedOnlyOncePerProcess", "true");
+		coSimulation.setAttribute("canNotUseMemoryManagementFunctions", "true");
+		coSimulation.setAttribute("canGetAndSetFMUstate", "true");
+		coSimulation.setAttribute("canSerializeFMUstate", "false");
+		coSimulation.setAttribute("providesDirectionalDerivative", "false");
+		rootElement.appendChild(coSimulation);
+		
+		Element logCategories = doc.createElement("LogCategories");
+		for(String c : new String[] {"logAll", "logError", "logFmiCall", "logEvent"})
+		{
+			Element cat = doc.createElement("Category");
+			cat.setAttribute("name", c);
+			logCategories.appendChild(cat);
+		}
+		rootElement.appendChild(logCategories);
+		
 		modelVariables = doc.createElement("ModelVariables");
 		rootElement.appendChild(modelVariables);
 
