@@ -8,4 +8,12 @@ class Utilities {
 		printf("Invoking «functionName»");
 	#endif SA_DEBUG	''';
 }
+def static String getDebug2(String printf){
+
+	return '''
+	#ifdef SA_DEBUG
+		«printf»
+	#endif SA_DEBUG	''';
+}
+
 }
