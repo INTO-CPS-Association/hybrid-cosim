@@ -10,7 +10,9 @@ input ports 	valve
 
 output ports	level
 
+control var test := 0;
 control rules {
+	test := test + 1;
 	save_state(getSetState);
 	var H_getSetState := do_step(getSetState, t, H);
 	if(t < 1.0 and t > 0.5)
