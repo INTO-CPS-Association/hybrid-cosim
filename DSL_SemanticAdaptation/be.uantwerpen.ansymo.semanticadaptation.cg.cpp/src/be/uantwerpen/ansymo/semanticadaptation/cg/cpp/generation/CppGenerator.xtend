@@ -531,6 +531,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						'''
 							«functionSignature»
 							{
+								«Utilities.getDebug(functionSignature)»
 								switch (id)
 								{
 									«FOR svInner : convertedSASVsOrdered.get(type)»
@@ -553,6 +554,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						'''
 							«functionSignature»
 							{
+								«Utilities.getDebug(functionSignature)»
 								«functionReturn»;
 							}
 						'''
@@ -575,10 +577,12 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			var convertedSASVsOrdered = convertedSASVs.groupBy[type];
 
 			for (SVType type : SVType.values) {
+				val functionSignature = '''void «adapClassName»::setFmiValue(fmi2ValueReference id, «Conversions.fmiTypeToCppType(type)» value)''';
 				cpp.add(
 					'''
-						void «adapClassName»::setFmiValue(fmi2ValueReference id, «Conversions.fmiTypeToCppType(type)» value)
+						«functionSignature»
 						{
+							«Utilities.getDebug(functionSignature)»
 							«IF convertedSASVsOrdered.containsKey(type)»
 								switch (id)	
 									{
