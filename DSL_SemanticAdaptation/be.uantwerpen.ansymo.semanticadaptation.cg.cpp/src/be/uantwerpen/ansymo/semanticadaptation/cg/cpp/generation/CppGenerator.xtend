@@ -264,6 +264,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				// Compile the fmu.cpp file
 				val fmuCppFile = FmuGenerator.genFmuCppFile(adapClassName);
 				fsa.generateFile("Fmu.cpp", fmuCppFile);
+				
+				fsa.generateFile("CMakeLists.txt",CMakeListsGenerator.generateCMakeLists(adapExternalName))
+				fsa.generateFile("msys-toolchain.cmake",CMakeListsGenerator.generateToolChainCmake());
 
 			}
 		}

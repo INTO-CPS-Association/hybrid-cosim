@@ -65,8 +65,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	}
 
 	@Test def getSetState_sa() {
-		__parseNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated',
-			"getSetState");
+		__parseNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated', "getSetState");
 	}
 
 	@Test def lazy_canonical() {
@@ -74,7 +73,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 	}
 
 	@Test def loop() {
-		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "loop");
+		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "LoopSA");
 	}
 
 	@Test def rate() {
@@ -170,7 +169,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			val fName = files.key.substring(14);
 
 			var File fp;
-			if (fName.equals("modelDescription.xml")) {
+			if (fName.equals("modelDescription.xml") || fName.equals("CMakeLists.txt") || fName.equals("msys-toolchain.cmake")) {
 				fp = new File(saRootDir, fName);
 			} else {
 				fp = new File(srcGenPath, fName);
@@ -188,12 +187,11 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			BuildUtilities.copyFile(rf, sinkFile);
 		}
 
-		BuildUtilities.writeToFile(new File(saRootDir, "CMakeLists.txt"),
-			CMakeListsGenerator.generateCMakeLists(projectName));
-
-		val cMakeToolChain = CMakeListsGenerator.generateToolChainCmake();
-		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
-
+//		BuildUtilities.writeToFile(new File(saRootDir, "CMakeLists.txt"),
+//			CMakeListsGenerator.generateCMakeLists(projectName));
+//
+//		val cMakeToolChain = CMakeListsGenerator.generateToolChainCmake();
+//		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
 		if (!CMakeUtil.windows) {
 			val cmake = new CMakeUtil(true)
 			FileUtils.copyDirectory(hcfRoot, new File(saRootDir, "hcf"), new FileFilter() {
@@ -205,7 +203,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 			})
 			Assert.assertTrue("Expected cmake to parse", cmake.generate(saRootDir));
 			Assert.assertTrue("Expected no make errors", cmake.make(saRootDir));
-			Assert.assertTrue("Failed to pack the FMU", cmake.make(saRootDir,"pack"));
+			Assert.assertTrue("Failed to pack the FMU", cmake.make(saRootDir, "pack"));
 		}
 	}
 

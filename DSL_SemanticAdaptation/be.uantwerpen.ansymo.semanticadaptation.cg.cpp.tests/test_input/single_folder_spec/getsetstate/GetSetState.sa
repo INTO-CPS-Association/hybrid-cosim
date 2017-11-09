@@ -13,7 +13,7 @@ output ports	level
 control rules {
 	save_state(getSetState);
 	var H_getSetState := do_step(getSetState, t, H);
-	if(dt < 1.0 and dt > 0.5)
+	if(t < 1.0 and t > 0.5)
 	{	
 		rollback(getSetState);
 	}
