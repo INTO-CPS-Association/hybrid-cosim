@@ -162,6 +162,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 		val functionSignature = createFunctionSignature("condition", "bool", this.count, this.functionSignatures);
 		retVal.code = '''
 			«functionSignature»{
+				«Utilities.getDebug(functionSignature)»
 				return «doSwitch(object.condition).code»;
 			}
 		''';
@@ -175,6 +176,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 		val functionSig = createFunctionSignature("body", "void", this.count, this.functionSignatures);
 		retVal.code = '''
 			«functionSig»{
+				«Utilities.getDebug(functionSig)»
 				«IF object.expression !== null»
 					«val result = doSwitch(object.expression)»
 					«result.code»«if (!result.isExpression) ";"»
@@ -280,6 +282,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 		val functionSig = createFunctionSignature("flush", "void", this.count, this.functionSignatures);
 		retVal.code = '''
 			«functionSig»{
+				«Utilities.getDebug(functionSig)»
 				«FOR stm : object.statements»
 					«val result = doSwitch(stm)»
 					«result.code»«if(!result.isExpression) ";"»

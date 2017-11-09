@@ -79,6 +79,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 				
 		val code = '''
 		«functionPrefix+this.adaptationClassName»::«functionNameArgs» {
+			«Utilities.getDebug(functionPrefix+this.adaptationClassName + "::" + functionNameArgs)»
 			«FOR ruleStm : object.controlRulestatements»
 			«val result = doSwitch(ruleStm)»
 			«result.code»«if (!result.isExpression) ";"»
