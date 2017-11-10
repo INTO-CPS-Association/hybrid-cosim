@@ -7,7 +7,7 @@ class Utilities {
 	#ifdef SA_DEBUG
 		printf("Invoking «functionName»");
 		printf("\n");
-	#endif SA_DEBUG	''';
+	#endif	''';
 }
 def static String getDebug2(String printf){
 
@@ -15,7 +15,7 @@ def static String getDebug2(String printf){
 	#ifdef SA_DEBUG
 		«printf»
 		printf("\n");
-	#endif SA_DEBUG	''';
+	#endif	''';
 }
 
 }
