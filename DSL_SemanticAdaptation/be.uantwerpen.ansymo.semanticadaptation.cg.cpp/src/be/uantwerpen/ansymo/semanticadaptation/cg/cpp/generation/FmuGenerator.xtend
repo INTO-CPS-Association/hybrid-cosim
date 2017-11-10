@@ -259,15 +259,15 @@ class FmuGenerator {
 		
 		extern "C" fmi2Status fmi2GetFMUstate(fmi2Component c, fmi2FMUstate* FMUstate)
 		{
-		 return g_adaptation->fmi2GetFMUstate(c,FMUstate);
+		 return g_adaptation->fmi2GetFMUstate(FMUstate);
 		}
 		extern "C" fmi2Status fmi2SetFMUstate(fmi2Component c, fmi2FMUstate FMUstate)
 		{
-		 return g_adaptation->fmi2SetFMUstate(c,FMUstate);
+		 return g_adaptation->fmi2SetFMUstate(FMUstate);
 		}
 		extern "C" fmi2Status fmi2FreeFMUstate(fmi2Component c, fmi2FMUstate* FMUstate)
 		{
-		 return g_adaptation->fmi2FreeFMUstate(c,FMUstate);
+		 return g_adaptation->fmi2FreeFMUstate(FMUstate);
 		}
 		
 		extern "C" fmi2Status fmi2SerializedFMUstateSize(fmi2Component c, fmi2FMUstate FMUstate, size_t *size)
