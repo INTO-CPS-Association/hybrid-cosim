@@ -1,0 +1,166 @@
+Building FMU (Visual C++) 
+64-bit mode activated. 
+Compiling the model (Visual C++) with FMI. 
+ 
+fmi2Functions.c
+dsmodel.c
+C:/Program Files (x86)/Dymola 2017 FD01\source\matrixop.h(186) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+C:/Program Files (x86)/Dymola 2017 FD01\source\matrixop.h(1001) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(156) : warning C4090: 'function' : different 'const' qualifiers
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3128) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3514) : warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3562) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3572) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3581) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3590) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3602) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3612) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3622) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(3707) : warning C4267: 'function' : conversion from 'size_t' to 'SizeType', possible loss of data
+C:/Program Files (x86)/Dymola 2017 FD01\source\ModelicaStrings.c(94) : warning C4267: 'initializing' : conversion from 'size_t' to 'int', possible loss of data
+C:/Program Files (x86)/Dymola 2017 FD01\source\ModelicaStrings.c(127) : warning C4267: 'return' : conversion from 'size_t' to 'int', possible loss of data
+C:/Program Files (x86)/Dymola 2017 FD01\source\ModelicaStrings.c(225) : warning C4244: 'return' : conversion from '__int64' to 'int', possible loss of data
+Generating Code...
+   Creating library ~FMUOutput\binaries\win64\Window.lib and object ~FMUOutput\binaries\win64\Window.exp
+Compiling the model (Visual C++) with FMI. 
+ 
+fmi2Functions.c
+dsmodel.c
+c:\program files (x86)\dymola 2017 fd01\source\matrixop.c(156) : warning C4090: 'function' : different 'const' qualifiers
+Generating Code...
+   Creating library ~FMUOutput\binaries\win32\Window.lib and object ~FMUOutput\binaries\win32\Window.exp
+Adding [modelDescription.xml] ... OK
+Adding [binaries\win32\Window.dll] ... OK
+Adding [binaries\win64\Window.dll] ... OK
+Adding [sources\adymosim.h] ... OK
+Adding [sources\Air.h] ... OK
+Adding [sources\all.c] ... OK
+Adding [sources\amach.h] ... OK
+Adding [sources\amat.h] ... OK
+Adding [sources\assumption.h] ... OK
+Adding [sources\atraj.h] ... OK
+Adding [sources\bloutil.h] ... OK
+Adding [sources\conf.h] ... OK
+Adding [sources\csvutil.h] ... OK
+Adding [sources\cvode\cvode.h] ... OK
+Adding [sources\cvode\cvode_dense.h] ... OK
+Adding [sources\cvode\cvode_direct.h] ... OK
+Adding [sources\cvode\LICENSE] ... OK
+Adding [sources\cvode.c] ... OK
+Adding [sources\cvode_dense.c] ... OK
+Adding [sources\cvode_direct.c] ... OK
+Adding [sources\cvode_direct_impl.h] ... OK
+Adding [sources\cvode_impl.h] ... OK
+Adding [sources\cvode_io.c] ... OK
+Adding [sources\delay.c] ... OK
+Adding [sources\delay.h] ... OK
+Adding [sources\dlldata.h] ... OK
+Adding [sources\dlldata_impl.h] ... OK
+Adding [sources\dsblock.h] ... OK
+Adding [sources\dsblock1.c] ... OK
+Adding [sources\dsblock2.c] ... OK
+Adding [sources\dsblock3.c] ... OK
+Adding [sources\dsblock4.c] ... OK
+Adding [sources\dsblock5.c] ... OK
+Adding [sources\dsblock6.c] ... OK
+Adding [sources\dsdefs.h] ... OK
+Adding [sources\dse_macros.h] ... OK
+Adding [sources\dsmodel.c] ... OK
+Adding [sources\dsmodel_fmu.h] ... OK
+Adding [sources\dsmodel_fmuconf.h] ... OK
+Adding [sources\dsutil.h] ... OK
+Adding [sources\dymf2c.c] ... OK
+Adding [sources\dymosim.h] ... OK
+Adding [sources\dymtable.c] ... OK
+Adding [sources\dymtable.h] ... OK
+Adding [sources\dymutil.h] ... OK
+Adding [sources\extendedIncludes.h] ... OK
+Adding [sources\f2c.h] ... OK
+Adding [sources\fmi2Functions.c] ... OK
+Adding [sources\fmi2Functions_fwd.h] ... OK
+Adding [sources\fmi2Import.h] ... OK
+Adding [sources\fmiCommonFunctions_int.c] ... OK
+Adding [sources\fmiCoSimFunctions_int.c] ... OK
+Adding [sources\fmiFunctions.c] ... OK
+Adding [sources\fmiFunctions_.h] ... OK
+Adding [sources\fmiFunctions_1.0_fwd.h] ... OK
+Adding [sources\fmiFunctions_fwd.h] ... OK
+Adding [sources\fmiMEFunctions_int.c] ... OK
+Adding [sources\fmiModelFunctions_.h] ... OK
+Adding [sources\fmiModelIdentifier.h] ... OK
+Adding [sources\fmiPlatformTypes_.h] ... OK
+Adding [sources\FMIversionPrefix.h] ... OK
+Adding [sources\gconstructor.h] ... OK
+Adding [sources\GenerateResultInNonDymosim.h] ... OK
+Adding [sources\GenericRefrigerant.hpp] ... OK
+Adding [sources\HDR81.h] ... OK
+Adding [sources\integration.c] ... OK
+Adding [sources\integration.h] ... OK
+Adding [sources\jac.c] ... OK
+Adding [sources\jac.h] ... OK
+Adding [sources\libdssetup.h] ... OK
+Adding [sources\localeless.cpp] ... OK
+Adding [sources\localeless.h] ... OK
+Adding [sources\matrixop.c] ... OK
+Adding [sources\matrixop.h] ... OK
+Adding [sources\matrixop1.h] ... OK
+Adding [sources\matutil.c] ... OK
+Adding [sources\matutil.h] ... OK
+Adding [sources\memdebug.c] ... OK
+Adding [sources\memdebug.h] ... OK
+Adding [sources\ModelicaFFT.c] ... OK
+Adding [sources\ModelicaInternal.c] ... OK
+Adding [sources\ModelicaIO.c] ... OK
+Adding [sources\ModelicaIO.h] ... OK
+Adding [sources\ModelicaMatIO.c] ... OK
+Adding [sources\ModelicaMatIO.h] ... OK
+Adding [sources\ModelicaRandom.c] ... OK
+Adding [sources\ModelicaStandardTables.c] ... OK
+Adding [sources\ModelicaStandardTables.h] ... OK
+Adding [sources\ModelicaStrings.c] ... OK
+Adding [sources\ModelicaUtilities.h] ... OK
+Adding [sources\moutil.c] ... OK
+Adding [sources\nvector\nvector_serial.h] ... OK
+Adding [sources\nvector_serial.c] ... OK
+Adding [sources\R11.h] ... OK
+Adding [sources\R1233zd.dll] ... OK
+Adding [sources\R1233zd.h] ... OK
+Adding [sources\R134a.h] ... OK
+Adding [sources\R22.h] ... OK
+Adding [sources\R290.h] ... OK
+Adding [sources\R32.h] ... OK
+Adding [sources\R404A.dll] ... OK
+Adding [sources\R404A.h] ... OK
+Adding [sources\R407C.h] ... OK
+Adding [sources\R410A.dll] ... OK
+Adding [sources\R410A.h] ... OK
+Adding [sources\R448A.h] ... OK
+Adding [sources\R717.h] ... OK
+Adding [sources\R744.h] ... OK
+Adding [sources\Refrigerant.h] ... OK
+Adding [sources\result.h] ... OK
+Adding [sources\sprwat.h] ... OK
+Adding [sources\ss2dym_rt_omp.c] ... OK
+Adding [sources\sundials\sundials_config.h] ... OK
+Adding [sources\sundials\sundials_dense.h] ... OK
+Adding [sources\sundials\sundials_direct.h] ... OK
+Adding [sources\sundials\sundials_math.h] ... OK
+Adding [sources\sundials\sundials_nvector.h] ... OK
+Adding [sources\sundials\sundials_types.h] ... OK
+Adding [sources\sundials_dense.c] ... OK
+Adding [sources\sundials_direct.c] ... OK
+Adding [sources\sundials_math.c] ... OK
+Adding [sources\sundials_nvector.c] ... OK
+Adding [sources\types.h] ... OK
+Adding [sources\userdefs.h] ... OK
+Adding [sources\userfunc.c] ... OK
+Adding [sources\usertab.h] ... OK
+Adding [sources\uthash.h] ... OK
+Adding [sources\util.c] ... OK
+Adding [sources\util.h] ... OK
+Adding [sources\win32_dirent.c] ... OK
+Adding [sources\win32_dirent.h] ... OK
+Adding [documentation\_main.html] ... OK
+ 
+Successful creation of Window.fmu. 
+ 

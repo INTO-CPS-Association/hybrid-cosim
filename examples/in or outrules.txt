@@ -1,0 +1,62 @@
+semantic adaptation reactive/delayed mealy/moore ExtFmu ext_fmu
+at "./path/to/ExtFmu.fmu"
+	
+	for inner fmu FMU1 fmu1
+		at "./path/to/FMU1.fmu"
+		with input ports In (m)
+		with output ports Out(m)
+	
+	for inner fmu FMU2 fmu2
+		at "./path/to/FMU2.fmu"
+		with input ports In (m)
+		with output ports Out (m)
+	
+input ports in1, out2
+
+output ports in1, out2
+
+param 	INIT_IN1 := 0.0,
+		INIT_OUT1 := 0.0,
+		INIT_IN2 := 0.0,
+		INIT_OUT2 := 0.0;
+
+control rules {
+	for (var iter in 1 .. 3) {
+		do_step(fmu1,t+(H/2*iter),H/2);
+		do_step(fmu2,t+(H/2*iter),H/2);	
+	}
+	return H;
+}
+
+in var 	stored_in1 := INIT_IN1,
+		stored_in2 := INIT_IN2;
+in rules {
+	true -> {
+		stored_in1 := ext_fmu.in1;
+	} --> {
+		fmu1.In := stored_in1;
+	};
+	
+	true -> {
+		stored_in2 := ext_fmu.in2;
+	} --> {
+		fmu2.In := stored_in2;
+	};
+}
+
+out var stored_out1 := INIT_OUT1,
+		stored_out2 := INIT_OUT2;
+		
+out rules{
+	true -> {
+		stored_out1 := fmu1.Out;
+	} --> {
+		ext_fmu.out1 := stored_out1;
+	};
+	
+	true -> {
+		stored_out2 := fmu2.Out;
+	} --> {
+		ext_fmu.out2 := stored_out2;
+	};
+}

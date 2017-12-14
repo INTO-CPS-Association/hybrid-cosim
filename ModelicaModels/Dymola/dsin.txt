@@ -1,0 +1,871 @@
+#1
+char Aclass(3,24)
+Adymosim
+1.4
+Modelica experiment file
+
+
+#    Experiment parameters
+double experiment(7,1)
+       0                   # StartTime    Time at which integration starts
+                           #              (and linearization and trimming time)
+       1                   # StopTime     Time at which integration stops
+       0                   # Increment    Communication step size, if > 0
+     500                   # nInterval    Number of communication intervals, if > 0
+ 1.0000000000000000E-004   # Tolerance    Relative precision of signals for
+                           #              simulation, linearization and trimming
+       0                   # MaxFixedStep Maximum step size of fixed step size
+                           #              integrators, if > 0.0
+       8                   # Algorithm    Integration algorithm as integer (1...28)
+                           #
+                           #             | model|       |        | dense | state |
+                           # Algorithm   | typ  | stiff | order  | output| event |
+                           # ------------+------+-------+--------+-------+-------+
+                           #  1 | deabm  |  ode |   no  |  1-12  |  yes  |   no  |
+                           #  2 | lsode1 |  ode |   no  |  1-12  |  yes  |   no  |
+                           #  3 | lsode2 |  ode |  yes  |  1-5   |  yes  |   no  |
+                           #  4 | lsodar |  ode |  both |1-12,1-5|  yes  |  yes  |
+                           #  5 | dopri5 |  ode |   no  |   5    |   no  |   no  |
+                           #  6 | dopri8 |  ode |   no  |   8    |   no  |   no  |
+                           #  7 | grk4t  |  ode |  yes  |   4    |   no  |   no  |
+                           #  8 | dassl  |  dae |  yes  |  1-5   |  yes  |  yes  |
+                           #  9 | odassl | hdae |  yes  |  1-5   |  yes  |  yes  |
+                           # 10 | mexx   | hdae |   no  |  2-24  |   no  |   no  |
+                           # 11 | euler  |  ode |   no  |   1    |   no  |  yes  |
+                           # 12 | rkfix2 |  ode |   no  |   2    |   no  |  yes  |
+                           # 13 | rkfix3 |  ode |   no  |   3    |   no  |  yes  |
+                           # 14 | rkfix4 |  ode |   no  |   4    |   no  |  yes  |
+                           #>=14| others |  ode |yes/no |  2-5   |   yes |  yes  |
+                           # ---+--------+------+-------+--------+-------+-------+
+                           # euler and rkfix have fixed stepsize.
+
+
+#    Method tuning parameters
+double method(27,1)
+       1                   # grid     type of communication time grid, defined by
+                           #          = 1: equidistant points ("Increment/nInterval")
+                           #          = 2: vector of grid points ("tgrid")
+                           #          = 3: variable step integrator (automatically)
+                           #          = 4: model (call of "increment" in Dymola, e.g.
+                           #                      incr=Time > 2 then 0 else 0.1
+                           #                      dummy=increment(incr))
+                           #          grid = 1,3 is stopped by "StopTime"
+                           #          grid = 2   is stopped by "tgrid(last)"
+                           #          grid = 4   runs forever (stopped by model)
+       1                   # nt       Use every NT time instant, if grid = 3
+       3                   # dense    1/2/3 restart/step/interpolate GRID points
+       1                   # evgrid   0/1 do not/save event points in comm. time grid
+       1                   # evu      0/1 U-discontinuity does not/trigger events
+       0                   # evuord       U-discontinuity order to consider (0,1,...)
+       0                   # error    0/1/2 One message/warning/error messages
+       0                   # jac      0/1 Compute jacobian numerically/by BLOCKJ
+       0                   # xd0c     0/1 Compute/set XD0
+       0                   # f3       0/1 Ignore/use F3 of HDAE (= index 1)
+       0                   # f4       0/1 Ignore/use F4 of HDAE (= index 2)
+       0                   # f5       0/1 Ignore/use F5 of HDAE (= invar.)
+       0                   # debug    flags for debug information (1<<0 uses pdebug) 
+     100                   # pdebug       priority of debug information (1...100)
+       0                   # fmax     Maximum number of evaluations of BLOCKF, if > 0
+       0                   # ordmax   Maximum allowed integration order, if > 0
+       0                   # hmax     Maximum absolute stepsize, if > 0
+       0                   # hmin     Minimum absolute stepsize, if > 0 (use with care!)
+       0                   # h0       Stepsize to be attempted on first step, if > 0
+ 2.0000000000000000E-014   # teps     Bound to check, if 2 equal time instants
+ 1.0000000000000000E-010   # eveps    Hysteresis epsilon at event points
+      20                   # eviter   Maximum number of event iterations
+ 9.9999999999999995E-007   # delaym   Minimum time increment in delay buffers
+       1                   # fexcep   0/1 floating exception crashes/stops dymosim
+       1                   # tscale   clock-time = tscale*simulation-time, if grid = 5
+                           #          > 1: simulation too slow
+                           #          = 1: simulation-time = real-time
+                           #          < 1: simulation too fast
+       1                   # shared   (not used)
+    2473                   # memkey   (not used)
+
+
+#    Output parameters
+int settings(13,1)
+ 0                         # lprec    0/1 do not/store result data in double
+ 1                         # lx       0/1 do not/store x  (state variables)
+ 1                         # lxd      0/1 do not/store xd (derivative of states)
+ 1                         # lu       0/1 do not/store u  (input     signals)
+ 1                         # ly       0/1 do not/store y  (output    signals)
+ 0                         # lz       0/1 do not/store z  (indicator signals)
+ 1                         # lw       0/1 do not/store w  (auxiliary signals)
+ 1                         # la       0/1 do not/store a  (alias     signals)
+ 0                         # lperf    0/1 do not/store performance indicators
+ 0                         # levent   0/1 do not/store event point
+ 1                         # lres     0/1 do not/store results on result file
+ 0                         # lshare   0/1 do not/store info data for shared memory on dsshare.txt
+ 1                         # lform    0/1 ASCII/Matlab-binary storage format of results
+                           #              (for simulation/linearization; not for trimming)
+
+
+#    Names of initial variables
+char initialName(178,72)
+system.p_ambient
+system.T_ambient
+system.g
+system.allowFlowReversal
+system.energyDynamics
+system.massDynamics
+system.substanceDynamics
+system.traceDynamics
+system.momentumDynamics
+system.m_flow_start
+system.p_start
+system.T_start
+system.use_eps_Re
+system.m_flow_nominal
+system.eps_m_flow
+system.dp_small
+system.m_flow_small
+tank.level
+tank.der(level)
+tank.V
+tank.der(V)
+tank.height
+tank.crossArea
+tank.p_ambient
+tank.T_ambient
+tank.level_start
+tank.energyDynamics
+tank.massDynamics
+tank.substanceDynamics
+tank.traceDynamics
+tank.p_start
+tank.use_T_start
+tank.T_start
+tank.h_start
+tank.X_start[1]
+tank.medium.p
+tank.medium.d
+tank.medium.T
+tank.medium.der(T)
+tank.medium.X[1]
+tank.medium.u
+tank.medium.der(u)
+tank.medium.R
+tank.medium.MM
+tank.medium.preferredMediumStates
+tank.medium.standardOrderComponents
+tank.medium.T_degC
+tank.medium.p_bar
+tank.U
+tank.der(U)
+tank.m
+tank.der(m)
+tank.Qb_flow
+tank.Wb_flow
+tank.initialize_p
+tank.nPorts
+tank.ports[1].p
+tank.ports[1].h_outflow
+tank.use_portsData
+tank.portsData[1].diameter
+tank.portsData[1].height
+tank.portsData[1].zeta_out
+tank.portsData[1].zeta_in
+tank.m_flow_nominal
+tank.m_flow_small
+tank.use_Re
+tank.ports_H_flow[1]
+tank.use_HeatTransfer
+tank.heatTransfer.n
+tank.heatTransfer.surfaceAreas[1]
+tank.heatTransfer.Q_flows[1]
+tank.heatTransfer.use_k
+tank.heatTransfer.k
+tank.heatTransfer.T_ambient
+tank.heatTransfer.heatPorts[1].Q_flow
+tank.portInDensities[1]
+tank.portVelocities[1]
+tank.ports_E_flow[1]
+tank.s[1]
+tank.ports_penetration[1]
+tank.portAreas[1]
+tank.vessel_ps_static[1]
+tank.Re_turbulent
+tank.fluidLevel_max
+tank.vesselArea
+tank.regularFlow[1]
+tank.inFlow[1]
+tank.level_start_eps
+tank1.level
+tank1.der(level)
+tank1.V
+tank1.der(V)
+tank1.height
+tank1.crossArea
+tank1.p_ambient
+tank1.T_ambient
+tank1.level_start
+tank1.energyDynamics
+tank1.massDynamics
+tank1.substanceDynamics
+tank1.traceDynamics
+tank1.p_start
+tank1.use_T_start
+tank1.T_start
+tank1.h_start
+tank1.X_start[1]
+tank1.medium.p
+tank1.medium.d
+tank1.medium.T
+tank1.medium.der(T)
+tank1.medium.X[1]
+tank1.medium.u
+tank1.medium.der(u)
+tank1.medium.R
+tank1.medium.MM
+tank1.medium.preferredMediumStates
+tank1.medium.standardOrderComponents
+tank1.medium.T_degC
+tank1.medium.p_bar
+tank1.U
+tank1.der(U)
+tank1.m
+tank1.Qb_flow
+tank1.Wb_flow
+tank1.initialize_p
+tank1.nPorts
+tank1.ports[1].h_outflow
+tank1.ports[2].m_flow
+tank1.ports[2].p
+tank1.use_portsData
+tank1.portsData[1].diameter
+tank1.portsData[1].height
+tank1.portsData[1].zeta_out
+tank1.portsData[1].zeta_in
+tank1.portsData[2].diameter
+tank1.portsData[2].height
+tank1.portsData[2].zeta_out
+tank1.portsData[2].zeta_in
+tank1.m_flow_nominal
+tank1.m_flow_small
+tank1.use_Re
+tank1.ports_H_flow[1]
+tank1.ports_H_flow[2]
+tank1.use_HeatTransfer
+tank1.heatTransfer.n
+tank1.heatTransfer.surfaceAreas[1]
+tank1.heatTransfer.Q_flows[1]
+tank1.heatTransfer.use_k
+tank1.heatTransfer.k
+tank1.heatTransfer.T_ambient
+tank1.heatTransfer.heatPorts[1].Q_flow
+tank1.portInDensities[1]
+tank1.portInDensities[2]
+tank1.portVelocities[1]
+tank1.portVelocities[2]
+tank1.ports_E_flow[1]
+tank1.ports_E_flow[2]
+tank1.s[1]
+tank1.s[2]
+tank1.ports_penetration[1]
+tank1.ports_penetration[2]
+tank1.portAreas[1]
+tank1.portAreas[2]
+tank1.vessel_ps_static[1]
+tank1.vessel_ps_static[2]
+tank1.Re_turbulent
+tank1.fluidLevel_max
+tank1.vesselArea
+tank1.regularFlow[1]
+tank1.regularFlow[2]
+tank1.inFlow[1]
+tank1.inFlow[2]
+tank1.level_start_eps
+temperature.port.m_flow
+temperature.port.h_outflow
+_GlobalScope.Modelica.Media.Interfaces.PartialPureSubstance.X_default[1]
+temperature.T_degC
+temperature.T
+
+double initialValue(178,6)
+ -1 1.0132500000000000E+005       0                 1.0000000000000000E+100
+  1   280   # system.p_ambient
+ -1 2.9314999999999998E+002       0                 1.0000000000000000E+100
+  1   280   # system.T_ambient
+ -1 9.8066499999999994E+000       0                       0                
+  1   280   # system.g
+  0       1                       0                       0                
+  6   257   # system.allowFlowReversal
+  0       1                       1                       4                
+  6   258   # system.energyDynamics
+  0       1                       1                       4                
+  6   258   # system.massDynamics
+  0       1                       1                       4                
+  6   258   # system.substanceDynamics
+  0       1                       1                       4                
+  6   258   # system.traceDynamics
+  0       4                       1                       4                
+  6   258   # system.momentumDynamics
+ -1       0                       0                       0                
+  1   280   # system.m_flow_start
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # system.p_start
+  0 2.8814999999999998E+002       0                 1.0000000000000000E+100
+  6   256   # system.T_start
+  0       0                       0                       0                
+  6   257   # system.use_eps_Re
+  0       0                       0                       0                
+  6   256   # system.m_flow_nominal
+ -1 1.0000000000000000E-004       0                 1.0000000000000000E+100
+  1   280   # system.eps_m_flow
+ -1       1                       0                 1.0000000000000000E+100
+  1   280   # system.dp_small
+ -1 1.0000000000000000E-002       0                 1.0000000000000000E+100
+  1   280   # system.m_flow_small
+ -1       0                       0                 1.0000000000000000E+100
+  2   272   # tank.level
+  0       0                       0                       0                
+  3   256   # tank.der(level)
+  0       0                       0                       0                
+  6   256   # tank.V
+  0       0                       0                       0                
+  6   256   # tank.der(V)
+ -1      30                       0                 1.0000000000000000E+100
+  1   280   # tank.height
+ -1      10                       0                       0                
+  1   280   # tank.crossArea
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank.p_ambient
+  0 2.8814999999999998E+002       1                   10000                
+  6   256   # tank.T_ambient
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank.level_start
+  0       1                       1                       4                
+  6   258   # tank.energyDynamics
+  0       1                       1                       4                
+  6   258   # tank.massDynamics
+  0       1                       1                       4                
+  6   258   # tank.substanceDynamics
+  0       1                       1                       4                
+  6   258   # tank.traceDynamics
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank.p_start
+  0       1                       0                       0                
+  6   257   # tank.use_T_start
+  0 2.8814999999999998E+002       1                   10000                
+  6   256   # tank.T_start
+  0       0                 -1.0000000000000000E+010 1.0000000000000000E+010
+  6   256   # tank.h_start
+ -1       1                       0                       1                
+  1   280   # tank.X_start[1]
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank.medium.p
+  0 9.9558600000000001E+002       0                  100000                
+  6   256   # tank.medium.d
+ -1     300                       1                   10000                
+  2   272   # tank.medium.T
+  0       0                       0                       0                
+  3   256   # tank.medium.der(T)
+  0       1                       0                       1                
+  6   256   # tank.medium.X[1]
+  0       0                 -1.0000000000000000E+008 1.0000000000000000E+008
+  6   256   # tank.medium.u
+  0       0                       0                       0                
+  6   256   # tank.medium.der(u)
+  0       0                       0                 1.0000000000000000E+007
+  6   256   # tank.medium.R
+  0 1.8015268000000001E-002 1.0000000000000000E-003 2.5000000000000000E-001
+  6   256   # tank.medium.MM
+  0       1                       0                       0                
+  6   257   # tank.medium.preferredMediumStates
+  0       1                       0                       0                
+  6   257   # tank.medium.standardOrderComponents
+  0       0                       0                       0                
+  6   256   # tank.medium.T_degC
+  0       0                       0                       0                
+  6   256   # tank.medium.p_bar
+  0       0                       0                       0                
+  6   256   # tank.U
+  0       0                       0                       0                
+  6   256   # tank.der(U)
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank.m
+  0       0                       0                       0                
+  6   288   # tank.der(m)
+  0       0                       0                       0                
+  6   256   # tank.Qb_flow
+  0       0                       0                       0                
+  6   256   # tank.Wb_flow
+  0       0                       0                       0                
+  6  1281   # tank.initialize_p
+  0       1                       0                       0                
+  6   258   # tank.nPorts
+  0  100000                       0                 1.0000000000000000E+008
+  6   292   # tank.ports[1].p
+  0       0                 -1.0000000000000000E+010 1.0000000000000000E+010
+  6   260   # tank.ports[1].h_outflow
+  0       1                       0                       0                
+  6   257   # tank.use_portsData
+ -1 2.0000000000000001E-001       0                 1.0000000000000000E+100
+  1   280   # tank.portsData[1].diameter
+ -1       0                       0                 1.0000000000000000E+100
+  1   280   # tank.portsData[1].height
+ -1 5.0000000000000000E-001       0                 1.0000000000000000E+100
+  1   280   # tank.portsData[1].zeta_out
+ -1 1.0400000000000000E+000       0                 1.0000000000000000E+100
+  1   280   # tank.portsData[1].zeta_in
+  0       0                 -100000                  100000                
+  6   256   # tank.m_flow_nominal
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank.m_flow_small
+  0       0                       0                       0                
+  6   257   # tank.use_Re
+  0       0                 -1.0000000000000000E+008 1.0000000000000000E+008
+  6   256   # tank.ports_H_flow[1]
+  0       0                       0                       0                
+  6   257   # tank.use_HeatTransfer
+  0       1                       0                       0                
+  6   258   # tank.heatTransfer.n
+  0       0                       0                       0                
+  6   256   # tank.heatTransfer.surfaceAreas[1]
+  0       0                       0                       0                
+  6   256   # tank.heatTransfer.Q_flows[1]
+  0       0                       0                       0                
+  6   257   # tank.heatTransfer.use_k
+  0       0                       0                       0                
+  6   256   # tank.heatTransfer.k
+  0 2.8814999999999998E+002       0                 1.0000000000000000E+100
+  6   256   # tank.heatTransfer.T_ambient
+  0       0                       0                       0                
+  6   388   # tank.heatTransfer.heatPorts[1].Q_flow
+  0 9.9558600000000001E+002       0                  100000                
+  6   256   # tank.portInDensities[1]
+  0       0                       0                       0                
+  6   256   # tank.portVelocities[1]
+  0       0                       0                       0                
+  6   256   # tank.ports_E_flow[1]
+  0       0                       0                       0                
+  6   256   # tank.s[1]
+  0       0                       0                       0                
+  6   256   # tank.ports_penetration[1]
+  0       0                       0                       0                
+  6   256   # tank.portAreas[1]
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank.vessel_ps_static[1]
+  0     100                       0                       0                
+  6   256   # tank.Re_turbulent
+  0       0                       0                 1.0000000000000000E+100
+  6  1280   # tank.fluidLevel_max
+  0       0                       0                       0                
+  6  1280   # tank.vesselArea
+  0       1                       0                       0                
+  6  1345   # tank.regularFlow[1]
+  0       0                       0                       0                
+  6  1377   # tank.inFlow[1]
+  0       0                       0                 1.0000000000000000E+100
+  6  1280   # tank.level_start_eps
+ -1       0                       0                 1.0000000000000000E+100
+  2   272   # tank1.level
+  0       0                       0                       0                
+  3   256   # tank1.der(level)
+  0       0                       0                       0                
+  6   256   # tank1.V
+  0       0                       0                       0                
+  6   256   # tank1.der(V)
+ -1      20                       0                 1.0000000000000000E+100
+  1   280   # tank1.height
+ -1      10                       0                       0                
+  1   280   # tank1.crossArea
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank1.p_ambient
+  0 2.8814999999999998E+002       1                   10000                
+  6   256   # tank1.T_ambient
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank1.level_start
+  0       1                       1                       4                
+  6   258   # tank1.energyDynamics
+  0       1                       1                       4                
+  6   258   # tank1.massDynamics
+  0       1                       1                       4                
+  6   258   # tank1.substanceDynamics
+  0       1                       1                       4                
+  6   258   # tank1.traceDynamics
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank1.p_start
+  0       1                       0                       0                
+  6   257   # tank1.use_T_start
+  0 2.8814999999999998E+002       1                   10000                
+  6   256   # tank1.T_start
+  0       0                 -1.0000000000000000E+010 1.0000000000000000E+010
+  6   256   # tank1.h_start
+ -1       1                       0                       1                
+  1   280   # tank1.X_start[1]
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank1.medium.p
+  0 9.9558600000000001E+002       0                  100000                
+  6   256   # tank1.medium.d
+ -1     300                       1                   10000                
+  2   272   # tank1.medium.T
+  0       0                       0                       0                
+  3   256   # tank1.medium.der(T)
+  0       1                       0                       1                
+  6   256   # tank1.medium.X[1]
+  0       0                 -1.0000000000000000E+008 1.0000000000000000E+008
+  6   256   # tank1.medium.u
+  0       0                       0                       0                
+  6   256   # tank1.medium.der(u)
+  0       0                       0                 1.0000000000000000E+007
+  6   256   # tank1.medium.R
+  0 1.8015268000000001E-002 1.0000000000000000E-003 2.5000000000000000E-001
+  6   256   # tank1.medium.MM
+  0       1                       0                       0                
+  6   257   # tank1.medium.preferredMediumStates
+  0       1                       0                       0                
+  6   257   # tank1.medium.standardOrderComponents
+  0       0                       0                       0                
+  6   256   # tank1.medium.T_degC
+  0       0                       0                       0                
+  6   256   # tank1.medium.p_bar
+  0       0                       0                       0                
+  6   256   # tank1.U
+  0       0                       0                       0                
+  6   256   # tank1.der(U)
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank1.m
+  0       0                       0                       0                
+  6   256   # tank1.Qb_flow
+  0       0                       0                       0                
+  6   256   # tank1.Wb_flow
+  0       0                       0                       0                
+  6  1281   # tank1.initialize_p
+  0       2                       0                       0                
+  6   258   # tank1.nPorts
+  0       0                 -1.0000000000000000E+010 1.0000000000000000E+010
+  6   260   # tank1.ports[1].h_outflow
+  0       0                 -100000                       0                
+  6   388   # tank1.ports[2].m_flow
+  0  100000                       0                 1.0000000000000000E+008
+  6   260   # tank1.ports[2].p
+  0       1                       0                       0                
+  6   257   # tank1.use_portsData
+ -1 2.0000000000000001E-001       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[1].diameter
+ -1       0                       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[1].height
+ -1 5.0000000000000000E-001       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[1].zeta_out
+ -1 1.0400000000000000E+000       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[1].zeta_in
+ -1 2.0000000000000001E-001       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[2].diameter
+ -1       0                       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[2].height
+ -1 5.0000000000000000E-001       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[2].zeta_out
+ -1 1.0400000000000000E+000       0                 1.0000000000000000E+100
+  1   280   # tank1.portsData[2].zeta_in
+  0       0                 -100000                  100000                
+  6   256   # tank1.m_flow_nominal
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # tank1.m_flow_small
+  0       0                       0                       0                
+  6   257   # tank1.use_Re
+  0       0                 -1.0000000000000000E+008 1.0000000000000000E+008
+  6   256   # tank1.ports_H_flow[1]
+  0       0                 -1.0000000000000000E+008 1.0000000000000000E+008
+  6   256   # tank1.ports_H_flow[2]
+  0       0                       0                       0                
+  6   257   # tank1.use_HeatTransfer
+  0       1                       0                       0                
+  6   258   # tank1.heatTransfer.n
+  0       0                       0                       0                
+  6   256   # tank1.heatTransfer.surfaceAreas[1]
+  0       0                       0                       0                
+  6   256   # tank1.heatTransfer.Q_flows[1]
+  0       0                       0                       0                
+  6   257   # tank1.heatTransfer.use_k
+  0       0                       0                       0                
+  6   256   # tank1.heatTransfer.k
+  0 2.8814999999999998E+002       0                 1.0000000000000000E+100
+  6   256   # tank1.heatTransfer.T_ambient
+  0       0                       0                       0                
+  6   388   # tank1.heatTransfer.heatPorts[1].Q_flow
+  0 9.9558600000000001E+002       0                  100000                
+  6   256   # tank1.portInDensities[1]
+  0 9.9558600000000001E+002       0                  100000                
+  6   256   # tank1.portInDensities[2]
+  0       0                       0                       0                
+  6   256   # tank1.portVelocities[1]
+  0       0                       0                       0                
+  6   256   # tank1.portVelocities[2]
+  0       0                       0                       0                
+  6   256   # tank1.ports_E_flow[1]
+  0       0                       0                       0                
+  6   256   # tank1.ports_E_flow[2]
+  0       0                       0                       0                
+  6   256   # tank1.s[1]
+  0       0                       0                       0                
+  6   256   # tank1.s[2]
+  0       0                       0                       0                
+  6   256   # tank1.ports_penetration[1]
+  0       0                       0                       0                
+  6   256   # tank1.ports_penetration[2]
+  0       0                       0                       0                
+  6   256   # tank1.portAreas[1]
+  0       0                       0                       0                
+  6   256   # tank1.portAreas[2]
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank1.vessel_ps_static[1]
+  0  100000                       0                 1.0000000000000000E+008
+  6   256   # tank1.vessel_ps_static[2]
+  0     100                       0                       0                
+  6   256   # tank1.Re_turbulent
+  0       0                       0                 1.0000000000000000E+100
+  6  1280   # tank1.fluidLevel_max
+  0       0                       0                       0                
+  6  1280   # tank1.vesselArea
+  0       1                       0                       0                
+  6  1345   # tank1.regularFlow[1]
+  0       1                       0                       0                
+  6  1345   # tank1.regularFlow[2]
+  0       0                       0                       0                
+  6  1377   # tank1.inFlow[1]
+  0       0                       0                       0                
+  6  1377   # tank1.inFlow[2]
+  0       0                       0                 1.0000000000000000E+100
+  6  1280   # tank1.level_start_eps
+  0       0                       0                  100000                
+  6   388   # temperature.port.m_flow
+  0   83680                 -1.0000000000000000E+010 1.0000000000000000E+010
+  6   260   # temperature.port.h_outflow
+  0       1                       0                       1                
+  6  1280   # _GlobalScope.Modelica.Media.Interfaces.PartialPureSubstance.X_default[1]
+  0       0                       0                       0                
+  6   256   # temperature.T_degC
+  0       0                       0                 1.0000000000000000E+100
+  6   256   # temperature.T
+
+
+# Matrix with 6 columns defining the initial value calculation
+# (columns 5 and 6 are not utilized for the calculation but are
+#  reported by dymosim via dymosim -i for user convenience):
+#
+# column 1: Type of initial value
+#           = -2: special case: for continuing simulation (column 2 = value)
+#           = -1: fixed value (column 2 = fixed value)
+#           =  0: free value, i.e., no restriction (column 2 = initial value)
+#           >  0: desired value (column 1 = weight for optimization
+#                                column 2 = desired value)
+#                 use weight=1, since automatic scaling usually
+#                 leads to equally weighted terms
+# column 2: fixed, free or desired value according to column 1.
+# column 3: Minimum value (ignored, if Minimum >= Maximum).
+# column 4: Maximum value (ignored, if Minimum >= Maximum).
+#           Minimum and maximum restrict the search range in initial
+#           value calculation. They might also be used for scaling.
+# column 5: Category of variable.
+#           = 1: parameter.
+#           = 2: state.
+#           = 3: state derivative.
+#           = 4: output.
+#           = 5: input.
+#           = 6: auxiliary variable.
+# column 6: Data type of variable and flags according to dsBaseType
+#  <value>&3= 0: real.
+#  <value>&3= 1: boolean.
+#  <value>&3= 2: integer.
+#
+# Initial values are calculated according to the following procedure:
+#
+# - If parameters, states and inputs are FIXED, and other variables
+#   are FREE, no special action takes place (default setting).
+#
+# - If there are only FIXED and FREE variables and the number of
+#   FREE parameters, states and inputs is IDENTICAL to the number of
+#   FIXED state derivatives, outputs and auxiliary variables, a non-linear
+#   equation is solved to determine a consistent set of initial conditions.
+#
+# - In all other cases the following optimization problem is solved:
+#      min( sum( weight(i)*( (value(i) - DESIRED(i))/scale(i) )^2 ) )
+#   under the constraint that the differential equation is fulfilled
+#   at the initial time. In most cases weight(i)=1 is sufficient, due
+#   to the automatic scaling (if DESIRED(i) is not close to zero,
+#   scale(i) = DESIRED(i). Otherwise, the scaling is based on the
+#   nominal value (and maybe minimum and maximum values given in 
+#   column 3 and 4). If these values are zero, scale(i)=1 is used).
+#
+char initialDescription(178,123)
+Default ambient pressure [Pa|bar]
+Default ambient temperature [K|degC]
+Constant gravity acceleration [m/s2]
+= false to restrict to design flow direction (port_a -> port_b) [:#(type=Boolean)]
+Default formulation of energy balances [:#(type=Modelica.Fluid.Types.Dynamics)]
+Default formulation of mass balances [:#(type=Modelica.Fluid.Types.Dynamics)]
+Default formulation of substance balances [:#(type=Modelica.Fluid.Types.Dynamics)]
+Default formulation of trace substance balances [:#(type=Modelica.Fluid.Types.Dynamics)]
+Default formulation of momentum balances, if options available [:#(type=Modelica.Fluid.Types.Dynamics)]
+Default start value for mass flow rates [kg/s]
+Default start value for pressures [Pa|bar]
+Default start value for temperatures [K|degC]
+= true to determine turbulent region automatically using Reynolds number [:#(type=Boolean)]
+Default nominal mass flow rate [kg/s]
+Regularization of zero flow for |m_flow| < eps_m_flow*m_flow_nominal [1]
+Default small pressure drop for regularization of laminar and zero flow [Pa|bar]
+Default small mass flow rate for regularization of laminar and zero flow [kg/s]
+Level height of tank [m]
+der(Level height of tank) [m/s]
+Actual tank volume [m3]
+der(Actual tank volume) [m3/s]
+Height of tank [m]
+Area of tank [m2]
+Tank surface pressure [Pa|bar]
+Tank surface Temperature [K|degC]
+Start value of tank level [m]
+Formulation of energy balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Formulation of mass balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Formulation of substance balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Formulation of trace substance balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Start value of pressure [Pa|bar]
+= true, use T_start, otherwise h_start [:#(type=Boolean)]
+Start value of temperature [K|degC]
+Start value of specific enthalpy [J/kg]
+Start value of mass fractions m_i/m [kg/kg]
+Absolute pressure of medium [Pa|bar]
+Density of medium [kg/m3|g/cm3]
+Temperature of medium [K|degC]
+der(Temperature of medium) [K/s]
+Mass fractions (= (component mass)/total mass  m_i/m) [kg/kg]
+Specific internal energy of medium [J/kg]
+der(Specific internal energy of medium) [m2/s3]
+Gas constant (of mixture if applicable) [J/(kg.K)]
+Molar mass (of mixture or single fluid) [kg/mol]
+= true if StateSelect.prefer shall be used for the independent property variables of the medium [:#(type=Boolean)]
+If true, and reducedX = true, the last element of X will be computed from the other ones [:#(type=Boolean)]
+Temperature of medium in [degC] [degC;]
+Absolute pressure of medium in [bar] [bar]
+Internal energy of fluid [J]
+der(Internal energy of fluid) [W]
+Mass of fluid [kg]
+der(Mass of fluid) [kg/s]
+Heat flow across boundaries or energy source/sink [W]
+Work flow across boundaries or source term [W]
+= true to set up initial equations for pressure [:#(type=Boolean)]
+Number of ports [:#(type=Integer)]
+Thermodynamic pressure in the connection point [Pa|bar]
+Specific thermodynamic enthalpy close to the connection point if m_flow < 0 [J/kg]
+= false to neglect pressure loss and kinetic energy [:#(type=Boolean)]
+Inner (hydraulic) diameter of inlet/outlet port [m]
+Height over the bottom of the vessel [m]
+Hydraulic resistance out of vessel, default 0.5 for small diameter mounted flush with the wall
+Hydraulic resistance into vessel, default 1.04 for small diameter mounted flush with the wall
+Nominal value for mass flow rates in ports [kg/s]
+Regularization range at zero mass flow rate [kg/s]
+= true, if turbulent region is defined by Re, otherwise by m_flow_small [:#(type=Boolean)]
+[W]
+= true to use the HeatTransfer model [:#(type=Boolean)]
+Number of heat transfer segments [:#(type=Integer)]
+Heat transfer areas [m2]
+Heat flow rates [W]
+= true to use k value for thermal isolation [:#(type=Boolean)]
+Heat transfer coefficient to ambient [W/(m2.K)]
+Ambient temperature [K|degC]
+Heat flow rate (positive if flowing from outside into the component) [W]
+densities of the fluid at the device boundary [kg/m3|g/cm3]
+velocities of fluid flow at device boundary [m/s]
+flow of kinetic and potential energy at device boundary [W]
+curve parameters for port flows vs. port pressures; for further details see, Modelica Tutorial: Ideal switching devices [m]
+penetration of port with fluid, depending on fluid level and port diameter
+[m2]
+static pressures inside the vessel at the height of the corresponding ports, zero flow velocity [Pa|bar]
+cf. suddenExpansion [1]
+maximum level of fluid in the vessel [m]
+Area of the vessel used to relate to cross flow area of ports [m2]
+[:#(type=Boolean)]
+[:#(type=Boolean)]
+[m]
+Level height of tank [m]
+der(Level height of tank) [m/s]
+Actual tank volume [m3]
+der(Actual tank volume) [m3/s]
+Height of tank [m]
+Area of tank [m2]
+Tank surface pressure [Pa|bar]
+Tank surface Temperature [K|degC]
+Start value of tank level [m]
+Formulation of energy balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Formulation of mass balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Formulation of substance balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Formulation of trace substance balance [:#(type=Modelica.Fluid.Types.Dynamics)]
+Start value of pressure [Pa|bar]
+= true, use T_start, otherwise h_start [:#(type=Boolean)]
+Start value of temperature [K|degC]
+Start value of specific enthalpy [J/kg]
+Start value of mass fractions m_i/m [kg/kg]
+Absolute pressure of medium [Pa|bar]
+Density of medium [kg/m3|g/cm3]
+Temperature of medium [K|degC]
+der(Temperature of medium) [K/s]
+Mass fractions (= (component mass)/total mass  m_i/m) [kg/kg]
+Specific internal energy of medium [J/kg]
+der(Specific internal energy of medium) [m2/s3]
+Gas constant (of mixture if applicable) [J/(kg.K)]
+Molar mass (of mixture or single fluid) [kg/mol]
+= true if StateSelect.prefer shall be used for the independent property variables of the medium [:#(type=Boolean)]
+If true, and reducedX = true, the last element of X will be computed from the other ones [:#(type=Boolean)]
+Temperature of medium in [degC] [degC;]
+Absolute pressure of medium in [bar] [bar]
+Internal energy of fluid [J]
+der(Internal energy of fluid) [W]
+Mass of fluid [kg]
+Heat flow across boundaries or energy source/sink [W]
+Work flow across boundaries or source term [W]
+= true to set up initial equations for pressure [:#(type=Boolean)]
+Number of ports [:#(type=Integer)]
+Specific thermodynamic enthalpy close to the connection point if m_flow < 0 [J/kg]
+Mass flow rate from the connection point into the component [kg/s]
+Thermodynamic pressure in the connection point [Pa|bar]
+= false to neglect pressure loss and kinetic energy [:#(type=Boolean)]
+Inner (hydraulic) diameter of inlet/outlet port [m]
+Height over the bottom of the vessel [m]
+Hydraulic resistance out of vessel, default 0.5 for small diameter mounted flush with the wall
+Hydraulic resistance into vessel, default 1.04 for small diameter mounted flush with the wall
+Inner (hydraulic) diameter of inlet/outlet port [m]
+Height over the bottom of the vessel [m]
+Hydraulic resistance out of vessel, default 0.5 for small diameter mounted flush with the wall
+Hydraulic resistance into vessel, default 1.04 for small diameter mounted flush with the wall
+Nominal value for mass flow rates in ports [kg/s]
+Regularization range at zero mass flow rate [kg/s]
+= true, if turbulent region is defined by Re, otherwise by m_flow_small [:#(type=Boolean)]
+[W]
+[W]
+= true to use the HeatTransfer model [:#(type=Boolean)]
+Number of heat transfer segments [:#(type=Integer)]
+Heat transfer areas [m2]
+Heat flow rates [W]
+= true to use k value for thermal isolation [:#(type=Boolean)]
+Heat transfer coefficient to ambient [W/(m2.K)]
+Ambient temperature [K|degC]
+Heat flow rate (positive if flowing from outside into the component) [W]
+densities of the fluid at the device boundary [kg/m3|g/cm3]
+densities of the fluid at the device boundary [kg/m3|g/cm3]
+velocities of fluid flow at device boundary [m/s]
+velocities of fluid flow at device boundary [m/s]
+flow of kinetic and potential energy at device boundary [W]
+flow of kinetic and potential energy at device boundary [W]
+curve parameters for port flows vs. port pressures; for further details see, Modelica Tutorial: Ideal switching devices [m]
+curve parameters for port flows vs. port pressures; for further details see, Modelica Tutorial: Ideal switching devices [m]
+penetration of port with fluid, depending on fluid level and port diameter
+penetration of port with fluid, depending on fluid level and port diameter
+[m2]
+[m2]
+static pressures inside the vessel at the height of the corresponding ports, zero flow velocity [Pa|bar]
+static pressures inside the vessel at the height of the corresponding ports, zero flow velocity [Pa|bar]
+cf. suddenExpansion [1]
+maximum level of fluid in the vessel [m]
+Area of the vessel used to relate to cross flow area of ports [m2]
+[:#(type=Boolean)]
+[:#(type=Boolean)]
+[:#(type=Boolean)]
+[:#(type=Boolean)]
+[m]
+Mass flow rate from the connection point into the component [kg/s]
+Specific thermodynamic enthalpy close to the connection point if m_flow < 0 [J/kg]
+Default value for mass fractions of medium (for initialization) [kg/kg]
+[degC;]
+Temperature in port medium [K|degC]
+
