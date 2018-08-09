@@ -204,6 +204,15 @@
 			</activeWhen>
 		</handler>
 	</extension>
+	<extension point="org.eclipse.core.contenttype.contentTypes">
+		<content-type
+			base-type="org.eclipse.core.runtime.text"
+			file-extensions="sa"
+			id="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.contenttype"
+			name="SemanticAdaptation File"
+			priority="normal">
+		</content-type>
+	</extension>
 	<!-- adding resource factories -->
 	<extension
 		point="org.eclipse.emf.ecore.extension_parser">
@@ -239,6 +248,15 @@
 			point="org.eclipse.core.resources.markers">
 		<super type="org.eclipse.xtext.ui.check.expensive"/>
 		<persistent value="true"/>
+	</extension>
+	<extension point="org.eclipse.ui.preferencePages">
+		<page
+			category="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation"
+			class="be.uantwerpen.ansymo.semanticadaptation.ui.SemanticAdaptationExecutableExtensionFactory:org.eclipse.xtext.ui.validation.ValidatorPreferencePage"
+			id="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.validator.preferencePage"
+			name="Errors/Warnings">
+			<keywordReference id="be.uantwerpen.ansymo.semanticadaptation.ui.keyword_SemanticAdaptation"/>
+		</page>
 	</extension>
 	<extension point="org.eclipse.xtext.builder.participant">
 		<participant
@@ -388,12 +406,18 @@
 			class="be.uantwerpen.ansymo.semanticadaptation.ui.SemanticAdaptationExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
 			extensions="sa">
 		</viewer>
+		<contentTypeBinding
+			contentTypeId="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.contenttype"
+			contentViewerId="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.compare.contentViewers" />
 	</extension>
 	<extension point="org.eclipse.compare.contentMergeViewers">
 		<viewer id="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.compare.contentMergeViewers"
 			class="be.uantwerpen.ansymo.semanticadaptation.ui.SemanticAdaptationExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
 			extensions="sa" label="SemanticAdaptation Compare">
 		</viewer>
+		<contentTypeBinding
+			contentTypeId="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.contenttype"
+			contentMergeViewerId="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.compare.contentMergeViewers" />
 	</extension>
 	<extension point="org.eclipse.ui.editors.documentProviders">
 		<provider id="be.uantwerpen.ansymo.semanticadaptation.SemanticAdaptation.editors.documentProviders"

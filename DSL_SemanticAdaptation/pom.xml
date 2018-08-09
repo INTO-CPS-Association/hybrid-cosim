@@ -33,7 +33,7 @@
 	<properties>
 		
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<xtext.version>2.11.0</xtext.version>
+		<xtext.version>2.14.0</xtext.version>
 
 		<main.basedir>${project.basedir}</main.basedir>
 		<tycho.version>1.0.0</tycho.version>

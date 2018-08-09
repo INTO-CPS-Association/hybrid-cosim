@@ -338,7 +338,7 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 	
 	private IScopeWrapper scopeWrapper;
 	
-	def public void setWrapper(IScopeWrapper wrapper) {
+	override setWrapper(IScopeWrapper wrapper) {
 		this.scopeWrapper = wrapper;
 	}
 
