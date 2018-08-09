@@ -59,39 +59,48 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		}
 	}
 
+	@Ignore
 	@Test def window_sa_canonical_new() {
 		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated',
 			"powerwindow");
 	}
-
+	
+	@Ignore
 	@Test def getSetState_sa() {
 		__parseNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated', "getSetState");
 	}
 
+	@Ignore
 	@Test def lazy_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
 	}
 
+	@Ignore
 	@Test def loop() {
 		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "LoopSA");
 	}
 
+	@Ignore
 	@Test def rate() {
 		__parseNoErrors('test_input/single_folder_spec/rate/rate.sa', 'generated', "rate");
 	}
 
+	@Ignore
 	@Test def rate_canonical() {
 		__parseNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
 	}
 
+	@Ignore
 	@Test def power() {
 		__parseNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated', 'power');
 	}
 
+	@Ignore
 	@Test def rollback_test() {
 		__parseNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated', 'rollback_test');
 	}
 
+	@Ignore
 	@Test def controller_test() {
 		__parseNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated', 'controller');
 	}
