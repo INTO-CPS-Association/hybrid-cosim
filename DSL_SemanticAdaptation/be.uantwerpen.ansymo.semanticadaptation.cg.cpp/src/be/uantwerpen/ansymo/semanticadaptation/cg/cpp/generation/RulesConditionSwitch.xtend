@@ -23,6 +23,8 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.util.LinkedHashMap
 import java.util.List
 import org.eclipse.emf.common.util.EList
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.PassedTime
 
 class RulesConditionSwitch extends BasicConditionSwitch {
 	// Global params
@@ -393,5 +395,20 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 		retVal.appendCode('''«left.code»; «forLoopIterVar»<«right.code»; «forLoopIterVar»++''')
 		return retVal;
 	}
-
+	
+	override ReturnInformation caseStepSize(StepSize object) {
+		var retVal = new ReturnInformation();
+		retVal.code = '''H''';
+		retVal.type = SVType.Real;
+		retVal.forceType = true;
+		return retVal;
+	}
+	
+	override ReturnInformation casePassedTime(PassedTime object) {
+		var retVal = new ReturnInformation();
+		retVal.code = '''dt''';
+		return retVal;
+	}
+	
+	
 }

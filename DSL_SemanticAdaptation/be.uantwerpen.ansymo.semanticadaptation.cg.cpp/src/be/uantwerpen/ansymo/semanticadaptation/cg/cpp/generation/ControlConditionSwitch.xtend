@@ -107,14 +107,6 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 		return retVal;
 	}
 
-	override ReturnInformation caseStepSize(StepSize object) {
-		var retVal = new ReturnInformation();
-		retVal.code = '''H''';
-		retVal.type = SVType.Real;
-		retVal.forceType = true;
-		return retVal;
-	}
-
 	override ReturnInformation caseCurrentTime(CurrentTime object) {
 		var retVal = new ReturnInformation();
 		retVal.code = '''t''';
