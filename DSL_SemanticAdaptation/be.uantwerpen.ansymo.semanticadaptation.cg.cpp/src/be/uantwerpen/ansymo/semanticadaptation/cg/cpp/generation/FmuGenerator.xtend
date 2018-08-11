@@ -63,7 +63,7 @@ class FmuGenerator {
 			g_adaptation = make_shared<adaptation::«adapClassName»>(name, resourceLoc, functions);
 			try
 			{
-				g_adaptation->initialize();
+				g_adaptation->initialize(loggingOn);
 			} catch (adaptation::SemanticAdaptationFmiException& e)
 			{
 				return NULL;

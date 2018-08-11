@@ -34,7 +34,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	) {
 		super(adaptationClassName, adaptationName, "", mSVars, SASVs, params, inVars, outVars, crtlVars);
 	}
-
+	
 	override ReturnInformation caseAssignment(Assignment object) {
 
 		if (object.lvalue.owner !== null) {
@@ -96,14 +96,14 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation caseDoStepFun(DoStepFun object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''this->do_step(this->«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»)''';
+		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.t).code»,«doSwitch(object.t).code»-t,«doSwitch(object.h).code»);''';
 		retVal.type = SVType.Integer;
 		return retVal;
 	}
 
 	override ReturnInformation caseDoStep(DoStep object) {
 		var retVal = new ReturnInformation();
-		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.h).code»,«doSwitch(object.t).code»)''';
+		retVal.code = '''this->do_step(«object.fmu.name»,«doSwitch(object.t).code»,«doSwitch(object.t).code»-t,«doSwitch(object.h).code»);''';
 		return retVal;
 	}
 

@@ -79,7 +79,12 @@ class ModelDescription {
 				
 			for (var j = 0; j < node.childNodes.length; j++) {
 				val subNode = node.childNodes.item(j);
-				if (subNode.nodeType == Node.ELEMENT_NODE) {
+				if (subNode.nodeType == Node.ELEMENT_NODE && (
+						subNode.nodeName=="Real" || 
+						subNode.nodeName=="String" || // There are other subnodes possible that are non type nodes.
+						subNode.nodeName=="Integer" || // In that case, we get an exception if we don't check for the name directly.
+						subNode.nodeName=="Boolean" 
+						)) {
 					val startAttribute = subNode.attributes.getNamedItem("start");
 					if (startAttribute !== null) {
 						sv.start = startAttribute.nodeValue;

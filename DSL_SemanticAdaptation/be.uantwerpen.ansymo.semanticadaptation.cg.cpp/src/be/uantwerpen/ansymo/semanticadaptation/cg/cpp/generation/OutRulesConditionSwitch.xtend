@@ -34,11 +34,14 @@ public class OutRulesConditionSwitch extends RulesConditionSwitch {
 
 	override ReturnInformation casePort(Port object) {
 		var retVal = new ReturnInformation();
-
-		val type = mSVars.get(this.externalVariableOwner).get(object.name).mappedSv.type;
-		val define = mSVars.get(this.externalVariableOwner).get(object.name).define;
+		val portName = if (object.alias !== null) BuildUtilities.stripDelimiters(object.alias) else object.name; // remove delimiters from string
+		val fmu_sVar = mSVars.get(this.externalVariableOwner)
+		val sVar = fmu_sVar.get(portName)
+		val type = sVar.mappedSv.type;
+		val define = mSVars.get(this.externalVariableOwner).get(portName).define;
 		retVal.code = '''getValue«Conversions.fmiTypeToGetValueString(type)»(«this.externalVariableOwner»,«define»)''';
 		retVal.type = type;
 		return retVal;
 	}
+	
 }

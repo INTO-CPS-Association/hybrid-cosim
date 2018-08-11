@@ -16,6 +16,18 @@ public class BuildUtilities {
 		System.out.println("Stored file: " + file);
 	}
 
+	public static String stripDelimiters(String input){
+		if (input==null)
+			return null;
+		return  input.substring(1, input.length()-1);
+	}
+	
+	public static String svPort(String input){
+		if (input==null)
+			return null;
+		return  input.substring(1, input.length()-1);
+	}
+	
 	public static void copyFile(File sourceFile, File sinkFile) throws IOException {
 	  Files.copy(sourceFile.toPath(), sinkFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	}

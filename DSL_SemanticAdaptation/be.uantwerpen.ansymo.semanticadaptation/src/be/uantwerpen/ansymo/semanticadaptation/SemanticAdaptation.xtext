@@ -47,7 +47,7 @@ CompositeFMU:
 	('output' 'ports' outports+=Port ("," outports+=Port)* )?;
 
 Adaptation:
-	({Adaptation} 'semantic' 'adaptation' (reactiveness=ReactiveOrDelayed)? (machine=MooreOrMealy)? type=FMUType (name=ID)? | // this is a type or a name?
+	({Adaptation} 'semantic' 'adaptation' (reactiveness=ReactiveOrDelayed)? (machine=MooreOrMealy)? name=ID | // this is a type or a name?
 	{AdaptationWithSpecificMaster} 'semantic' 'adaptation' (reactiveness=ReactiveOrDelayed)? (machine=MooreOrMealy)? type=FMUType (name=ID)? 'without' 'master')
 	'at' path=STRING // to be generated here
 	inner=InnerFMUDeclaration
@@ -186,7 +186,7 @@ Port:
 	// TODO: add internal destination/source of port
 	// Unity conversions: https://pint.readthedocs.io/en/0.7.2/
 	(type=TypeDefinition)?
-	name=ID 
+	name=ID (alias=STRING)?  // Needs string name because some FMU's have weird port names.
 	(':=' initval=LiteralOrArray)? 
 	( multiplicity=Multiplicity )?
 	( '(' unity=Unity ')' )? 

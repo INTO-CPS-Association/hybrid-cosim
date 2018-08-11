@@ -114,7 +114,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val fsa = new InMemoryFileSystemAccess()
 		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
-		cppGen.doGenerate(model.eResource, fsa, ctxt);
+		cppGen.doGenerate(model.eResource, fsa);
 
 		for (files : fsa.allFiles.entrySet) {
 			val filename2 = files.key.substring(14);
@@ -164,7 +164,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val fsa = new InMemoryFileSystemAccess();
 		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
-		cppGen.doGenerate(model.eResource, fsa, ctxt);
+		cppGen.doGenerate(model.eResource, fsa);
 
 		if (saRootDir.exists) {
 			BuildUtilities.deleteFolder(saRootDir);

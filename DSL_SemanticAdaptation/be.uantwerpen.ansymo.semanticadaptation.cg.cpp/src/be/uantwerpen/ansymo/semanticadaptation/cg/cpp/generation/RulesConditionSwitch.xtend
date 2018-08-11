@@ -99,7 +99,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 	 */
 	public def String createFunctionSignature(String functionName, String type, int count,
 		List<String> functionSignatures) {
-		val functionSignature = this.functionPrefix + functionName + count + "(double dt, double h)";
+		val functionSignature = this.functionPrefix + functionName + count + "(double dt, double H, double h)";
 		functionSignatures.add(type + " " + functionSignature);
 		return type + " " + this.adaptationClassName + "::" + functionSignature;
 	}
@@ -390,7 +390,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 		var retVal = new ReturnInformation();
 		val left = doSwitch(object.left);
 		val right = doSwitch(object.right);
-		retVal.appendCode('''«left.code»; «forLoopIterVar»<=«right.code»; «forLoopIterVar»++''')
+		retVal.appendCode('''«left.code»; «forLoopIterVar»<«right.code»; «forLoopIterVar»++''')
 		return retVal;
 	}
 

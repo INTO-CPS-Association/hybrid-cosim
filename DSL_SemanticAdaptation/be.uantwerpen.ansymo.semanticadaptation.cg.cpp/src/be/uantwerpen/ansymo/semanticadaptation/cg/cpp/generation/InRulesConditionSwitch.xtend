@@ -8,6 +8,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ReturnInformation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.GlobalInOutVariable
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InRulesBlock
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 
 class InRulesConditionSwitch extends RulesConditionSwitch {
 
@@ -52,7 +53,20 @@ class InRulesConditionSwitch extends RulesConditionSwitch {
 		var retVal = new ReturnInformation();
 
 		if (inOutputFunction) {
-			retVal.code = '''setValue(«object.lvalue.owner.name»,«mSVars.get(object.lvalue.owner.name).get(object.lvalue.ref.name).define»,«doSwitch(object.expr).code»)''';
+			val lValOwnerName = object.lvalue.owner.name
+			val lValRefName = if (object.lvalue.ref instanceof Port) 
+								(if (((object.lvalue.ref) as Port).alias !== null )
+									BuildUtilities.stripDelimiters(((object.lvalue.ref) as Port).alias) 
+								else 
+									object.lvalue.ref.name) 
+							  else object.lvalue.ref.name
+			val objExpr = object.expr
+			val switchResultCode = doSwitch(objExpr).code
+			val varDefine = mSVars.get(lValOwnerName).get(lValRefName).define
+			retVal.code = 
+				'''
+					setValue(«lValOwnerName»,«varDefine»,«switchResultCode»);
+				''';
 			return retVal;
 		} else {
 			return super.caseAssignment(object);

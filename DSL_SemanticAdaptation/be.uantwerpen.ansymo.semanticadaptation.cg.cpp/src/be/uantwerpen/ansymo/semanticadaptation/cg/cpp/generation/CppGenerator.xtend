@@ -29,21 +29,34 @@ import java.util.List
 import org.eclipse.emf.common.util.EList
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.generator.IGeneratorContext
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
+import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.common.CommonPlugin
 
-class CppGenerator extends SemanticAdaptationGenerator {
+class CppGenerator {
 	private var IFileSystemAccess2 fsa;
 	private List<File> resourcePaths = newArrayList();
 
-	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
+	def void doGenerate(Resource resource, IFileSystemAccess2 fsa) {
+		Log.push("CppGenerator.doGenerate")
+		val adaptationFolderURI = resource.URI.trimSegments(1)
+		Log.println("Adaptation folder URI: " + adaptationFolderURI)
+		doGenerate(resource, fsa, adaptationFolderURI)
+		Log.pop("CppGenerator.doGenerate")
+	}
+	
+	def void doGenerate(Resource resource, IFileSystemAccess2 fsa, URI adaptationFolderURI) {
+		Log.push("CppGenerator.doGenerate " + adaptationFolderURI)
 		this.fsa = fsa;
 		for (SemanticAdaptation type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
-			type.compile;
+			type.compile(adaptationFolderURI);
 		}
+		Log.pop("CppGenerator.doGenerate"  + adaptationFolderURI)
 	}
+	
 
 	// TODO: Verify adaptation.name is not a C++ keyword
-	def void compile(SemanticAdaptation adaptation) {
+	def void compile(SemanticAdaptation adaptation, URI adaptationFolderURI) {
 		for (Adaptation adap : adaptation.elements.filter(Adaptation)) {
 			// Value used for scoping variables in the .sa file
 			val adapInteralRefName = adap.name;
@@ -52,15 +65,21 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			val adapClassName = adap.name.toFirstUpper;
 
 			// This is the external name used in the model description file for the semantic adaptation FMU
-			val adapExternalName = adap.type.name;
+			val adapExternalName = adap.name;
 
+   
 			// List of inner FMUs
 			var ArrayList<InnerFMUData> innerFMUsData = newArrayList();
 			val innerFmus = adap.inner.eAllContents.toList.filter(InnerFMU);
+   			
 			if (innerFmus.isEmpty) {
 				throw new IncorrectAmountOfElementsException("The adaptation does not contain any InnerFMUs.")
 			}
-
+			
+			if (innerFmus.size > 1) {
+				throw new IncorrectAmountOfElementsException("Only one InnerFmu is supported.")
+			}
+			
 			/*
 			 * This map will contain scalar variables from the FMUs defined in InnerFMU.
 			 * The structure is fmuName -> (SVName -> mappedSV) where SVName = mappedSV.name for easy lookup.
@@ -74,17 +93,33 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			// TODO: Add support for multiple inner fmus. Only partially supported
 			var ModelDescription md;
 			for (fmu : adap.inner.eAllContents.toList.filter(InnerFMU)) {
-				val fmuFile = new File(fmu.path.replace('\"', ''));
+				Log.push("Loading fmu " + fmu.path)
+				val fmuFile = getFMUFile(fmu.path, adaptationFolderURI)
 				this.resourcePaths.add(fmuFile);
 				md = new ModelDescription(fmu.name, fmu.type.name, fmuFile);
-				innerFMUsData.add(new InnerFMUData(fmu.name, fmu.type.name, md.guid));
-				// fmus.add(fmu.name -> fmu.type.name);
+	
+				innerFMUsData.add(new InnerFMUData(fmu.name, fmu.path, md.guid));
 				val LinkedHashMap<String, MappedScalarVariable> mSV = newLinkedHashMap();
+	
+				Log.push("Loading fmu variables")
 				for (sv : md.sv.values) {
-					var mappedSv = new MappedScalarVariable(sv);
-					mappedSv.define = (mappedSv.mappedSv.owner + mappedSv.mappedSv.name).toUpperCase;
-					mSV.put(mappedSv.mappedSv.name, mappedSv);
+					// Only declared ports are considered.
+					val svInPort = fmu.inports.findFirst[Port p | p.name==sv.name || BuildUtilities.stripDelimiters(p.alias) == sv.name]
+					val svOutPort = fmu.outports.findFirst[Port p | p.name==sv.name || BuildUtilities.stripDelimiters(p.alias) == sv.name]
+					if (svInPort !== null || svOutPort !== null){
+						val svPort = if (svInPort !== null) svInPort else svOutPort
+						val svPortRef = svPort.name;
+						var mappedSv = new MappedScalarVariable(sv);
+						mappedSv.define = (mappedSv.mappedSv.owner + svPortRef).toUpperCase;
+						mSV.put(mappedSv.mappedSv.name, mappedSv);
+						Log.println("Variable " + sv.name + " declared.")
+					} else {
+						Log.println("Variable " + sv.name + " undeclared.")
+					}
 				}
+				mappedScalarVariables.put(fmu.name, mSV);
+				Log.pop("Loading fmu variables")
+									
 				mappedScalarVariables.put(fmu.name, mSV);
 			}
 
@@ -170,7 +205,20 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				mappedScalarVariables, SASVs, params, if(inVars !== null) inVars.value else null,
 				if(outVars !== null) outVars.value else null, if(crtlVars !== null) crtlVars.value else null,
 				inPortsWithSrcDep);
+   
+								  
+																										 
+   
+						   
+																											 
+																						 
+															 
+																							 
+																											
 
+								  
+																										 
+   
 				// Compile the out rules
 				val outRules = if(adap.out !== null) adap.out as InOutRules else null;
 				val outRuleResult = compileInOutRuleBlocks(IORuleType.Output, outRules, adapClassName,
@@ -180,9 +228,23 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 				// Compile the Control Rules. These might use the out vars, so pass these along.
 				val crtlRules = if(adap.control !== null) adap.control else null;
+	  
+																						 
 				val crtlRuleResult = compileControlRuleBlock(crtlRules, adapClassName, adapInteralRefName,
+																						 
+				  
+				  
+			
+							
 					mappedScalarVariables, SASVs, params, if(inVars !== null) inVars.value else null,
+											 
 					if(outVars !== null) outVars.value else null, if(crtlVars !== null) crtlVars.value else null);
+				 
+					  
+													 
+													  
+	 
+	 
 
 				/*
 				 * Compile the constructor, destructor and initialize functions
@@ -204,7 +266,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				/*
 				 * Compile getRuleThis function
 				 */
+																				 
 				val String getRuleThisSource = compileGetRuleThis(adapClassName);
+																				 
 
 				/*
 				 * The in and out rules have populated the semantic adaptation scalar variables we can generate the getFmiValue* and setFmiValue functions.
@@ -214,6 +278,18 @@ class CppGenerator extends SemanticAdaptationGenerator {
 
 				// Compile the state functions
 				val Pair<String,String> stateFunctions = compileStateFunctions(adapClassName);
+								  
+				  
+										
+					  
+				   
+				   
+							  
+							   
+								
+						
+	 
+														
 
 				// Compile the source file
 				val String sourceInclude = '''#include "«adapClassName».h"''';
@@ -237,9 +313,14 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				if (inVars !== null)
 					allGVars.putAll(inVars.value);
 				if (outVars !== null)
+									  
 					allGVars.putAll(outVars.value);
 				if (crtlVars !== null)
 					allGVars.putAll(crtlVars.value);
+										
+					  
+	 
+													  
 
 				// Compile the header file
 				val headerFile = compileHeader(
@@ -260,6 +341,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				val modelDescCreator = new ModelDescriptionCreator(adapExternalName);
 				val modelDescription = modelDescCreator.generateModelDescription(SASVs.values);
 				fsa.generateFile("modelDescription.xml", modelDescription);
+   
+																																									  
+																																							 
 
 				// Compile the fmu.cpp file
 				val fmuCppFile = FmuGenerator.genFmuCppFile(adapClassName);
@@ -269,6 +353,15 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				fsa.generateFile("msys-toolchain.cmake",CMakeListsGenerator.generateToolChainCmake());
 
 			}
+		}
+  		
+  		def getFMUFile(String fmuUnresolvedPath, URI adaptationFolderURI) {
+			var resolvedFolderURI = CommonPlugin.resolve(adaptationFolderURI);
+			val fmuCompleteURI = URI.createFileURI(resolvedFolderURI.toFileString + File.separatorChar + fmuUnresolvedPath.replace('\"', ''))
+			var fmuPath = fmuCompleteURI.toFileString
+			Log.println("Resolved fmu path: " + fmuPath)
+			val fmuFile = new File(fmuPath);
+			return fmuFile
 		}
 
 		def String compileParams(LinkedHashMap<String, GlobalInOutVariable> gVars, EList<ParamDeclarations> params) {
@@ -280,6 +373,8 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			}
 			return paramsConstructorSource;
 		}
+								 
+  
 
 		def calcSADefines(Collection<SAScalarVariable> variables) {
 			var ArrayList<String> defines = newArrayList();
@@ -303,7 +398,51 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			return defines.join("\n");
 		}
 
+											
+  
+
 		def Pair<String,String> compileStateFunctions(String saName)
+  
+		
+	 
+									 
+											   
+												   
+	 
+	 
+	 
+												
+   
+										  
+							
+			
+   
+  
+														  
+   
+												
+   
+		
+	 
+									 
+											   
+												   
+	 
+	 
+	 
+												
+   
+										  
+							
+			
+   
+  
+														  
+   
+												
+   
+  
+														   
 		{
 			return
 			'''
@@ -314,11 +453,24 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			-> 
 			'''
 			fmi2FMUstate «saName»::getInternalFMUState()
+   
+						
 			{
 				InternalState* s = new InternalState();
 				*s = this->internalState;
 				return s;
 			}
+					
+	
+					
+	
+				   
+	
+					   
+	
+					
+	
+					  
 			
 			void «saName»::setInternalFMUState(fmi2FMUstate state)
 			{
@@ -331,11 +483,27 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			}''';			
 		}
 
+   
 		// Compiles the final source file
+									  
+	
 		def String compileSource(String include, String constructor, String getRuleThis, String getFunctions,
+																						   
+																						   
 			String setFunctions, String inFunctions, String outFunctions, String controlFunction, String stateFunctions) {
+																						   
+															
 			return '''
 				«include»
+											   
+   
+								   
+						
+					 
+					
+	
+						
+						 
 				
 				namespace adaptation 
 				{
@@ -358,6 +526,37 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				}
 				
 			'''
+	
+
+   
+	
+								   
+																									   
+																												 
+			 
+			   
+	
+						 
+	 
+					
+	 
+					
+	 
+					 
+	 
+					 
+	 
+					
+	 
+						
+	 
+					 
+	 
+					   
+	
+	 
+	
+	  
 		}
 
 		/*
@@ -369,9 +568,22 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<InnerFMUData> fmus,
 			Collection<ScalarVariable> sVars, String stateFunctions) {
 			return '''
+
+	
 				
 					#ifndef SRC_«adapClassName.toUpperCase»_H
 					#define SRC_«adapClassName.toUpperCase»_H
+			   
+				
+	
+   
+													 
+		
+													   
+									  
+														
+								 
+																																												 
 				
 					#include "SemanticAdaptation.h"
 					#include "HyfMath.h"
@@ -383,6 +595,15 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					
 					namespace adaptation
 					{
+			 
+																																																																		  
+						 
+									
+	   
+																					   
+																						
+																						   
+																						   
 						
 						«fmusDefines»
 						
@@ -392,18 +613,32 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						{
 							public:
 								«adapClassName»(shared_ptr<std::string> fmiInstanceName, shared_ptr<string> resourceLocation, const fmi2CallbackFunctions* functions);
-								void initialize();
+								void initialize(bool loggingOn);
 								virtual ~«adapClassName»();
 								
 								void setFmiValue(fmi2ValueReference id, int value);
 								void setFmiValue(fmi2ValueReference id, bool value);
 								void setFmiValue(fmi2ValueReference id, double value);
 								void setFmiValue(fmi2ValueReference id, string value);
+					
+													
+	   
+													 
+	   
+						 
+											  
+				 
 							
 								int getFmiValueInteger(fmi2ValueReference id);
 								bool getFmiValueBoolean(fmi2ValueReference id);
 								double getFmiValueReal(fmi2ValueReference id);
 								string getFmiValueString(fmi2ValueReference id);
+								
+				  
+				  
+								
+				  
+				  
 								
 							protected:
 								«stateFunctions»
@@ -455,9 +690,50 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			var ArrayList<String> initialisations = newArrayList();
 			if (reactiveOrDealyed == ReactiveOrDelayed.DELAYED) {
 				initialisations.add('''this->reactiveness = ReactiveOrDelayed::Delayed;''');
+   
 
 			} else if (reactiveOrDealyed == ReactiveOrDelayed.REACTIVE) {
+																										  
+												 
 				initialisations.add('''this->reactiveness = ReactiveOrDelayed::Reactive;''');
+   
+					
+					
+										  
+			   
+						  
+															   
+														 
+																 
+								  
+																																													
+	
+											 
+									  
+												   
+		
+   
+			
+																																							   
+																																											   
+	   
+				  
+			  
+			   
+				
+											 
+									  
+												   
+		
+   
+			
+																																							   
+																																											   
+	   
+				  
+			  
+			   
+				
 			}
 
 			if (machineType == MooreOrMealy.MOORE) {
@@ -471,10 +747,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 				pathCount++;
 				initialisations.add('''
 					auto «pathName» = make_shared<string>(*resourceLocation);
-					«pathName»->append(string("«fmu.typeName».fmu"));
+					«pathName»->append(string(«fmu.getPath»));
 					auto «fmu.name»Fmu = make_shared<fmi2::Fmu>(*«pathName»);
 					«fmu.name»Fmu->initialize();
-					this->«fmu.name» = «fmu.name»Fmu->instantiate("«fmu.name»",fmi2CoSimulation, "«fmu.guid»", true, true, shared_from_this());
+					this->«fmu.name» = «fmu.name»Fmu->instantiate("«fmu.name»",fmi2CoSimulation, "«fmu.guid»", true, loggingOn, shared_from_this());
 					
 					if(this->«fmu.name»->component == NULL)
 						this->lastErrorState = fmi2Fatal;
@@ -491,7 +767,7 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					«crtlCons»
 				}
 				
-				void «adapClassName»::initialize()
+				void «adapClassName»::initialize(bool loggingOn)
 				{
 					«initialisations.join("\r\n")»
 				}
@@ -530,6 +806,9 @@ class CppGenerator extends SemanticAdaptationGenerator {
 					cpp.add(
 						'''
 							«functionSignature»
+	   
+												
+				  
 							{
 								«Utilities.getDebug(functionSignature)»
 								switch (id)
@@ -544,6 +823,10 @@ class CppGenerator extends SemanticAdaptationGenerator {
 									{
 										«functionReturn»;
 									}
+				  
+				
+		 
+							
 								}
 								
 							}
@@ -602,11 +885,22 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						}
 					'''
 				);
+	
+   
 
+						
 			}
 
 			return cpp.join("\n");
 		}
+	
+															 
+													  
+											 
+																					 
+								  
+		   
+														   
 
 		/*
 		 * Compiles the source file function executeInternalControlFlow.
@@ -617,11 +911,35 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params,
 			LinkedHashMap<String, GlobalInOutVariable> inVars, LinkedHashMap<String, GlobalInOutVariable> outVars,
 			LinkedHashMap<String, GlobalInOutVariable> crtlVars) {
+   
 			var cpp = "";
+   
 			val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params, inVars,
+																																								  
+																																												 
+				 
+		   
+				   
+				 
+		  
+		  
+		 
+			   
+	  
+	   
 				outVars, crtlVars);
 			if (crtlRuleBlock !== null)
 				cpp += visitor.doSwitch(crtlRuleBlock).code;
+										 
+  
+				 
+		  
+		  
+		 
+			   
+	  
+	   
+	 
 
 			return new InOutRulesBlockResult(cpp, visitor.functionSignatures);
 		}
@@ -633,13 +951,28 @@ class CppGenerator extends SemanticAdaptationGenerator {
 		def String removeEmptyArgumentParenthesis(String content) {
 			return content.substring(0, content.length - 2);
 		}
+	
+																											  
+																								   
+																								   
+																										
+														
+  
+											 
 		
 		def String removeArgumentParenthesis(String content) {
 			val startParen = content.indexOf('(');
+							 
+											   
 			
 			return content.substring(0,startParen);
 		}
 
+										
+  
+ 
+ 
+ 
 		/*
 		 * Calculates necessary information on global in/out variables
 		 */
@@ -647,6 +980,11 @@ class CppGenerator extends SemanticAdaptationGenerator {
 			LinkedHashMap<String, GlobalInOutVariable> params) {
 
 			val visitor = new RulesConditionSwitch("", "", "", null, null, params, null, null, null)
+	  
+														 
+	 
+	 
+	  
 			return visitor.getGlobalVars(gVars);
 		}
 
@@ -675,8 +1013,58 @@ class CppGenerator extends SemanticAdaptationGenerator {
 						outVars, crtlVars)
 				else
 					new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params, inVars,
+											 
+  
+ 
+											  
+															  
+  
+ 
+ 
+   
+																			  
+																										
+											  
+	
+												  
+					
+						
+							 
+						
+																												  
+												
+													
+													
+													 
+																												  
+												
+													
+													
+													 
 						outVars, crtlVars);
 
+	
+   
+																			  
+																										
+											  
+	
+												  
+					
+						
+							 
+						
+																												  
+												
+													
+													
+													 
+													  
+							
+	 
+  
+	
+ 
 			val functionName = "create" + ioType + "Rules()";
 			var String cpp = "";
 			var List<String> allFunctionSignatures = newArrayList();

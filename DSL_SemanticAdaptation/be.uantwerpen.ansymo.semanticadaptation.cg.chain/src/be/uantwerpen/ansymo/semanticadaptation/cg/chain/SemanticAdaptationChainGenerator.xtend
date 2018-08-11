@@ -22,8 +22,7 @@ class SemanticAdaptationChainGenerator extends SemanticAdaptationCustomGenerator
 		Log.push("Generating cpp code...")
 		
 		val cppGen = new CppGenerator();
-		val IGeneratorContext ctxt = null;
-		cppGen.doGenerate(canonical_sa.eResource, fsa,ctxt);
+		cppGen.doGenerate(canonical_sa.eResource, fsa);
 		
 		Log.pop("Generating cpp code... DONE")
 		

@@ -92,8 +92,7 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 		__assertNoParseErrors(model, hdFile)
 
 		val fsa = new InMemoryFileSystemAccess()
-		val IGeneratorContext ctxt = null;
-		new CppGenerator().doGenerate(model.eResource, fsa,ctxt)
+		new CppGenerator().doGenerate(model.eResource, fsa)
 
 		System.out.println(fsa.allFiles)
 	}

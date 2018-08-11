@@ -1257,7 +1257,7 @@ class SemanticAdaptationCanonicalGenerator {
 					Log.println("External port " + newExternalPort.qualifiedName + " bound to port " + port.qualifiedName)
 				} else {
 					Log.println("Error: External port " + externalPortName + " already declared.")
-					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it to avoid clashes.")
+					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it, or connect it to an internal fmu port, to avoid clashes.")
 				}
 			} else {
 				Log.println("Port " + port.qualifiedName + " has an incoming connection.")
@@ -1510,7 +1510,7 @@ class SemanticAdaptationCanonicalGenerator {
 					Log.println("External port " + newExternalPort.qualifiedName + " bound to port " + port.qualifiedName)
 				} else {
 					Log.println("Error: External port " + externalPortName + " already declared.")
-					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it to avoid clashes.")
+					throw new Exception("Error: External port " + externalPortName + " already declared. Please rename it, or connect it to an internal fmu port, to avoid clashes.")
 				}
 			} else {
 				Log.println("Port " + port.qualifiedName + " has an incoming connection.")
