@@ -319,6 +319,10 @@ class SemanticAdaptationCanonicalGenerator {
 			
 			val doStepIndex = findDoStepStatementIndex(ctrlRule, trgFMU)
 			
+			if (doStepIndex < 0){
+				throw new IllegalArgumentException("DoStep instruction for FMU " + trgFMU.name + " not found in control rule block.")
+			}
+			
 			if (! existsAssignmentToPort_BeforeIndex(connection.tgt.port, doStepIndex, ctrlRule)){
 				Log.println("Creating assignment to port " + connection.tgt.port.qualifiedName + " at position " + doStepIndex)
 				addPortAssignment(ctrlRule.controlRulestatements, connection.tgt.port, connection.src.port, doStepIndex, true)
@@ -360,6 +364,7 @@ class SemanticAdaptationCanonicalGenerator {
 		// var someVar = 10, h = doStep(f), etc...
 		// Only single declarations are supported, such as:
 		// var h = doStep(f)
+		// FIXME: This needs to look into hirarchical statements (like for loops).
 		val doStepAssignments = rule.controlRulestatements.indexed
 									.filter[s | s.value instanceof Declaration && 
 												(s.value as Declaration).declarations.size == 1 &&
