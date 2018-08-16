@@ -31,7 +31,6 @@ import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.eclipse.xtext.generator.IGeneratorContext
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -112,7 +111,6 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		val correctFileDirectory = new File(directory + File.separator + "correct");
 
 		val fsa = new InMemoryFileSystemAccess()
-		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
 		cppGen.doGenerate(model.eResource, fsa);
 
@@ -162,7 +160,6 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		__assertNoParseErrors(model, filename)
 
 		val fsa = new InMemoryFileSystemAccess();
-		val IGeneratorContext ctxt = null;
 		val cppGen = new CppGenerator();
 		cppGen.doGenerate(model.eResource, fsa);
 

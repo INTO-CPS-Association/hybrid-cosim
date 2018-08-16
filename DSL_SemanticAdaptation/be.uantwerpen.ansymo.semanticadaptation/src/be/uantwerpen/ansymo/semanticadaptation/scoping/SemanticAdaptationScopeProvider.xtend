@@ -325,8 +325,7 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 	
 	
 	
-	@Inject
-	private IGlobalScopeProvider globalScopeProvider;
+	@Inject IGlobalScopeProvider globalScopeProvider;
 
 	def protected IScope getGlobalScope(Resource context, EReference reference) {
 		return getGlobalScope(context, reference, null);
@@ -336,7 +335,7 @@ class SemanticAdaptationScopeProvider extends AbstractDeclarativeScopeProvider  
 		return wrap(globalScopeProvider.getScope(context, reference, filter));
 	}
 	
-	private IScopeWrapper scopeWrapper;
+	IScopeWrapper scopeWrapper;
 	
 	override setWrapper(IScopeWrapper wrapper) {
 		this.scopeWrapper = wrapper;

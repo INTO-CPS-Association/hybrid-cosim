@@ -51,7 +51,6 @@ import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.generator.IGeneratorContext
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
 
 /**
@@ -571,7 +570,6 @@ class SemanticAdaptationCanonicalGenerator {
 		val internalPort2ExternalPortBindings = new HashMap<Port, Port>()
 		
 		for (port : getAllInnerFMUInputPortDeclarations(sa)){
-			var parentFMU = port.eContainer as InnerFMU
 			Log.println("Checking if port " + port.qualifiedName + " is bound to an external port.")
 			val externalPort = findExternalPortByTargetDependency(sa.inports, port)
 			if (externalPort !== null){

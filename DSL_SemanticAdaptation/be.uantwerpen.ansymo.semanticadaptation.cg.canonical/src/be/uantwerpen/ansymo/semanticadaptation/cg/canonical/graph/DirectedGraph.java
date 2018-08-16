@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.eclipse.xtext.util.Strings;
-
 /*****************************************************************************
  * File: DirectedGraph.java
  * Author: Keith Schwarz (htiek@cs.stanford.edu)

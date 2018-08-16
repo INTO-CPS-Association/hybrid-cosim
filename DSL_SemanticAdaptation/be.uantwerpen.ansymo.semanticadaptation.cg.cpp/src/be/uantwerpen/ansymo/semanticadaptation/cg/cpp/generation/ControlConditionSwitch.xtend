@@ -16,7 +16,6 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GetNextInternalTimeStep
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SaveState
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.util.LinkedHashMap
 
@@ -52,7 +51,7 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 		return retVal;
 	}
 
-	public def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(ControlRuleBlock object) {
+	def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(ControlRuleBlock object) {
 		if (object.globalCtrlVars !== null) {
 			this.globalDeclaration = true;
 			for (gVar : object.globalCtrlVars)

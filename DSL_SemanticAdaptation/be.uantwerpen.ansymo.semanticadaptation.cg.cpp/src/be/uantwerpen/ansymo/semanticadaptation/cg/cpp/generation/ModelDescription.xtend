@@ -20,18 +20,15 @@ import org.w3c.dom.Document
 import org.w3c.dom.NodeList
 
 class ModelDescription {
-	private final Document md;
-	private final String name;
-	private final String type;
+	final Document md;
+	final String name;
 	//Get rid of these. We need more information anyways.
-	private var LinkedHashMap<String, Pair<String, Integer>> svDefs = newLinkedHashMap();
-	private var LinkedHashMap<String, ScalarVariable> svs = newLinkedHashMap();
-	private var String guid;
+	var LinkedHashMap<String, Pair<String, Integer>> svDefs = newLinkedHashMap();
+	var LinkedHashMap<String, ScalarVariable> svs = newLinkedHashMap();
+	var String guid;
 
-	new(String name, String type, File path) {
+	new(String name, File path) {
 		this.name = name;
-		this.type = type;
-		
 		
 		var ZipFile fmu = new ZipFile(path);
 		var Enumeration<? extends ZipEntry> entries = fmu.entries();
@@ -98,15 +95,15 @@ class ModelDescription {
 		}
 	}
 
-	public def getName() {
+	def getName() {
 		return this.name;
 	}
 
-	public def getSvDef() {
+	def getSvDef() {
 		return this.svDefs;
 	}
 
-	public def getSv() { return this.svs; }
+	def getSv() { return this.svs; }
 
-	public def getGuid() { return this.guid; }
+	def getGuid() { return this.guid; }
 }

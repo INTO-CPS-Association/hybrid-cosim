@@ -11,7 +11,7 @@ class Log {
 	
 	var c = 0
 	
-	private static Logger logger;
+	static Logger logger;
 	
 	protected new() {
 		LogManager.resetConfiguration();

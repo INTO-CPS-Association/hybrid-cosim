@@ -8,7 +8,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import java.util.LinkedHashMap
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.OutRulesBlock
 
-public class OutRulesConditionSwitch extends RulesConditionSwitch {
+class OutRulesConditionSwitch extends RulesConditionSwitch {
 	new(String adaptationClassName, String adaptationName,
 		LinkedHashMap<String, LinkedHashMap<String, MappedScalarVariable>> mSVars,
 		LinkedHashMap<String, SAScalarVariable> SASVs, LinkedHashMap<String, GlobalInOutVariable> params,
@@ -17,7 +17,7 @@ public class OutRulesConditionSwitch extends RulesConditionSwitch {
 		super(adaptationClassName, adaptationName, "out_rule_", mSVars, SASVs, params, inVars, outVars, crtlVars);
 	}
 
-	public def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(OutRulesBlock object) {
+	def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(OutRulesBlock object) {
 		if (object.globalOutVars !== null) {
 			this.globalDeclaration = true;
 			for (gVar : object.globalOutVars)

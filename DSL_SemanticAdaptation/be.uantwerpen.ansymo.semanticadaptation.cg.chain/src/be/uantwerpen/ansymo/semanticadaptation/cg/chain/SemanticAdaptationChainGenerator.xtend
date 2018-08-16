@@ -10,7 +10,6 @@ import be.uantwerpen.ansymo.semanticadaptation.log.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import org.eclipse.emf.common.util.URI
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import org.eclipse.xtext.generator.IGeneratorContext
 
 class SemanticAdaptationChainGenerator extends SemanticAdaptationCustomGenerator {
 	

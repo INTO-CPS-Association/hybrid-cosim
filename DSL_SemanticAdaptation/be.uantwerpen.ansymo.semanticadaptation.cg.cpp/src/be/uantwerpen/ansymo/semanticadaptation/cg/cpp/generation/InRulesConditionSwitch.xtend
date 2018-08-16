@@ -12,7 +12,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 
 class InRulesConditionSwitch extends RulesConditionSwitch {
 
-	private Boolean inOutputFunction = false;
+	Boolean inOutputFunction = false;
 
 	new(
 		String adaptationClassName,
@@ -27,7 +27,7 @@ class InRulesConditionSwitch extends RulesConditionSwitch {
 		super(adaptationClassName, adaptationName, "in_rule_", mSVars, SASVs, params, inVars, outVars, crtlVars);
 	}
 
-	public def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(InRulesBlock object) {
+	def LinkedHashMap<String, GlobalInOutVariable> getGlobalVars(InRulesBlock object) {
 		if (object.globalInVars !== null) {
 			this.globalDeclaration = true;
 			for (gVar : object.globalInVars)

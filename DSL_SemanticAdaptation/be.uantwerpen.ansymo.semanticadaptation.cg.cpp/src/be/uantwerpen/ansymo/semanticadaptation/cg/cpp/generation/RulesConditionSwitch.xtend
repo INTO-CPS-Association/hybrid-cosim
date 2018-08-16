@@ -99,14 +99,14 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 	 * This function adds a header style function signature to the list <i>functionsignatures</i> 
 	 * and returns the source style function signature
 	 */
-	public def String createFunctionSignature(String functionName, String type, int count,
+	def String createFunctionSignature(String functionName, String type, int count,
 		List<String> functionSignatures) {
 		val functionSignature = this.functionPrefix + functionName + count + "(double dt, double H, double h)";
 		functionSignatures.add(type + " " + functionSignature);
 		return type + " " + this.adaptationClassName + "::" + functionSignature;
 	}
 
-	public def getDataRuleCount() { return this.count; }
+	def getDataRuleCount() { return this.count; }
 
 	def void incrementCount() {
 		this.count++;
@@ -115,7 +115,7 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 	/*
 	 * COMPILATION FUNCTIONS
 	 */
-	public def Pair<String, LinkedHashMap<String, GlobalInOutVariable>> getGlobalVars(EList<Declaration> gVars) {
+	def Pair<String, LinkedHashMap<String, GlobalInOutVariable>> getGlobalVars(EList<Declaration> gVars) {
 
 		// Get the global variables added to globalVars
 		this.globalDeclaration = true;

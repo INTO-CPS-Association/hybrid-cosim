@@ -10,7 +10,6 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVCausality
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.exceptions.IncorrectAmountOfElementsException
-import be.uantwerpen.ansymo.semanticadaptation.generator.SemanticAdaptationGenerator
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Adaptation
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ControlRuleBlock
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
@@ -34,8 +33,8 @@ import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.common.CommonPlugin
 
 class CppGenerator {
-	private var IFileSystemAccess2 fsa;
-	private List<File> resourcePaths = newArrayList();
+	var IFileSystemAccess2 fsa;
+	List<File> resourcePaths = newArrayList();
 
 	def void doGenerate(Resource resource, IFileSystemAccess2 fsa) {
 		Log.push("CppGenerator.doGenerate")
@@ -96,7 +95,7 @@ class CppGenerator {
 				Log.push("Loading fmu " + fmu.path)
 				val fmuFile = getFMUFile(fmu.path, adaptationFolderURI)
 				this.resourcePaths.add(fmuFile);
-				md = new ModelDescription(fmu.name, fmu.type.name, fmuFile);
+				md = new ModelDescription(fmu.name, fmuFile);
 	
 				innerFMUsData.add(new InnerFMUData(fmu.name, fmu.path, md.guid));
 				val LinkedHashMap<String, MappedScalarVariable> mSV = newLinkedHashMap();
@@ -453,24 +452,12 @@ class CppGenerator {
 			-> 
 			'''
 			fmi2FMUstate «saName»::getInternalFMUState()
-   
 						
 			{
 				InternalState* s = new InternalState();
 				*s = this->internalState;
 				return s;
 			}
-					
-	
-					
-	
-				   
-	
-					   
-	
-					
-	
-					  
 			
 			void «saName»::setInternalFMUState(fmi2FMUstate state)
 			{
@@ -495,15 +482,6 @@ class CppGenerator {
 															
 			return '''
 				«include»
-											   
-   
-								   
-						
-					 
-					
-	
-						
-						 
 				
 				namespace adaptation 
 				{
@@ -526,37 +504,6 @@ class CppGenerator {
 				}
 				
 			'''
-	
-
-   
-	
-								   
-																									   
-																												 
-			 
-			   
-	
-						 
-	 
-					
-	 
-					
-	 
-					 
-	 
-					 
-	 
-					
-	 
-						
-	 
-					 
-	 
-					   
-	
-	 
-	
-	  
 		}
 
 		/*
@@ -568,23 +515,9 @@ class CppGenerator {
 			LinkedHashMap<String, GlobalInOutVariable> globalVariables, ArrayList<InnerFMUData> fmus,
 			Collection<ScalarVariable> sVars, String stateFunctions) {
 			return '''
-
-	
-				
 					#ifndef SRC_«adapClassName.toUpperCase»_H
 					#define SRC_«adapClassName.toUpperCase»_H
-			   
-				
-	
-   
-													 
-		
-													   
-									  
-														
-								 
-																																												 
-				
+					
 					#include "SemanticAdaptation.h"
 					#include "HyfMath.h"
 					#include <memory>
@@ -595,18 +528,8 @@ class CppGenerator {
 					
 					namespace adaptation
 					{
-			 
-																																																																		  
-						 
-									
-	   
-																					   
-																						
-																						   
-																						   
-						
 						«fmusDefines»
-						
+
 						«SADefines»
 					
 						class «adapClassName» : public SemanticAdaptation<«adapClassName»>, public enable_shared_from_this<«adapClassName»>
@@ -620,26 +543,11 @@ class CppGenerator {
 								void setFmiValue(fmi2ValueReference id, bool value);
 								void setFmiValue(fmi2ValueReference id, double value);
 								void setFmiValue(fmi2ValueReference id, string value);
-					
-													
-	   
-													 
-	   
-						 
-											  
-				 
-							
 								int getFmiValueInteger(fmi2ValueReference id);
 								bool getFmiValueBoolean(fmi2ValueReference id);
 								double getFmiValueReal(fmi2ValueReference id);
 								string getFmiValueString(fmi2ValueReference id);
-								
-				  
-				  
-								
-				  
-				  
-								
+
 							protected:
 								«stateFunctions»
 								
@@ -690,50 +598,8 @@ class CppGenerator {
 			var ArrayList<String> initialisations = newArrayList();
 			if (reactiveOrDealyed == ReactiveOrDelayed.DELAYED) {
 				initialisations.add('''this->reactiveness = ReactiveOrDelayed::Delayed;''');
-   
-
 			} else if (reactiveOrDealyed == ReactiveOrDelayed.REACTIVE) {
-																										  
-												 
 				initialisations.add('''this->reactiveness = ReactiveOrDelayed::Reactive;''');
-   
-					
-					
-										  
-			   
-						  
-															   
-														 
-																 
-								  
-																																													
-	
-											 
-									  
-												   
-		
-   
-			
-																																							   
-																																											   
-	   
-				  
-			  
-			   
-				
-											 
-									  
-												   
-		
-   
-			
-																																							   
-																																											   
-	   
-				  
-			  
-			   
-				
 			}
 
 			if (machineType == MooreOrMealy.MOORE) {
@@ -806,9 +672,6 @@ class CppGenerator {
 					cpp.add(
 						'''
 							«functionSignature»
-	   
-												
-				  
 							{
 								«Utilities.getDebug(functionSignature)»
 								switch (id)
@@ -823,12 +686,7 @@ class CppGenerator {
 									{
 										«functionReturn»;
 									}
-				  
-				
-		 
-							
 								}
-								
 							}
 						'''
 					);
@@ -885,22 +743,9 @@ class CppGenerator {
 						}
 					'''
 				);
-	
-   
-
-						
 			}
-
 			return cpp.join("\n");
 		}
-	
-															 
-													  
-											 
-																					 
-								  
-		   
-														   
 
 		/*
 		 * Compiles the source file function executeInternalControlFlow.
@@ -914,32 +759,11 @@ class CppGenerator {
    
 			var cpp = "";
    
-			val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params, inVars,
-																																								  
-																																												 
-				 
-		   
-				   
-				 
-		  
-		  
-		 
-			   
-	  
-	   
-				outVars, crtlVars);
+			val visitor = new ControlConditionSwitch(adaptationClassName, adaptationName, 
+									mSVars, SASVs, params, inVars, outVars, crtlVars
+			);
 			if (crtlRuleBlock !== null)
 				cpp += visitor.doSwitch(crtlRuleBlock).code;
-										 
-  
-				 
-		  
-		  
-		 
-			   
-	  
-	   
-	 
 
 			return new InOutRulesBlockResult(cpp, visitor.functionSignatures);
 		}
@@ -951,27 +775,11 @@ class CppGenerator {
 		def String removeEmptyArgumentParenthesis(String content) {
 			return content.substring(0, content.length - 2);
 		}
-	
-																											  
-																								   
-																								   
-																										
-														
-  
-											 
 		
 		def String removeArgumentParenthesis(String content) {
 			val startParen = content.indexOf('(');
-							 
-											   
-			
 			return content.substring(0,startParen);
 		}
-
-										
-  
- 
- 
  
 		/*
 		 * Calculates necessary information on global in/out variables
@@ -980,10 +788,6 @@ class CppGenerator {
 			LinkedHashMap<String, GlobalInOutVariable> params) {
 
 			val visitor = new RulesConditionSwitch("", "", "", null, null, params, null, null, null)
-	  
-														 
-	 
-	 
 	  
 			return visitor.getGlobalVars(gVars);
 		}
@@ -1013,57 +817,7 @@ class CppGenerator {
 						outVars, crtlVars)
 				else
 					new OutRulesConditionSwitch(adaptationClassName, adaptationName, mSVars, SASVs, params, inVars,
-											 
-  
- 
-											  
-															  
-  
- 
- 
-   
-																			  
-																										
-											  
-	
-												  
-					
-						
-							 
-						
-																												  
-												
-													
-													
-													 
-																												  
-												
-													
-													
-													 
 						outVars, crtlVars);
-
-	
-   
-																			  
-																										
-											  
-	
-												  
-					
-						
-							 
-						
-																												  
-												
-													
-													
-													 
-													  
-							
-	 
-  
-	
  
 			val functionName = "create" + ioType + "Rules()";
 			var String cpp = "";
