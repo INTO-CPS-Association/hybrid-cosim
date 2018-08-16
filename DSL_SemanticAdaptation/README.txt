@@ -28,8 +28,8 @@ Generation and Compilation
 - Might be necessary to right click on a project -> Maven -> Update project
 
 ```bash
-# Perform a clean build
-mvn clean package
+# Perform a clean build, and run tests
+mvn clean install
 ```
 
 ### Other tasks:
