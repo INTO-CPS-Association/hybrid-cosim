@@ -26,6 +26,7 @@ import org.junit.runners.Parameterized
 import org.junit.runners.Parameterized.Parameters
 import org.junit.Ignore
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
+import org.junit.Assert
 
 @RunWith(typeof(Parameterized))
 @InjectWith(SemanticAdaptationInjectorProvider)
@@ -87,6 +88,8 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 		files.remove(0);
 		val tailFiles = files;
 		val model = __parse(hdFile, tailFiles)
+		
+		println("Checking for errors in file " + hdFile.absolutePath)
 		__assertNoParseErrors(model, hdFile)
 
 		val fsa = new InMemoryFileSystemAccess()
@@ -117,6 +120,7 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 
 	def __assertNoParseErrors(EObject root, File file) {
 		try {
+			Assert.assertNotNull(root)
 			root.assertNoErrors
 		} catch (AssertionError e) {
 			val p = Pattern.compile(".*, offset (?<offset>[0-9]+), length (?<length>[0-9]+)")

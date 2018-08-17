@@ -62,36 +62,36 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		__parseAndGenerateWithNoErrors('window_sa_canonical_new.BASE.sa', 'test_input/single_folder_spec/window/', 'powerwindow');
 	}
 	
-	@Ignore @Test def getSetState_sa() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated', "getSetState");
+	@Test def getSetState_sa() {
+		__parseAndGenerateWithNoErrors('GetSetState.sa', 'test_input/single_folder_spec/getsetstate/', "getSetState");
 	}
 
-	@Ignore @Test def lazy_canonical() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
+	@Test def lazy_canonical() {
+		__parseAndGenerateWithNoErrors('lazy_canonical.sa', 'test_input/single_folder_spec/lazy/', "lazy");
 	}
 
 	@Ignore @Test def loop() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "LoopSA");
+		__parseAndGenerateWithNoErrors('loop_canonical.sa', 'test_input/single_folder_spec/loop/', "LoopSA");
 	}
 
-	@Ignore @Test def rate() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/rate/rate.sa', 'generated', "rate");
+	@Test def rate() {
+		__parseAndGenerateWithNoErrors('rate.sa', 'test_input/single_folder_spec/rate/', "rate");
 	}
 
-	@Ignore @Test def rate_canonical() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
+	@Test def rate_canonical() {
+		__parseAndGenerateWithNoErrors('rate_canonical.sa', 'test_input/single_folder_spec/rate/', "rate_canonical");
 	}
 
-	@Ignore @Test def power() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated', 'power');
+	@Test def power() {
+		__parseAndGenerateWithNoErrors('power.BASE.sa', 'test_input/single_folder_spec/power/', 'power');
 	}
 
-	@Ignore @Test def rollback_test() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated', 'rollback_test');
+	@Test def rollback_test() {
+		__parseAndGenerateWithNoErrors('rollback_test.sa', 'test_input/single_folder_spec/rollback_test/', 'rollback_test');
 	}
 
-	@Ignore @Test def controller_test() {
-		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated', 'controller');
+	@Test def controller_test() {
+		__parseAndGenerateWithNoErrors('controller.sa', 'test_input/single_folder_spec/controller/', 'controller');
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
