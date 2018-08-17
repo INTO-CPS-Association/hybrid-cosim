@@ -1,8 +1,8 @@
-semantic adaptation reactive moore RateSA rate_sa
+semantic adaptation reactive moore rate_sa
 at "./path/to/RateSA.fmu"
 
 	for inner fmu LoopSA loop_sa
-		at "./test_input/single_folder_spec/rate/LoopSA.fmu"
+		at "./LoopSA.fmu"
 		with input ports displacement (rad), speed (rad/s)
 		with output ports tau (N.m)
 	

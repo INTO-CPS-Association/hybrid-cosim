@@ -1,4 +1,4 @@
-semantic adaptation reactive mealy OuterFMU outerFMU
+semantic adaptation reactive mealy OuterFMU
 at "./path/to/FMU.fmu"
 
 	for inner fmu reactive moore NA n1

@@ -1,8 +1,8 @@
-semantic adaptation delayed moore PowerSA power_sa
+semantic adaptation delayed moore power_sa
 at "./path/to/PowerSA.fmu"
 
 	for inner fmu Power power
-	at "test_input/single_folder_spec/power/Power.fmu"
+	at "./Power.fmu"
 	with input ports u, d, tau (N.m)
 	with output ports armature_current (A), speed (rad/s), displacement (rad)
 

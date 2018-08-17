@@ -1,6 +1,6 @@
 module Controller_SA
 
-semantic adaptation reactive moore ControllerSA controller_sa
+semantic adaptation reactive moore controller_sa
 at "./path/to/ControllerSA.fmu"
 
 	for inner fmu LazySA lazy

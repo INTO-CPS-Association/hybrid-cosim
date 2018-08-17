@@ -63,8 +63,6 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 				
 				Assert.assertTrue(sa.inports.filter[p | p.name=="innerFMU1__input_port1"].size == 0)
 				
-				//sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.owner.name == "innerFMU2"
-				//sa.inports.filter[p | p.name=="innerFMU2__input_port3"].head.targetdependency.port.name == "input_port3"
 			}
 		}) }
 	

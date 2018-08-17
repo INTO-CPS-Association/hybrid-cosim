@@ -368,8 +368,8 @@ class SemanticAdaptationCanonicalGenerator {
 									.filter[s | s.value instanceof Declaration && 
 												(s.value as Declaration).declarations.size == 1 &&
 												(s.value as Declaration).declarations.head instanceof SingleVarDeclaration &&
-												((s.value as Declaration).declarations.head as SingleVarDeclaration).expr instanceof DoStepFun &&
-												(((s.value as Declaration).declarations.head as SingleVarDeclaration).expr as DoStepFun).fmu == fmu 
+												(s.value as Declaration).declarations.head.expr instanceof DoStepFun &&
+												((s.value as Declaration).declarations.head.expr as DoStepFun).fmu == fmu 
 									]
 		
 		check(doStepAssignments.size <= 1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
@@ -649,8 +649,8 @@ class SemanticAdaptationCanonicalGenerator {
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
 		assignment.lvalue = SemanticAdaptationFactory.eINSTANCE.createVariable()
-		(assignment.lvalue as Variable).owner = toPort.eContainer as FMU
-		(assignment.lvalue as Variable).ref = toPort
+		assignment.lvalue.owner = toPort.eContainer as FMU
+		assignment.lvalue.ref = toPort
 		val varRef = SemanticAdaptationFactory.eINSTANCE.createVariable()
 		varRef.owner = fromPort.eContainer as FMU
 		varRef.ref = fromPort
@@ -1049,7 +1049,7 @@ class SemanticAdaptationCanonicalGenerator {
 		} else if (expression instanceof StringLiteral){
 			return "String"
 		} else if (expression instanceof Variable){
-			var varRef = expression as Variable
+			var varRef = expression
 			if (varRef.ref instanceof Port){
 				var decl = varRef.ref as Port
 				if (decl.type !== null){

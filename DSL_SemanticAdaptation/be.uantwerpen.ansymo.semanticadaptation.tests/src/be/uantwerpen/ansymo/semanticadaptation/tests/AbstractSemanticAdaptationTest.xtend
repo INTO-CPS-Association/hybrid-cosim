@@ -79,7 +79,7 @@ abstract class AbstractSemanticAdaptationTest {
 					print(ind(indent+1) + f.name + ": ")
 					if (feature instanceof EObject) {
 						print(feature.class.simpleName.substring(0, feature.class.simpleName.length-4))
-						printObject((feature as EObject), indent+1)
+						printObject(feature, indent+1)
 					} else if (feature instanceof String) {
 						println(feature.class.simpleName + " = '" + feature + "'")
 					} else {

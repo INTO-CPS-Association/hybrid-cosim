@@ -1,4 +1,4 @@
-semantic adaptation delayed moore PowerSA power_sa
+semantic adaptation delayed moore power_sa
 at "./path/to/PowerSA.fmu"
 
 	for inner fmu Power power

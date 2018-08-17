@@ -1,8 +1,8 @@
-semantic adaptation reactive mealy GetSetStateSA getSetStateSA
+semantic adaptation reactive mealy getSetStateSA
 at "./path/to/GetSetStateSA.fmu"
 
 	for inner fmu GetSetState getSetState
-		at "test_input/single_folder_spec/getsetstate/GetSetState.fmu"
+		at "./GetSetState.fmu"
 		with input ports valve
 		with output ports level
 

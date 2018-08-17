@@ -1,4 +1,4 @@
-semantic adaptation reactive mealy OuterFMU outerFMU
+semantic adaptation reactive mealy outerFMU
 at "./path/to/FMU.fmu"
 
 	for inner fmu InnerFMU innerFMU1

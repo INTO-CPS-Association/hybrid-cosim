@@ -77,8 +77,7 @@ class CgCppAutoTest extends AbstractSemanticAdaptationTest {
 
 	var List<File> f;
 
-	@Ignore
-	@Test def allSemanticAdaptations() {
+	@Ignore @Test def allSemanticAdaptations() {
 		//assertTrue(false);
 		__parseNoErrors(f);
 	}

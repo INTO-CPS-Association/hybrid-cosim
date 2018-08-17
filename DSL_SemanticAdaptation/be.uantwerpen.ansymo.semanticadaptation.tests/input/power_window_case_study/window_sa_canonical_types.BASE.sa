@@ -1,4 +1,4 @@
-semantic adaptation reactive mealy WindowSA windowSA
+semantic adaptation reactive mealy windowSA
 at "./path/to/WindowSA.fmu"
 
 	for inner fmu Window window

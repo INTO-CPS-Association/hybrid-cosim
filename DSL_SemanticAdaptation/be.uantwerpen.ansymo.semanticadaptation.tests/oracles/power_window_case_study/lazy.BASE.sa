@@ -1,4 +1,4 @@
-semantic adaptation reactive moore LazySA lazy_sa_BASE
+semantic adaptation reactive moore lazy_sa_BASE
 at "./path/to/LazySA.fmu"
 
 	for inner fmu Controller controller

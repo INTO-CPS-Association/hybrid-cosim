@@ -1,4 +1,4 @@
-semantic adaptation reactive mealy WindowSA windowSA
+semantic adaptation reactive mealy WindowSA
 at "./path/to/WindowSA.fmu"
 
 	for inner fmu Window window
@@ -10,7 +10,7 @@ output ports disp (m)  <- window.height, tau (N)
 
 out rules {
 	true -> {} --> {
-		windowSA.tau := -window.reaction_torque;
+		tau := -window.reaction_torque;
 	};
 }
 

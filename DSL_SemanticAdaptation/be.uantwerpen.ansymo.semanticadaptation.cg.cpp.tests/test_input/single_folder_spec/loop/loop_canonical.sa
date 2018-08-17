@@ -1,13 +1,13 @@
-semantic adaptation reactive moore LoopSA loop_sa
+semantic adaptation reactive moore loop_sa
 at "./path/to/LoopSA.fmu"
 	
 	for inner fmu WindowSA window_sa
-		at "./test_input/single_folder_spec/loop/WindowSA.fmu"
+		at "./WindowSA.fmu"
 		with input ports displacement (rad), speed (rad/s), reaction_force (N)
 		with output ports disp (m), tau (N.m)
 	
 	for inner fmu Obstacle obstacle
-		at "./test_input/single_folder_spec/loop/Obstacle.fmu"
+		at "./Obstacle.fmu"
 		with input ports disp (m)
 		with output ports reaction_force (m)
 	

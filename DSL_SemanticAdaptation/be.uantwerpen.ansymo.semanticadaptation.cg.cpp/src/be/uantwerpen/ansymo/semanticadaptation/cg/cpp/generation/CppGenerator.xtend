@@ -38,24 +38,26 @@ class CppGenerator {
 
 	def void doGenerate(Resource resource, IFileSystemAccess2 fsa) {
 		Log.push("CppGenerator.doGenerate")
+		Log.println("Resource URI: " + resource.URI)
 		val adaptationFolderURI = resource.URI.trimSegments(1)
-		Log.println("Adaptation folder URI: " + adaptationFolderURI)
-		doGenerate(resource, fsa, adaptationFolderURI)
+		val resolvedFolderURI = CommonPlugin.resolve(adaptationFolderURI);
+		Log.println("Adaptation folder URI: " + resolvedFolderURI.toFileString)
+		doGenerate(resource, fsa, resolvedFolderURI.toFileString)
 		Log.pop("CppGenerator.doGenerate")
 	}
 	
-	def void doGenerate(Resource resource, IFileSystemAccess2 fsa, URI adaptationFolderURI) {
-		Log.push("CppGenerator.doGenerate " + adaptationFolderURI)
+	def void doGenerate(Resource resource, IFileSystemAccess2 fsa, String resolvedFolderURI) {
+		Log.push("CppGenerator.doGenerate " + resolvedFolderURI)
 		this.fsa = fsa;
 		for (SemanticAdaptation type : resource.allContents.toIterable.filter(SemanticAdaptation)) {
-			type.compile(adaptationFolderURI);
+			type.compile(resolvedFolderURI);
 		}
-		Log.pop("CppGenerator.doGenerate"  + adaptationFolderURI)
+		Log.pop("CppGenerator.doGenerate"  + resolvedFolderURI)
 	}
 	
 
 	// TODO: Verify adaptation.name is not a C++ keyword
-	def void compile(SemanticAdaptation adaptation, URI adaptationFolderURI) {
+	def void compile(SemanticAdaptation adaptation, String resolvedFolderURI) {
 		for (Adaptation adap : adaptation.elements.filter(Adaptation)) {
 			// Value used for scoping variables in the .sa file
 			val adapInteralRefName = adap.name;
@@ -93,7 +95,7 @@ class CppGenerator {
 			var ModelDescription md;
 			for (fmu : adap.inner.eAllContents.toList.filter(InnerFMU)) {
 				Log.push("Loading fmu " + fmu.path)
-				val fmuFile = getFMUFile(fmu.path, adaptationFolderURI)
+				val fmuFile = getFMUFile(fmu.path, resolvedFolderURI)
 				this.resourcePaths.add(fmuFile);
 				md = new ModelDescription(fmu.name, fmuFile);
 	
@@ -354,9 +356,11 @@ class CppGenerator {
 			}
 		}
   		
-  		def getFMUFile(String fmuUnresolvedPath, URI adaptationFolderURI) {
-			var resolvedFolderURI = CommonPlugin.resolve(adaptationFolderURI);
-			val fmuCompleteURI = URI.createFileURI(resolvedFolderURI.toFileString + File.separatorChar + fmuUnresolvedPath.replace('\"', ''))
+  		def getFMUFile(String fmuUnresolvedPath, String resolvedFolderURI) {
+			Log.println("Current working dir: " + resolvedFolderURI)
+			//var resolvedFolderURI = CommonPlugin.resolve(adaptationFolderURI);
+			Log.println("Resolved Current working dir: " + resolvedFolderURI)
+			val fmuCompleteURI = URI.createFileURI(resolvedFolderURI + File.separatorChar + fmuUnresolvedPath.replace('\"', ''))
 			var fmuPath = fmuCompleteURI.toFileString
 			Log.println("Resolved fmu path: " + fmuPath)
 			val fmuFile = new File(fmuPath);

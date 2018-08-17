@@ -58,50 +58,40 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		}
 	}
 
-	@Ignore
 	@Test def window_sa_canonical_new() {
-		__parseNoErrors('test_input/single_folder_spec/window/window_sa_canonical_new.BASE.sa', 'generated',
-			"powerwindow");
+		__parseAndGenerateWithNoErrors('window_sa_canonical_new.BASE.sa', 'test_input/single_folder_spec/window/', 'powerwindow');
 	}
 	
-	@Ignore
-	@Test def getSetState_sa() {
-		__parseNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated', "getSetState");
+	@Ignore @Test def getSetState_sa() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/getsetstate/GetSetState.sa', 'generated', "getSetState");
 	}
 
-	@Ignore
-	@Test def lazy_canonical() {
-		__parseNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
+	@Ignore @Test def lazy_canonical() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/lazy/lazy_canonical.sa', 'generated', "lazy");
 	}
 
-	@Ignore
-	@Test def loop() {
-		__parseNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "LoopSA");
+	@Ignore @Test def loop() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/loop/loop_canonical.sa', 'generated', "LoopSA");
 	}
 
-	@Ignore
-	@Test def rate() {
-		__parseNoErrors('test_input/single_folder_spec/rate/rate.sa', 'generated', "rate");
+	@Ignore @Test def rate() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/rate/rate.sa', 'generated', "rate");
 	}
 
-	@Ignore
-	@Test def rate_canonical() {
-		__parseNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
+	@Ignore @Test def rate_canonical() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/rate/rate_canonical.sa', 'generated', "rate_canonical");
 	}
 
-	@Ignore
-	@Test def power() {
-		__parseNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated', 'power');
+	@Ignore @Test def power() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/power/power.BASE.sa', 'generated', 'power');
 	}
 
-	@Ignore
-	@Test def rollback_test() {
-		__parseNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated', 'rollback_test');
+	@Ignore @Test def rollback_test() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/rollback_test/rollback_test.sa', 'generated', 'rollback_test');
 	}
 
-	@Ignore
-	@Test def controller_test() {
-		__parseNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated', 'controller');
+	@Ignore @Test def controller_test() {
+		__parseAndGenerateWithNoErrors('test_input/single_folder_spec/controller/controller.sa', 'generated', 'controller');
 	}
 
 	def __parseNoErrorsWithValidation(String directory, String filename) {
@@ -151,23 +141,29 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 	}
 
-	def __parseNoErrors(String filename, String directory, String projectName) {
-		val saRootDir = Paths.get("target", directory, projectName).toFile();
-		val srcGenPath = new File(saRootDir, "sources")
-		val resourcesPath = new File(saRootDir, "resources");
-
-		val model = __parse(filename)
-		__assertNoParseErrors(model, filename)
+	def __parseAndGenerateWithNoErrors(String filename, String directory, String projectName) {
+		val dirTestOutput = directory.replace('test_input/','target/test-classes/')
+		val saRootDir = Paths.get(dirTestOutput).toFile();
+		val saGenRootTempDir = Paths.get(dirTestOutput, projectName).toFile();
+		val absFileName = Paths.get(dirTestOutput, filename).toFile();
+		val srcGenPath = new File(saGenRootTempDir, "sources")
+		val resourcesPath = new File(saGenRootTempDir, "resources");
+		
+		println("saGenRootTempDir="+saGenRootTempDir.absolutePath)
+		println("absFileName="+absFileName.absolutePath)
+		
+		val model = __parse(absFileName.absolutePath)
+		__assertNoParseErrors(model, absFileName.absolutePath)
 
 		val fsa = new InMemoryFileSystemAccess();
 		val cppGen = new CppGenerator();
-		cppGen.doGenerate(model.eResource, fsa);
+		cppGen.doGenerate(model.eResource, fsa, saRootDir.absolutePath);
 
-		if (saRootDir.exists) {
-			BuildUtilities.deleteFolder(saRootDir);
+		if (saGenRootTempDir.exists) {
+			BuildUtilities.deleteFolder(saGenRootTempDir);
 		}
 
-		saRootDir.mkdirs();
+		saGenRootTempDir.mkdirs();
 		srcGenPath.mkdirs();
 		resourcesPath.mkdirs();
 
@@ -176,7 +172,7 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 
 			var File fp;
 			if (fName.equals("modelDescription.xml") || fName.equals("CMakeLists.txt") || fName.equals("msys-toolchain.cmake")) {
-				fp = new File(saRootDir, fName);
+				fp = new File(saGenRootTempDir, fName);
 			} else {
 				fp = new File(srcGenPath, fName);
 			}
@@ -200,16 +196,16 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 //		BuildUtilities.writeToFile(new File(saRootDir, "msys-toolchain.cmake"), cMakeToolChain);
 		if (!CMakeUtil.windows) {
 			val cmake = new CMakeUtil(true)
-			FileUtils.copyDirectory(hcfRoot, new File(saRootDir, "hcf"), new FileFilter() {
+			FileUtils.copyDirectory(hcfRoot, new File(saGenRootTempDir, "hcf"), new FileFilter() {
 
 				override accept(File pathname) {
 					return !pathname.name.equals("CMakeCache.txt")
 				}
 
 			})
-			Assert.assertTrue("Expected cmake to parse", cmake.generate(saRootDir));
-			Assert.assertTrue("Expected no make errors", cmake.make(saRootDir));
-			Assert.assertTrue("Failed to pack the FMU", cmake.make(saRootDir, "pack"));
+			Assert.assertTrue("Expected cmake to parse", cmake.generate(saGenRootTempDir));
+			Assert.assertTrue("Expected no make errors", cmake.make(saGenRootTempDir));
+			Assert.assertTrue("Failed to pack the FMU", cmake.make(saGenRootTempDir, "pack"));
 		}
 	}
 

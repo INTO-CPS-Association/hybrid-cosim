@@ -1,4 +1,4 @@
-semantic adaptation reactive moore LoopSA loop_sa
+semantic adaptation reactive moore loop_sa
 at "./path/to/LoopSA.fmu"
 
 	for inner fmu WindowSA window_sa

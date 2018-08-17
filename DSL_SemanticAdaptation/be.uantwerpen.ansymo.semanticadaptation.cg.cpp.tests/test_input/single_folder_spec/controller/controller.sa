@@ -1,8 +1,8 @@
-semantic adaptation reactive moore ControllerSA controller_sa
+semantic adaptation reactive moore controller_sa
 at "./path/to/ControllerSA.fmu"
 
 	for inner fmu LazySA lazy
-	at "test_input/single_folder_spec/controller/LazySA.fmu"
+	at "./LazySA.fmu"
 	with input ports obj_detected, passenger_up, passenger_down, passenger_stop, driver_up, driver_down, driver_stop
 	with output ports up, down, stop
 

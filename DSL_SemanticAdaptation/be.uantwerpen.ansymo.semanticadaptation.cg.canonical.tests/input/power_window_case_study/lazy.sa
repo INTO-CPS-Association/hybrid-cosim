@@ -1,4 +1,4 @@
-semantic adaptation reactive moore LazySA lazy_sa
+semantic adaptation reactive moore LazySA
 at "./path/to/LazySA.fmu"
 
 	for inner fmu Controller controller
@@ -38,13 +38,13 @@ control rules {
 	}
 	
 	var step_size := min(H, tn - t); 
-	if (lazy_sa.obj_detected != prev_obj_detected or
-		lazy_sa.passenger_up != prev_passenger_up or
-		lazy_sa.passenger_down != prev_passenger_down or
-		lazy_sa.passenger_stop != prev_passenger_stop or
-		lazy_sa.driver_up != prev_driver_up or
-		lazy_sa.driver_down != prev_driver_down or
-		lazy_sa.driver_stop != prev_driver_stop or
+	if (LazySA.obj_detected != prev_obj_detected or
+		LazySA.passenger_up != prev_passenger_up or
+		LazySA.passenger_down != prev_passenger_down or
+		LazySA.passenger_stop != prev_passenger_stop or
+		LazySA.driver_up != prev_driver_up or
+		LazySA.driver_down != prev_driver_down or
+		LazySA.driver_stop != prev_driver_stop or
 		(t+H) >= tn
 	){
 		var Real step_to_be_done := (t+H-tl);
@@ -54,13 +54,13 @@ control rules {
 		tl := tl + step_done; 
 	}
 	
-	prev_obj_detected := lazy_sa.obj_detected;
-	prev_passenger_up := lazy_sa.passenger_up;
-	prev_passenger_down := lazy_sa.passenger_down;
-	prev_passenger_stop := lazy_sa.passenger_stop;
-	prev_driver_up := lazy_sa.driver_up;
-	prev_driver_down := lazy_sa.driver_down;
-	prev_driver_stop := lazy_sa.driver_stop;
+	prev_obj_detected := LazySA.obj_detected;
+	prev_passenger_up := LazySA.passenger_up;
+	prev_passenger_down := LazySA.passenger_down;
+	prev_passenger_stop := LazySA.passenger_stop;
+	prev_driver_up := LazySA.driver_up;
+	prev_driver_down := LazySA.driver_down;
+	prev_driver_stop := LazySA.driver_stop;
 	
 	return step_size;
 }

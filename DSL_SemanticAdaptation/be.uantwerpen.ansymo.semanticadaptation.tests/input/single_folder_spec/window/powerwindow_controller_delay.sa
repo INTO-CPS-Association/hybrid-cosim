@@ -2,7 +2,7 @@ import PowerWindowModel
 
 module Controller_SA
 
-semantic adaptation ArmatureCurrentSA armature_current_sa
+semantic adaptation armature_current_sa
 at "./path/to/ArmatureCurrentSA.fmu"
 for fmu controller
 triggered by signal == true
@@ -11,7 +11,7 @@ in rules with crossing absolute tolerance = 1e-8 and relative tolerance = 0.0001
 	otherwise -> obj_detected := false;
 }
 
-semantic adaptation InOutSA in_out_sa
+semantic adaptation in_out_sa
 at "./path/to/InOutSA.fmu"
 for fmu controller
 out rules with zero order hold {

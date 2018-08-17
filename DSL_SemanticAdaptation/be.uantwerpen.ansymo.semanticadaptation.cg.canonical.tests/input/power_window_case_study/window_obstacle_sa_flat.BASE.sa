@@ -1,6 +1,6 @@
 module WindowObstacleLoop_SA
 
-semantic adaptation reactive mealy WindowObstableLoopSA adaptedFMU
+semantic adaptation reactive mealy WindowObstableLoopSA
 at "./path/to/WindowObstableLoopSA.fmu"
 
 	for inner fmu WindowSA window_sa

@@ -5,7 +5,7 @@ module Lazy_SA
  * 	when any of its inputs changes, or when it requests to be explicitly run.
  */
 
-semantic adaptation reactive moore LazySA lazy_sa
+semantic adaptation reactive moore lazy_sa
 at "./path/to/LazySA.fmu"
 
 	for inner fmu Controller controller
