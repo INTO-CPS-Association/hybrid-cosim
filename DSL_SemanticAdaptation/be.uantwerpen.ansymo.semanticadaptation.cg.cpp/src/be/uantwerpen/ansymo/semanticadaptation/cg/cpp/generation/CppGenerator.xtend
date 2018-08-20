@@ -163,6 +163,7 @@ class CppGenerator {
 			var inVars = if(inRuleBlock !== null) compileRuleBlockVars(inRuleBlock.globalInVars, params);
 			var outVars = if(outRuleBlock !== null) compileRuleBlockVars(outRuleBlock.globalOutVars, params);
 			val crtlVars = if(crtlRuleBlock !== null) compileRuleBlockVars(crtlRuleBlock.globalCtrlVars, params);
+			
 			/*
 			 * Support for source dependency: output ports tau <- loop_sa.tau
 			 * Only carried out for outVars.
@@ -231,23 +232,12 @@ class CppGenerator {
 
 				// Compile the Control Rules. These might use the out vars, so pass these along.
 				val crtlRules = if(adap.control !== null) adap.control else null;
-	  
 																						 
-				val crtlRuleResult = compileControlRuleBlock(crtlRules, adapClassName, adapInteralRefName,
-																						 
-				  
-				  
-			
-							
-					mappedScalarVariables, SASVs, params, if(inVars !== null) inVars.value else null,
-											 
-					if(outVars !== null) outVars.value else null, if(crtlVars !== null) crtlVars.value else null);
-				 
-					  
-													 
-													  
-	 
-	 
+				val crtlRuleResult = compileControlRuleBlock(crtlRules, adapClassName, adapInteralRefName, 
+																mappedScalarVariables, SASVs, params, 
+																if(inVars !== null) inVars.value else null,
+											 					if(outVars !== null) outVars.value else null, 
+											 					if(crtlVars !== null) crtlVars.value else null);
 
 				/*
 				 * Compile the constructor, destructor and initialize functions
