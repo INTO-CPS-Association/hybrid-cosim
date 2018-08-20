@@ -156,7 +156,9 @@ class CppGenerator {
 			val inRuleBlock = adap.in;
 			val outRuleBlock = adap.out;
 			val crtlRuleBlock = adap.control;
-
+			
+			
+			
 			// Get the control vars, in vars, and out vars				
 			var inVars = if(inRuleBlock !== null) compileRuleBlockVars(inRuleBlock.globalInVars, params);
 			var outVars = if(outRuleBlock !== null) compileRuleBlockVars(outRuleBlock.globalOutVars, params);

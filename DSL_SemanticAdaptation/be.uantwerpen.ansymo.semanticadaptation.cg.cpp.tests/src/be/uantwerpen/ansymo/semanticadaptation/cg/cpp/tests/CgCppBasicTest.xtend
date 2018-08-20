@@ -62,6 +62,10 @@ class CgCppBasicTest extends AbstractSemanticAdaptationTest {
 		__parseAndGenerateWithNoErrors('window_sa_canonical_new.BASE.sa', 'test_input/single_folder_spec/window/', 'powerwindow');
 	}
 	
+	@Test def empty_ctrl_rules() {
+		__parseAndGenerateWithNoErrors('plantmr.sa', 'test_input/single_folder_spec/emptyctrlrules/', 'PlantMR');
+	}
+	
 	@Test def getSetState_sa() {
 		__parseAndGenerateWithNoErrors('GetSetState.sa', 'test_input/single_folder_spec/getsetstate/', "getSetState");
 	}

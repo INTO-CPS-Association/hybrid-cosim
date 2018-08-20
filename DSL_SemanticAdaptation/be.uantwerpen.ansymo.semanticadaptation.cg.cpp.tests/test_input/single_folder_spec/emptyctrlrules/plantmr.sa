@@ -1,0 +1,15 @@
+semantic adaptation reactive moore PlantMultiRate
+at "./PlantMultiRate.fmu"
+
+	for inner fmu Plant plant
+		at "./EMAPlantNoLoad_FixedEuler_1Em6.fmu"
+		with input ports 
+			Real torque "torque_input@expseu_", 
+			Real psu "psu_vol_input_v@expseu_", 
+			Real v "V_IN@expseu_", 
+			Real x "X_IN@expseu_" 
+		with output ports 
+			Real w "ang_vel_out_rpm@expseu_", 
+			Real f "F_OUT@expseu_"
+
+param RATE := 1; 
