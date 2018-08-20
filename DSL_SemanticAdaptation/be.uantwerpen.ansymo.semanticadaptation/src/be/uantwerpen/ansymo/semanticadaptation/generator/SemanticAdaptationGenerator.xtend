@@ -22,7 +22,7 @@ import org.eclipse.xtext.generator.IGeneratorContext
 class SemanticAdaptationGenerator extends AbstractGenerator {
 
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-		Log.push("Generating canonical semantic adaptation for file " + resource.URI + "...")
+		Log.push("Generating semantic adaptation for file " + resource.URI + "...")
 		
 		Log.println("Resource URI information:")
 		Log.println("\t resource.URI.lastSegment = " + resource.URI.lastSegment())
@@ -39,7 +39,7 @@ class SemanticAdaptationGenerator extends AbstractGenerator {
 		
 		chainGenerator.generate(adaptation, fsa, resource.URI)
 		
-		Log.pop("Generating canonical semantic adaptation for file " + resource.URI + "...")
+		Log.pop("Generating semantic adaptation for file " + resource.URI + "...")
 	}
 	
 	def SemanticAdaptationCustomGenerator loadSemanticAdaptationCustomGenerator() {
