@@ -166,10 +166,6 @@ class FmuGenerator {
 				if (status != fmi2OK)
 					return status;
 		
-				status = g_adaptation->flushAllEnabledOutRules();
-				if (status != fmi2OK)
-					return status;
-		
 				for (int i = 0; i < nvr; i++)
 				{
 					value[i] = ((*g_adaptation).*getter)(vr[i]);

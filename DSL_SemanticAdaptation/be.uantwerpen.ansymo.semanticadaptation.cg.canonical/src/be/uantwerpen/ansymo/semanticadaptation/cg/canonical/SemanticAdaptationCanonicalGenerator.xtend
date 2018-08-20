@@ -411,19 +411,28 @@ class SemanticAdaptationCanonicalGenerator {
 			throw new Exception("Does not make sense. At least one inner FMU is expected.")
 		}
 		
-		val minExpression = SemanticAdaptationFactory.eINSTANCE.createMin()
+		var Expression returnExpression = null
 		
-		Log.println("Creating min(...) expression with the following arguments:")
-		
-		for(varDecl : stepVariables){
+		if (stepVariables.size == 1){
 			val varRef = SemanticAdaptationFactory.eINSTANCE.createVariable()
-			varRef.ref = varDecl
-			minExpression.args.add(varRef)
-			Log.println(varDecl.name)
+			varRef.ref = stepVariables.first
+			returnExpression = varRef
+			Log.println("Single inner fmu: return " + stepVariables.first.name)
+		} else {
+			Log.println("Creating min(...) expression with the following arguments:")
+			
+			val minExpression = SemanticAdaptationFactory.eINSTANCE.createMin()
+			for(varDecl : stepVariables){
+				val varRef = SemanticAdaptationFactory.eINSTANCE.createVariable()
+				varRef.ref = varDecl
+				minExpression.args.add(varRef)
+				Log.println(varDecl.name)
+			}
+			returnExpression = minExpression
 		}
 		
 		rule.returnstatement = SemanticAdaptationFactory.eINSTANCE.createReturnStatement()
-		rule.returnstatement.expr = minExpression
+		rule.returnstatement.expr = returnExpression
 		
 		Log.pop("appendReturnCosimStep")
 	}
@@ -441,6 +450,7 @@ class SemanticAdaptationCanonicalGenerator {
 		val step_var = SemanticAdaptationFactory.eINSTANCE.createSingleVarDeclaration()		
 		step_var.name = "H_" + fmu.name
 		step_var.expr = doStep
+		step_var.type = "Real"
 		
 		val step_decl = SemanticAdaptationFactory.eINSTANCE.createDeclaration()
 		step_decl.declarations.add(step_var)
