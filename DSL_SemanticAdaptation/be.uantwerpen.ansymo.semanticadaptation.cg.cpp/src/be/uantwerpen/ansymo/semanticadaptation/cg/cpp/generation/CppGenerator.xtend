@@ -209,20 +209,7 @@ class CppGenerator {
 				mappedScalarVariables, SASVs, params, if(inVars !== null) inVars.value else null,
 				if(outVars !== null) outVars.value else null, if(crtlVars !== null) crtlVars.value else null,
 				inPortsWithSrcDep);
-   
-								  
-																										 
-   
-						   
-																											 
-																						 
-															 
-																							 
-																											
-
-								  
-																										 
-   
+     
 				// Compile the out rules
 				val outRules = if(adap.out !== null) adap.out as InOutRules else null;
 				val outRuleResult = compileInOutRuleBlocks(IORuleType.Output, outRules, adapClassName,
@@ -271,19 +258,7 @@ class CppGenerator {
 
 				// Compile the state functions
 				val Pair<String,String> stateFunctions = compileStateFunctions(adapClassName);
-								  
-				  
-										
-					  
-				   
-				   
-							  
-							   
-								
-						
-	 
-														
-
+				
 				// Compile the source file
 				val String sourceInclude = '''#include "«adapClassName».h"''';
 				val sourceFile = compileSource(
@@ -310,10 +285,6 @@ class CppGenerator {
 					allGVars.putAll(outVars.value);
 				if (crtlVars !== null)
 					allGVars.putAll(crtlVars.value);
-										
-					  
-	 
-													  
 
 				// Compile the header file
 				val headerFile = compileHeader(
@@ -333,10 +304,7 @@ class CppGenerator {
 				// Compile the model description file
 				val modelDescCreator = new ModelDescriptionCreator(adapExternalName);
 				val modelDescription = modelDescCreator.generateModelDescription(SASVs.values);
-				fsa.generateFile("modelDescription.xml", modelDescription);
-   
-																																									  
-																																							 
+				fsa.generateFile("modelDescription.xml", modelDescription);																																	 
 
 				// Compile the fmu.cpp file
 				val fmuCppFile = FmuGenerator.genFmuCppFile(adapClassName);
@@ -397,47 +365,6 @@ class CppGenerator {
   
 
 		def Pair<String,String> compileStateFunctions(String saName)
-  
-		
-	 
-									 
-											   
-												   
-	 
-	 
-	 
-												
-   
-										  
-							
-			
-   
-  
-														  
-   
-												
-   
-		
-	 
-									 
-											   
-												   
-	 
-	 
-	 
-												
-   
-										  
-							
-			
-   
-  
-														  
-   
-												
-   
-  
-														   
 		{
 			return
 			'''
@@ -470,15 +397,10 @@ class CppGenerator {
 		// Compiles the final source file
 									  
 	
-		def String compileSource(String include, String constructor, String getRuleThis, String getFunctions,
-																						   
-																						   
-			String setFunctions, String inFunctions, String outFunctions, String controlFunction, String stateFunctions) {
-																						   
-															
+		def String compileSource(String include, String constructor, String getRuleThis, String getFunctions,																   
+			String setFunctions, String inFunctions, String outFunctions, String controlFunction, String stateFunctions) {															
 			return '''
 				«include»
-				
 				namespace adaptation 
 				{
 					«constructor»
