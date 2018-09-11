@@ -1,0 +1,44 @@
+semantic adaptation reactive moore SensorPlantMultiRate
+at "./SensorMultiRate.fmu"
+
+	for inner fmu Sensor sensor
+		at "./Sensor.fmu"
+		with input ports Real f "F_INPUT@expseu_"
+		with output ports Real x_aft "X_AFTER_LOAD@expseu_", Real v "V_OUTPUT@expseu_", Real x "X_OUTPUT@expseu_"
+	
+	for inner fmu Plant plant
+		at "./Plant.fmu"
+		with input ports 
+			Real torque "torque_input@expseu_", 
+			Real psu "psu_vol_input_v@expseu_", 
+			Real v "V_IN@expseu_", 
+			Real x "X_IN@expseu_" 
+		with output ports 
+			Real w "ang_vel_out_rpm@expseu_", 
+			Real f "F_OUT@expseu_"
+	
+	coupled as 
+		plant.f -> sensor.f,
+		sensor.x -> plant.x,
+		sensor.v -> plant.v
+
+param Real RATE := 2.0;
+
+control rules {
+	var micro_step := 0.0;
+	var inner_time := 0.0;
+
+	inner_time := t;
+	
+	micro_step := H/RATE;
+	
+	for (var iter in 0 .. RATE) {
+		do_step(plant, inner_time, micro_step);
+		var hh := do_step(sensor, inner_time, micro_step);
+		inner_time := inner_time + micro_step;	
+	}
+	
+	micro_step := do_step(plant, inner_time, micro_step);
+	
+	return H;
+}

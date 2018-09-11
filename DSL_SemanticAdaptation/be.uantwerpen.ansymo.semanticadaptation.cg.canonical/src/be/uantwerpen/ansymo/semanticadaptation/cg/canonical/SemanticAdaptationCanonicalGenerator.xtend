@@ -15,6 +15,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.BuiltinFunctio
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Close
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Connection
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Declaration
@@ -24,6 +25,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStep
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Expression
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.FMU
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.For
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMU
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InnerFMUDeclarationFull
@@ -31,6 +33,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IntLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MooreOrMealy
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.MultiplyUnity
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.NestableStatement
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.ReactiveOrDelayed
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RealLiteral
@@ -42,6 +45,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StringLiteral
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Unity
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.io.ByteArrayOutputStream
+import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedList
 import java.util.List
@@ -51,7 +55,7 @@ import org.eclipse.emf.common.util.URI
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.xtext.EcoreUtil2
 import org.eclipse.xtext.generator.IFileSystemAccess2
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CurrentTime
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.If
 
 /**
  * Generates code from your model files on save.
@@ -283,7 +287,7 @@ class SemanticAdaptationCanonicalGenerator {
 		Log.pop("Canonicalize")
 	}
 	
-	def replacePortRefsByVarDecl(EList<Statement> statements, HashMap<Port, SingleVarDeclaration> port2VarDecl) {
+	def replacePortRefsByVarDecl(EList<NestableStatement> statements, HashMap<Port, SingleVarDeclaration> port2VarDecl) {
 		Log.push("replacePortRefsByVarDecl")
 		
 		for(statement : statements){
@@ -316,28 +320,33 @@ class SemanticAdaptationCanonicalGenerator {
 			val trgFMU = connection.tgt.port.eContainer as InnerFMU
 			val ctrlRule = sa.control.rule as CustomControlRule
 			
-			val doStepIndex = findDoStepStatementIndex(ctrlRule, trgFMU)
+			val doStepLocations = findDoStepStatementIndex(ctrlRule, trgFMU)
 			
-			if (doStepIndex < 0){
+			if (doStepLocations.empty){
 				throw new IllegalArgumentException("DoStep instruction for FMU " + trgFMU.name + " not found in control rule block.")
 			}
 			
-			if (! existsAssignmentToPort_BeforeIndex(connection.tgt.port, doStepIndex, ctrlRule)){
-				Log.println("Creating assignment to port " + connection.tgt.port.qualifiedName + " at position " + doStepIndex)
-				addPortAssignment(ctrlRule.controlRulestatements, connection.tgt.port, connection.src.port, doStepIndex, true)
-			} else {
-				Log.println("There is already an assignment to port " + connection.tgt.port.qualifiedName + " before position " + doStepIndex)
+			for (doStepLocation : doStepLocations) {
+				val doStepIndex = doStepLocation.key
+				if (! existsAssignmentToPort_BeforeIndex(connection.tgt.port, doStepIndex, doStepLocation.value)){
+					Log.println("Creating assignment to port " + connection.tgt.port.qualifiedName + " at position " + doStepIndex)
+					addPortAssignment(doStepLocation.value, connection.tgt.port, connection.src.port, doStepIndex, true)
+				} else {
+					Log.println("There is already an assignment to port " + connection.tgt.port.qualifiedName + " before position " + doStepIndex)
+				}
 			}
+			
 		}
 		
 		Log.pop("createInternalBindingAssignments")
 	}
 	
-	def existsAssignmentToPort_BeforeIndex(Port port, int index, CustomControlRule rule) {
+	def existsAssignmentToPort_BeforeIndex(Port port, int index, EList<NestableStatement> statements) {
 		
-		val assignmentsToPort = rule.controlRulestatements.indexed
+		val assignmentsToPort = statements.indexed
 									.filter[s | s.value instanceof Assignment && 
-												(s.value as Assignment).lvalue.ref == port 
+												(s.value as Assignment).lvalue.ref == port &&
+												s.key < index
 									]
 		
 		check(assignmentsToPort.size <= 1, "Multiple assignments to the same port are not supported yet. Use a loop with a single call.")
@@ -345,43 +354,79 @@ class SemanticAdaptationCanonicalGenerator {
 		return assignmentsToPort.size == 1
 	}
 	
+	def tryOneEObject(List<()=>EObject> attempts){
+		for (attempt : attempts) {
+			try {
+				val res = attempt.apply()
+				return res
+			} catch (Exception e) {
+			  // Ignore
+			}
+		}
+		throw new Exception("All attempts failed.")
+	}
+	
+	def tryOneStatements(List<()=>EList<NestableStatement>> attempts){
+		for (attempt : attempts) {
+			try {
+				val res = attempt.apply()
+				return res
+			} catch (Exception e) {
+			  // Ignore
+			}
+		}
+		throw new Exception("All attempts failed.")
+	}
+	
 	def findDoStepStatementIndex(CustomControlRule rule, InnerFMU fmu) {
 		Log.push("findDoStepStatementIndex")
 		
-		var result = -1
+		val ArrayList<Pair<Integer, EList<NestableStatement>>> results = newArrayList()
 		
-		val doStepProcedures = rule.controlRulestatements.indexed.filter[s | s.value instanceof DoStep && (s.value as DoStep).fmu == fmu]
-		
-		check(doStepProcedures.size <= 1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
-		
-		if (doStepProcedures.size == 1){
-			Log.println("Found a doStep procedure for fmu "  + fmu.name + " at position " + doStepProcedures.head.key)
-			result = doStepProcedures.head.key
-		}
-		
-		// Warning: this does not support instructions such as:
-		// var someVar = 10, h = doStep(f), etc...
-		// Only single declarations are supported, such as:
-		// var h = doStep(f)
-		// FIXME: This needs to look into hirarchical statements (like for loops).
-		val doStepAssignments = rule.controlRulestatements.indexed
-									.filter[s | s.value instanceof Declaration && 
-												(s.value as Declaration).declarations.size == 1 &&
-												(s.value as Declaration).declarations.head instanceof SingleVarDeclaration &&
-												(s.value as Declaration).declarations.head.expr instanceof DoStepFun &&
-												((s.value as Declaration).declarations.head.expr as DoStepFun).fmu == fmu 
-									]
-		
-		check(doStepAssignments.size <= 1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
-		
-		if (doStepAssignments.size == 1){
-			check(result==-1, "Multiple calls to the doStep function for the same FMU are not supported yet. Use a loop with a single call.")
-			Log.println("Found a doStep function for fmu "  + fmu.name + " at position " + doStepAssignments.head.key)
-			result = doStepAssignments.head.key
-		}
+		rule.eAllContents.filter[s | 
+			if (s instanceof DoStep)
+				(s as DoStep).fmu == fmu
+			else if (s instanceof DoStepFun)
+				(s as DoStepFun).fmu == fmu
+			else 
+				false
+		].forEach[ s |
+			
+			if (s instanceof DoStepFun){
+				check(s.eContainer instanceof Assignment || s.eContainer instanceof SingleVarDeclaration, 
+				  "doStep must be used in either an assignment (var h := doStep(...) or h := doStep(...)), or as a procedure. Use auxiliary variables.")
+			}
+			
+			// Quick and dirty way of navigating up the tree to get to the list of statements
+			val statement = if (s instanceof DoStepFun)
+									tryOneEObject(#[
+										[(s.eContainer as Assignment)],
+										[(s.eContainer as SingleVarDeclaration).eContainer]
+									])
+							else 
+								s
+			
+			val container = statement.eContainer
+			
+			val parentStatementList = tryOneStatements(#[
+								[(container as CustomControlRule).controlRulestatements],
+								[(container as For).statements],
+								[if ((container as If).ifstatements.contains(s)) 
+									(container as If).ifstatements
+								 else 
+								 	(s.eContainer as If).elsestatements
+								]
+							])
+			
+			val index = parentStatementList.indexed.findFirst[x | x.value==statement].key
+			
+			check(index >= 0, "Could not find doStep statement even though it exists.")
+			
+			results.add((index -> parentStatementList))
+		]
 		
 		Log.pop("findDoStepStatementIndex")
-		return result
+		return results
 	}
 	
 	def createCoSimStepInstructions(Adaptation sa) {
@@ -654,7 +699,7 @@ class SemanticAdaptationCanonicalGenerator {
 		Log.pop("addOutRules_Internal2External_Assignments")
 	}
 	
-	def addPortAssignment(List<Statement> statements, Port toPort, Port fromPort, int position, boolean convertUnits) {
+	def addPortAssignment(List<NestableStatement> statements, Port toPort, Port fromPort, int position, boolean convertUnits) {
 		Log.push("addPortAssignment")
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()
@@ -764,7 +809,7 @@ class SemanticAdaptationCanonicalGenerator {
 		Log.pop("addRules_External2Stored_Assignments")
 	}
 	
-	def addAssignmentToStoredVar(List<Statement> statements, Port internalPort, SingleVarDeclaration storedVarDecl) {
+	def addAssignmentToStoredVar(List<NestableStatement> statements, Port internalPort, SingleVarDeclaration storedVarDecl) {
 		Log.push("addAssignmentToStoredVar")
 		
 		val assignment = SemanticAdaptationFactory.eINSTANCE.createAssignment()

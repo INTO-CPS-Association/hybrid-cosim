@@ -131,7 +131,7 @@ SettingAssignment:
 	
 RuleCondition:
 	{RuleCondition} condition=Expression (params+=SettingAssignment ('and' params+=SettingAssignment)*)? | 
-	{CompositeRuleCondition} '{' statements+=Statement* returnstatement=ReturnStatement '}';
+	{CompositeRuleCondition} '{' statements+=NestableStatement* returnstatement=ReturnStatement '}';
 
 RuleSetting:
 	{AbsoluteTolerance} 'absolute' 'tolerance' | // todo relative/absolute tolerance (look up float equality)
@@ -143,7 +143,7 @@ RuleStrategy:
 	
 StateTransitionFunction:
 	{StateTransitionFunction} expression=Expression |
-	{StateTransitionFunction} '{' statements+=Statement* '}' |
+	{StateTransitionFunction} '{' statements+=NestableStatement* '}' |
 	{StateTransitionFunction} assignment=Assignment;// |
 	//{StoreNull} ('null' | 'nothing') |
 	//{StateTransitionFunction} 'todo';
@@ -164,19 +164,20 @@ OutputFunction:
 	{ZeroOrderHold} (('zero' 'order' 'hold') | 'ZOH') |
 	{FirstOrderHold} (('first' 'order' 'hold') | 'FOH') |
 	{CustomOutputFunction} expr=Expression |
-	{CompositeOutputFunction} '{' statements+=Statement* (returnstatement=ReturnStatement)? '}';
+	{CompositeOutputFunction} '{' statements+=NestableStatement* (returnstatement=ReturnStatement)? '}';
 
 ControlRule:
 	{ImpliedControlRule} 'implied' | // the default
 	{TriggeredControlRule} 'triggered' 'by' condition=Expression |
 	{PeriodicControlRule} 'periodic' ('at' init_time=REALTYPE)? 'every' period=REALTYPE | 
 	{MultipliedControlRule} 'multiplied' multiplication=INT 'times' | 
-	{CustomControlRule} 'control' 'rules' '{' controlRulestatements+=Statement* returnstatement=ReturnStatement '}';
+	{CustomControlRule} 'control' 'rules' '{' controlRulestatements+=NestableStatement* returnstatement=ReturnStatement '}';
 
 AnonymousFunction: // has access to ports
 	{FunctionExpression} '{=' code=Expression '}'| 
-	{FunctionBody} '{' statements+=Statement* returnstatement=ReturnStatement '}' |  // should return something
-	FunctionDeclaration; // TODO: should return something
+	{FunctionBody} '{' statements+=NestableStatement* returnstatement=ReturnStatement '}' //|  // should return something
+	// FunctionDeclaration
+	; 
 
 SpecifiedPort: // if ports need owners
 	(owner=[FMU] '.' )? port=[Port];
@@ -218,7 +219,7 @@ AtomicUnity:
 //	statements+=Statement* returnstatement=ReturnStatement;
 	
 Statement:
-	NestableStatement | FunctionDeclaration;
+	NestableStatement; //| FunctionDeclaration;
 
 NestableStatement:
 	Declaration | (Assignment  ';') | (Procedure  ';') | For | If | BreakStatement;
@@ -231,7 +232,7 @@ If:
 	
 FunctionDeclaration:
 	'def' name=ID ('(' args+=DeclaredParameter (',' args+=DeclaredParameter)* ')')? 
-	'{' statements+=Statement* returnstatement=ReturnStatement '}';
+	'{' statements+=NestableStatement* returnstatement=ReturnStatement '}';
 
 Declaration:
 //	'var' name=ID (':=' expr=Expression)? ';';

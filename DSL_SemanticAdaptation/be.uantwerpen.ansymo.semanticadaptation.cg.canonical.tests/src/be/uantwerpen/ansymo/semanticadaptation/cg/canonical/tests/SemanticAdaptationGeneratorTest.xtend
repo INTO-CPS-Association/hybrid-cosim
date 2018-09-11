@@ -233,6 +233,17 @@ class SemanticAdaptationGeneratorTest extends AbstractSemanticAdaptationTest{
 			override accept(Result t) { }
 		}) }
 	
+	@Test def test_CreatePortAssignmentsBeforeDoStep_sample3() { 
+		__generate('input/canonical_generation/sample3.sa', new IAcceptor<CompilationTestHelper.Result>(){
+			override accept(Result t) {
+				var Adaptation sa = t.resourceSet.resources.head
+										.allContents.toIterable
+										.filter(SemanticAdaptation).last.elements
+										.filter(Adaptation).head
+				Assert.assertTrue(sa.name == "SensorPlantMultiRate")
+			}
+		}) }
+	
 	def void __generate(String filename, IAcceptor<CompilationTestHelper.Result> acceptor) {
 		//readFile(filename).assertCompilesTo('oracles/power_window_case_study/lazy.BASE.sa')
 		
