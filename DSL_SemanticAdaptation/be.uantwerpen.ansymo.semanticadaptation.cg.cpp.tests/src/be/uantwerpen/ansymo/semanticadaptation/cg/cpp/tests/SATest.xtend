@@ -29,11 +29,10 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
-class SATest extends AbstractSemanticAdaptationTest {
+abstract class SATest extends AbstractSemanticAdaptationTest {
 	
 	@Inject extension ParseHelper<SemanticAdaptation>
 	@Inject extension  ValidationTestHelper
-	
 	
 	/**
 	 * Parses the SA file and generates the C++.
