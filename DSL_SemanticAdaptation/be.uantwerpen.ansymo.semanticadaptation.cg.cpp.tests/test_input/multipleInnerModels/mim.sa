@@ -1,0 +1,43 @@
+semantic adaptation reactive moore MIM
+at "./path/to/MIM.fmu"
+	
+	for inner fmu MIM1 m1
+		at "MIM1.fmu"
+		with input ports mim1in 
+		with output ports mim1out 
+	
+	for inner fmu MIM2 m2
+		at "MIM2.fmu"
+		with input ports mim2in
+		with output ports mim2out
+	
+	coupled as m1.mim1out -> m2.mim2in
+	
+	input ports mimin
+	
+	output ports mimout
+	
+	control rules {
+		do_step(m1,t,H);
+		do_step(m2,t,H);
+	
+		return H;
+	}
+	
+	in var stored_m1_mimin := 0.0;
+	in rules {
+		true -> {
+			stored_m1_mimin := MIM.mimin;
+		} --> {
+			m1.mim1in := stored_m1_mimin;
+		};
+	}
+	
+	out var	stored_m2_mim2out := 0.0;
+	out rules{
+		true -> {
+			stored_m2_mim2out := m2.mim2out;
+		} --> {
+			MIM.mimout := stored_m2_mim2out;
+		};
+	}
