@@ -5,6 +5,7 @@ import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ReturnInformation
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SVType
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DataRule
@@ -14,17 +15,18 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.If
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InOutRules
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.IsSet
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.LValueDeclaration
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.PassedTime
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Range
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.RuleCondition
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SingleVarDeclaration
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StateTransitionFunction
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Var
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
 import java.util.LinkedHashMap
 import java.util.List
 import org.eclipse.emf.common.util.EList
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.StepSize
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.PassedTime
 
 class RulesConditionSwitch extends BasicConditionSwitch {
 	// Global params
@@ -257,6 +259,25 @@ class RulesConditionSwitch extends BasicConditionSwitch {
 
 		return retVal;
 	}
+	
+	def ReturnInformation caseAssignmentToPort(Assignment object){ 
+		val retVal = new ReturnInformation();
+		
+		val lValOwnerName = object.lvalue.owner.name
+		val lValRefName = if (((object.lvalue.ref) as Port).alias !== null )
+								BuildUtilities.stripDelimiters(((object.lvalue.ref) as Port).alias) 
+							else 
+								object.lvalue.ref.name
+		val objExpr = object.expr
+		val switchResultCode = doSwitch(objExpr).code
+		val varDefine = mSVars.get(lValOwnerName).get(lValRefName).define
+		retVal.code = 
+			'''
+				setValue(«lValOwnerName»,«varDefine»,«switchResultCode»);
+			''';
+		
+		return retVal;
+	}	
 
 	override ReturnInformation caseSingleVarDeclaration(SingleVarDeclaration object) {
 		var retVal = new ReturnInformation();

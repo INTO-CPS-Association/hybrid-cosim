@@ -1,14 +1,15 @@
 package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation
 
-import java.util.LinkedHashMap
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ReturnInformation
-import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.GlobalInOutVariable
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.MappedScalarVariable
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.ReturnInformation
+import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.data.SAScalarVariable
+import be.uantwerpen.ansymo.semanticadaptation.log.Log
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Assignment
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CompositeOutputFunction
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.InRulesBlock
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
+import java.util.LinkedHashMap
 
 class InRulesConditionSwitch extends RulesConditionSwitch {
 
@@ -50,24 +51,12 @@ class InRulesConditionSwitch extends RulesConditionSwitch {
 	}
 
 	override ReturnInformation caseAssignment(Assignment object) {
-		var retVal = new ReturnInformation();
-
 		if (inOutputFunction) {
-			val lValOwnerName = object.lvalue.owner.name
-			val lValRefName = if (object.lvalue.ref instanceof Port) 
-								(if (((object.lvalue.ref) as Port).alias !== null )
-									BuildUtilities.stripDelimiters(((object.lvalue.ref) as Port).alias) 
-								else 
-									object.lvalue.ref.name) 
-							  else object.lvalue.ref.name
-			val objExpr = object.expr
-			val switchResultCode = doSwitch(objExpr).code
-			val varDefine = mSVars.get(lValOwnerName).get(lValRefName).define
-			retVal.code = 
-				'''
-					setValue(«lValOwnerName»,«varDefine»,«switchResultCode»);
-				''';
-			return retVal;
+			if (object.lvalue.ref instanceof Port){
+				return super.caseAssignmentToPort(object)
+			} else {
+				throw new Exception("Assignment to a non_port variable.")
+			}
 		} else {
 			return super.caseAssignment(object);
 		}

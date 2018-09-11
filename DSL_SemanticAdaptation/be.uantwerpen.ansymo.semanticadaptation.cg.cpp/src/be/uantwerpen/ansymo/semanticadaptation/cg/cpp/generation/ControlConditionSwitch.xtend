@@ -14,6 +14,7 @@ import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.CustomControlR
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStep
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.DoStepFun
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.GetNextInternalTimeStep
+import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Port
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Rollback
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SaveState
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.Variable
@@ -35,11 +36,8 @@ class ControlConditionSwitch extends RulesConditionSwitch {
 	}
 	
 	override ReturnInformation caseAssignment(Assignment object) {
-
-		if (object.lvalue.owner !== null) {
-			var retVal = new ReturnInformation();
-			retVal.code = '''setValue(«object.lvalue.owner.name»,«mSVars.get(object.lvalue.owner.name).get(object.lvalue.ref.name).define»,«doSwitch(object.expr).code»)'''
-			return retVal;
+		if (object.lvalue.ref instanceof Port){
+			return super.caseAssignmentToPort(object)
 		} else {
 			return super.caseAssignment(object);
 		}
