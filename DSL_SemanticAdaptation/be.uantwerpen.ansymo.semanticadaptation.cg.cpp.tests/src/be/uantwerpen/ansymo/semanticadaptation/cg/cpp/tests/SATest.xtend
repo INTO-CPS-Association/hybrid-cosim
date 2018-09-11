@@ -2,20 +2,14 @@ package be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests
 
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.BuildUtilities
 import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CppGenerator
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.tests.CMakeUtil.CMakeGenerateException
 import be.uantwerpen.ansymo.semanticadaptation.semanticAdaptation.SemanticAdaptation
-import be.uantwerpen.ansymo.semanticadaptation.cg.cpp.generation.CMakeListsGenerator
 import be.uantwerpen.ansymo.semanticadaptation.testframework.FmuMainTestGenerator
 import be.uantwerpen.ansymo.semanticadaptation.tests.AbstractSemanticAdaptationTest
 import be.uantwerpen.ansymo.semanticadaptation.tests.SemanticAdaptationInjectorProvider
 import com.google.inject.Inject
 import java.io.File
-import java.io.FileFilter
-import java.io.FileWriter
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.regex.Pattern
-import org.apache.commons.io.FileUtils
 import org.eclipse.emf.ecore.EObject
 import org.eclipse.emf.ecore.resource.ResourceSet
 import org.eclipse.xtext.generator.InMemoryFileSystemAccess
@@ -23,12 +17,10 @@ import org.eclipse.xtext.testing.InjectWith
 import org.eclipse.xtext.testing.XtextRunner
 import org.eclipse.xtext.testing.util.ParseHelper
 import org.eclipse.xtext.testing.validation.ValidationTestHelper
-import org.junit.Assert
-import org.junit.BeforeClass
-import org.junit.Ignore
-import org.junit.Test
 import org.junit.runner.RunWith
 
+@RunWith(XtextRunner)
+@InjectWith(SemanticAdaptationInjectorProvider)
 abstract class SATest extends AbstractSemanticAdaptationTest {
 	
 	@Inject extension ParseHelper<SemanticAdaptation>

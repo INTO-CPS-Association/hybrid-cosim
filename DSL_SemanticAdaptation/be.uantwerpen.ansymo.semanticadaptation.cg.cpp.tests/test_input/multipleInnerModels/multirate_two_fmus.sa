@@ -1,0 +1,49 @@
+semantic adaptation reactive moore SensorPlantMultiRate
+at "./SensorMultiRate.fmu"
+
+	for inner fmu Sensor sensor
+		at "./sensor.fmu"
+		with input ports Real f "F_INPUT@expseu_"
+		with output ports Real x_aft "X_AFTER_LOAD@expseu_", Real v "V_OUTPUT@expseu_", Real x "X_OUTPUT@expseu_"
+	
+	for inner fmu Plant plant
+		at "./plant.fmu"
+		with input ports 
+			Real torque "torque_input@expseu_", 
+			Real psu "psu_vol_input_v@expseu_", 
+			Real v "V_IN@expseu_", 
+			Real x "X_IN@expseu_" 
+		with output ports 
+			Real w "ang_vel_out_rpm@expseu_", 
+			Real f "F_OUT@expseu_"
+	
+	coupled as 
+		plant.f -> sensor.f,
+		sensor.x -> plant.x,
+		sensor.v -> plant.v
+
+input ports Real torque , Real psu
+output ports Real x_aft , Real w
+param Real INIT_TORQUE := 0.0 , Real INIT_PSU := 0.0 , Real INIT_X_AFT := 0.0 , Real INIT_V := 0.0 , Real INIT_X := 0.0 , Real INIT_W := 0.0 , Real INIT_F := 0.0 ;
+control rules {
+sensor . f := stored__f ;
+var Real H_sensor := do_step ( sensor , t , H ) ;
+plant . x := stored__x ;
+plant . v := stored__v ;
+var Real H_plant := do_step ( plant , t , H ) ;
+return min ( H_sensor , H_plant ) ; }
+in var Real stored__torque := INIT_TORQUE , Real stored__psu := INIT_PSU ; in rules {
+true -> {
+stored__psu := SensorPlantMultiRate . psu ;
+stored__torque := SensorPlantMultiRate . torque ; } --> {
+plant . torque := stored__torque ;
+plant . psu := stored__psu ; } ; }
+out var Real stored__x_aft := INIT_X_AFT , Real stored__x := INIT_X , Real stored__v := INIT_V , Real stored__f := INIT_F , Real stored__w := INIT_W ; out rules {
+true -> {
+stored__f := plant . f ;
+stored__x := sensor . x ;
+stored__w := plant . w ;
+stored__v := sensor . v ;
+stored__x_aft := sensor . x_aft ; } --> {
+SensorPlantMultiRate . w := stored__w ;
+SensorPlantMultiRate . x_aft := stored__x_aft ; } ; }

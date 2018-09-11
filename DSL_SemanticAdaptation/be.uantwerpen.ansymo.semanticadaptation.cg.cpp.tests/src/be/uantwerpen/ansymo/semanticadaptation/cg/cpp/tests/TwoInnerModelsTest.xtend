@@ -8,12 +8,18 @@ import org.junit.Test
 
 @RunWith(XtextRunner)
 @InjectWith(SemanticAdaptationInjectorProvider)
-class TwoInnerModels extends SATest {
+class TwoInnerModelsTest extends SATest {
 	
 	@Test
 	def ParseSAWithMultipleInnerModels()
 	{
 		__parseAndGenerateWithNoErrors('mim.sa', 'test_input/multipleInnerModels/', 'mim');
+	}
+
+	@Test
+	def ParseSAWithPlantSensorMR()
+	{
+		__parseAndGenerateWithNoErrors('multirate_two_fmus.sa', 'test_input/multipleInnerModels/', 'multirate_two_fmus');
 	}
 
 	
