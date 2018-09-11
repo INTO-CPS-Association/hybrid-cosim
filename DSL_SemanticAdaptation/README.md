@@ -8,7 +8,7 @@ git submodule update --init --recursive
 # Development environment:
 
 Install instructions:
-- Download Eclipse NEON (64 bits) installer.
+- Download Eclipse Photon (64 bits) installer.
 - Run it, and select "Eclipse DSL Tools" environment.
 or if you already have Eclipse DSL Tools, then just install the xText plugins as follows:
 	http://download.eclipse.org/modeling/tmf/xtext/updates/composite/releases/
@@ -33,5 +33,5 @@ mvn clean install
 ```
 
 ### Other tasks:
-	Run the plugin: 
+	Run the plugin:
 		After building everything, right-click /be.uantwerpen.ansymo.semanticadaptation -> run as -> eclipse application
